@@ -1,7 +1,4 @@
-'use client'; // Required to use usePathname hook
-
 import { Inter } from 'next/font/google';
-import { usePathname } from 'next/navigation';
 
 import './globals.css';
 import { Toaster } from '@/components/ui/toaster';
@@ -18,14 +15,11 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const pathname = usePathname();
-  const showMainLayout = pathname !== '/login';
-
   return (
     <html lang="fr" className={inter.variable}>
       <body className="font-body antialiased bg-background">
         <FirebaseClientProvider>
-          {showMainLayout ? <MainLayout>{children}</MainLayout> : children}
+          <MainLayout>{children}</MainLayout>
           <Toaster />
         </FirebaseClientProvider>
       </body>

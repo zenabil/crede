@@ -5,19 +5,20 @@ import { AppLogo } from './app-logo';
 import { useAuth, useUser } from '@/firebase';
 import { Button } from '../ui/button';
 import { LogOut, Loader2 } from 'lucide-react';
-import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
+import { signInAnonymously } from 'firebase/auth';
 
 export function MainLayout({ children }: { children: React.ReactNode }) {
   const auth = useAuth();
   const { user, loading } = useUser();
-  const router = useRouter();
 
   useEffect(() => {
-    if (!loading && !user) {
-      router.replace('/login');
+    if (!loading && !user && auth) {
+      signInAnonymously(auth).catch((error) => {
+        console.error('Anonymous sign-in failed:', error);
+      });
     }
-  }, [user, loading, router]);
+  }, [user, loading, auth]);
 
   const handleSignOut = async () => {
     if (auth) {
