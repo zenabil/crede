@@ -2,7 +2,7 @@
 
 import { useMemo } from 'react';
 import { useParams } from 'next/navigation';
-import { collection, doc, query, where, orderBy } from 'firebase/firestore';
+import { collection, doc, query, where } from 'firebase/firestore';
 import { useCollectionOnce, useDocOnce, useFirestore } from '@/firebase';
 import type { Customer, Transaction } from '@/lib/types';
 import Link from 'next/link';
@@ -35,17 +35,20 @@ export default function CustomerDetailPage() {
       firestore,
       TRANSACTIONS_COLLECTION
     );
-    return query(
-      transactionsCollection,
-      where('customerId', '==', id),
-      orderBy('date', 'desc')
-    );
+    return query(transactionsCollection, where('customerId', '==', id));
   }, [firestore, id]);
 
   const { data: customer, loading: customerLoading } =
     useDocOnce<Customer>(customerRef);
   const { data: transactions, loading: transactionsLoading } =
     useCollectionOnce<Transaction>(transactionsQuery);
+
+  const sortedTransactions = useMemo(() => {
+    if (!transactions) return [];
+    return [...transactions].sort(
+      (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+    );
+  }, [transactions]);
 
   const loading = customerLoading || transactionsLoading;
 
@@ -70,7 +73,7 @@ export default function CustomerDetailPage() {
         <CustomerHeader customer={customer} />
       </div>
       <TransactionsView
-        transactions={transactions || []}
+        transactions={sortedTransactions}
         customerId={customer.id}
       />
     </div>
