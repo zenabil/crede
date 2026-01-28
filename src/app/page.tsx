@@ -1,9 +1,9 @@
 import { db } from '@/lib/data';
-import { CustomersTable } from '@/components/customers/customers-table';
 import { AddCustomerDialog } from '@/components/customers/add-customer-dialog';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { formatCurrency } from '@/lib/utils';
 import { Users, Wallet, TrendingUp, TrendingDown } from 'lucide-react';
+import { CustomerOverview } from '@/components/customers/customer-overview';
 
 export default async function DashboardPage() {
   const customers = await db.getCustomers();
@@ -86,14 +86,7 @@ export default async function DashboardPage() {
         </Card>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Aperçu des clients</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <CustomersTable customers={customers} />
-        </CardContent>
-      </Card>
+      <CustomerOverview customers={customers} />
     </div>
   );
 }
