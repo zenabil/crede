@@ -1,6 +1,7 @@
 'use client';
 
 import { useMemo } from 'react';
+import { useParams } from 'next/navigation';
 import { collection, doc, query, where, orderBy } from 'firebase/firestore';
 import { useCollectionOnce, useDocOnce, useFirestore } from '@/firebase';
 import type { Customer, Transaction } from '@/lib/types';
@@ -17,20 +18,19 @@ import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
 import CustomerDetailLoading from './loading';
 
-export default function CustomerDetailPage({
-  params: { id },
-}: {
-  params: { id: string };
-}) {
+export default function CustomerDetailPage() {
+  const params = useParams();
+  const id = params.id as string;
+
   const firestore = useFirestore();
 
   const customerRef = useMemo(() => {
-    if (!firestore) return null;
+    if (!firestore || !id) return null;
     return doc(firestore, CUSTOMERS_COLLECTION, id);
   }, [firestore, id]);
 
   const transactionsQuery = useMemo(() => {
-    if (!firestore) return null;
+    if (!firestore || !id) return null;
     const transactionsCollection = collection(
       firestore,
       TRANSACTIONS_COLLECTION
@@ -42,7 +42,8 @@ export default function CustomerDetailPage({
     );
   }, [firestore, id]);
 
-  const { data: customer, loading: customerLoading } = useDocOnce<Customer>(customerRef);
+  const { data: customer, loading: customerLoading } =
+    useDocOnce<Customer>(customerRef);
   const { data: transactions, loading: transactionsLoading } =
     useCollectionOnce<Transaction>(transactionsQuery);
 
