@@ -3,6 +3,7 @@
 import { useState, type FormEvent } from 'react';
 import { z } from 'zod';
 import { useToast } from '@/hooks/use-toast';
+import { useRouter } from 'next/navigation';
 
 interface UseFormSubmissionProps<T extends z.ZodType<any, any>> {
   schema: T;
@@ -24,6 +25,7 @@ export function useFormSubmission<T extends z.ZodType<any, any>>({
   config,
 }: UseFormSubmissionProps<T>) {
   const { toast } = useToast();
+  const router = useRouter();
   const [isPending, setIsPending] = useState(false);
   const [errors, setErrors] = useState<z.inferFormattedError<T> | undefined>(
     undefined
@@ -60,6 +62,7 @@ export function useFormSubmission<T extends z.ZodType<any, any>>({
         description: config?.successMessage || 'Opération réussie.',
       });
 
+      router.refresh();
       formRef.current?.reset();
       onSuccess?.();
     } catch (error) {

@@ -1,47 +1,41 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useMemo, useCallback } from 'react';
 import { useParams } from 'next/navigation';
-import { collection, doc, query, where } from 'firebase/firestore';
-import { useCollectionOnce, useDocOnce, useFirestore } from '@/firebase';
 import type { Customer, Transaction } from '@/lib/types';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 
-import {
-  CUSTOMERS_COLLECTION,
-  TRANSACTIONS_COLLECTION,
-} from '@/lib/firestore-collections';
 import { CustomerHeader } from '@/components/customers/customer-header';
 import { TransactionsView } from '@/components/transactions/transactions-view';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
 import CustomerDetailLoading from './loading';
+import { useDocOnce } from '@/hooks/use-doc-once';
+import { useCollectionOnce } from '@/hooks/use-collection-once';
+import {
+  getCustomerById,
+  getTransactionsByCustomerId,
+} from '@/lib/mock-data/api';
 
 export default function CustomerDetailPage() {
   const params = useParams();
   const id = params.id as string;
 
-  const firestore = useFirestore();
+  const fetchCustomer = useCallback(() => {
+    if (!id) return Promise.resolve(null);
+    return getCustomerById(id);
+  }, [id]);
 
-  const customerRef = useMemo(() => {
-    if (!firestore || !id) return null;
-    return doc(firestore, CUSTOMERS_COLLECTION, id);
-  }, [firestore, id]);
-
-  const transactionsQuery = useMemo(() => {
-    if (!firestore || !id) return null;
-    const transactionsCollection = collection(
-      firestore,
-      TRANSACTIONS_COLLECTION
-    );
-    return query(transactionsCollection, where('customerId', '==', id));
-  }, [firestore, id]);
+  const fetchTransactions = useCallback(() => {
+    if (!id) return Promise.resolve(null);
+    return getTransactionsByCustomerId(id);
+  }, [id]);
 
   const { data: customer, loading: customerLoading } =
-    useDocOnce<Customer>(customerRef);
+    useDocOnce<Customer>(fetchCustomer);
   const { data: transactions, loading: transactionsLoading } =
-    useCollectionOnce<Transaction>(transactionsQuery);
+    useCollectionOnce<Transaction>(fetchTransactions);
 
   const sortedTransactions = useMemo(() => {
     if (!transactions) return [];

@@ -2,19 +2,13 @@
 
 import { useRef } from 'react';
 import { z } from 'zod';
-import { useFirestore } from '@/firebase';
-import { collection, doc, writeBatch, increment } from 'firebase/firestore';
-import {
-  CUSTOMERS_COLLECTION,
-  TRANSACTIONS_COLLECTION,
-} from '@/lib/firestore-collections';
-
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { SubmitButton } from '@/components/forms/submit-button';
 import type { TransactionType } from '@/lib/types';
 import { useFormSubmission } from '@/hooks/use-form-submission';
+import { addTransaction } from '@/lib/mock-data/api';
 
 const transactionSchema = z.object({
   amount: z.coerce
@@ -38,7 +32,6 @@ export function AddTransactionForm({
   defaultAmount?: number;
   defaultDescription?: string;
 }) {
-  const firestore = useFirestore();
   const formRef = useRef<HTMLFormElement>(null);
 
   const text = type === 'debt' ? 'Ajouter la dette' : 'Ajouter le paiement';
@@ -52,26 +45,11 @@ export function AddTransactionForm({
       errorMessage: "Une erreur est survenue lors de l'ajout de la transaction.",
     },
     onSubmit: async (data) => {
-      if (!firestore) throw new Error('Firestore not available');
-
-      const batch = writeBatch(firestore);
-
-      // Create new transaction document
-      const transactionRef = doc(collection(firestore, TRANSACTIONS_COLLECTION));
-      batch.set(transactionRef, {
+      await addTransaction({
         ...data,
         customerId,
         type,
-        date: new Date().toISOString(),
       });
-
-      // Update customer balance
-      const customerRef = doc(firestore, CUSTOMERS_COLLECTION, customerId);
-      const incrementAmount =
-        type === 'debt' ? data.amount : -data.amount;
-      batch.update(customerRef, { balance: increment(incrementAmount) });
-
-      await batch.commit();
     },
   });
 

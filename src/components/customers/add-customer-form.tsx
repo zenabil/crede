@@ -2,14 +2,12 @@
 
 import { useRef } from 'react';
 import { z } from 'zod';
-import { useFirestore } from '@/firebase';
-import { collection, addDoc } from 'firebase/firestore';
-import { CUSTOMERS_COLLECTION } from '@/lib/firestore-collections';
 
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { SubmitButton } from '@/components/forms/submit-button';
 import { useFormSubmission } from '@/hooks/use-form-submission';
+import { addCustomer } from '@/lib/mock-data/api';
 
 const customerSchema = z.object({
   name: z
@@ -21,7 +19,6 @@ const customerSchema = z.object({
 });
 
 export function AddCustomerForm({ onSuccess }: { onSuccess?: () => void }) {
-  const firestore = useFirestore();
   const formRef = useRef<HTMLFormElement>(null);
 
   const { isPending, errors, handleSubmit } = useFormSubmission({
@@ -33,13 +30,7 @@ export function AddCustomerForm({ onSuccess }: { onSuccess?: () => void }) {
       errorMessage: "Une erreur est survenue lors de l'ajout du client.",
     },
     onSubmit: async (data) => {
-      if (!firestore) throw new Error('Firestore not available');
-      const customersCollection = collection(firestore, CUSTOMERS_COLLECTION);
-      await addDoc(customersCollection, {
-        ...data,
-        createdAt: new Date().toISOString(),
-        balance: 0,
-      });
+      await addCustomer(data);
     },
   });
 

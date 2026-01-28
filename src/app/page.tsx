@@ -1,10 +1,7 @@
 'use client';
 
-import { useMemo } from 'react';
-import { collection, query, orderBy } from 'firebase/firestore';
-import { useCollectionOnce, useFirestore } from '@/firebase';
+import { useMemo, useCallback } from 'react';
 import type { Customer } from '@/lib/types';
-import { CUSTOMERS_COLLECTION } from '@/lib/firestore-collections';
 
 import { AddCustomerDialog } from '@/components/customers/add-customer-dialog';
 import { formatCurrency } from '@/lib/utils';
@@ -12,18 +9,21 @@ import { Users, Wallet, TrendingUp, TrendingDown } from 'lucide-react';
 import { CustomerOverview } from '@/components/customers/customer-overview';
 import { StatCard } from '@/components/dashboard/stat-card';
 import Loading from './loading';
+import { useCollectionOnce } from '@/hooks/use-collection-once';
+import { getCustomers } from '@/lib/mock-data/api';
 
 export default function DashboardPage() {
-  const firestore = useFirestore();
-
-  const customersQuery = useMemo(() => {
-    if (!firestore) return null;
-    const customersCollection = collection(firestore, CUSTOMERS_COLLECTION);
-    return query(customersCollection, orderBy('createdAt', 'desc'));
-  }, [firestore]);
+  const fetchCustomers = useCallback(async () => {
+    const data = await getCustomers();
+    // Sort data here since the mock API doesn't support sorting
+    if (!data) return [];
+    return data.sort(
+      (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    );
+  }, []);
 
   const { data: customers, loading: customersLoading } =
-    useCollectionOnce<Customer>(customersQuery);
+    useCollectionOnce<Customer>(fetchCustomers);
 
   const { totalBalance, customersInDebt, customersWithCredit } = useMemo(() => {
     if (!customers) {
