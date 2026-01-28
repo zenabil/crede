@@ -33,9 +33,19 @@ function calculateBalance(customerId: string): number {
 
 async function getCustomers(): Promise<CustomerWithBalance[]> {
   await simulateDelay(500);
-  return customers.map(c => ({
-    ...c,
-    balance: calculateBalance(c.id),
+
+  const balances = transactions.reduce((acc, transaction) => {
+    const { customerId, type, amount } = transaction;
+    const currentBalance = acc.get(customerId) || 0;
+    const newBalance =
+      type === 'debt' ? currentBalance + amount : currentBalance - amount;
+    acc.set(customerId, newBalance);
+    return acc;
+  }, new Map<string, number>());
+
+  return customers.map(customer => ({
+    ...customer,
+    balance: balances.get(customer.id) || 0,
   }));
 }
 

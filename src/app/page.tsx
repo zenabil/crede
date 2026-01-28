@@ -9,12 +9,19 @@ export default async function DashboardPage() {
   const customers = await db.getCustomers();
 
   const totalCustomers = customers.length;
-  const totalBalance = customers.reduce(
-    (acc, customer) => acc + customer.balance,
-    0
-  );
-  const customersInDebt = customers.filter((c) => c.balance > 0).length;
-  const customersWithCredit = customers.filter((c) => c.balance < 0).length;
+  const { totalBalance, customersInDebt, customersWithCredit } =
+    customers.reduce(
+      (acc, customer) => {
+        acc.totalBalance += customer.balance;
+        if (customer.balance > 0) {
+          acc.customersInDebt++;
+        } else if (customer.balance < 0) {
+          acc.customersWithCredit++;
+        }
+        return acc;
+      },
+      { totalBalance: 0, customersInDebt: 0, customersWithCredit: 0 }
+    );
 
   return (
     <div className="flex flex-col gap-8">
