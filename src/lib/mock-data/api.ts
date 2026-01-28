@@ -131,6 +131,85 @@ export const updateCustomer = async (
   });
 };
 
+export const updateTransaction = async (
+  id: string,
+  data: { amount: number; description: string }
+): Promise<Transaction> => {
+  console.log(`Updating transaction ${id} with:`, data);
+  return new Promise((resolve, reject) => {
+    setTimeout(() => {
+      const transactionIndex = mockDataStore.transactions.findIndex(
+        (t) => t.id === id
+      );
+      if (transactionIndex === -1) {
+        return reject(new Error('Transaction not found'));
+      }
+
+      const oldTransaction = mockDataStore.transactions[transactionIndex];
+
+      const customerIndex = mockDataStore.customers.findIndex(
+        (c) => c.id === oldTransaction.customerId
+      );
+      if (customerIndex === -1) {
+        return reject(new Error('Associated customer not found'));
+      }
+
+      const amountDifference = data.amount - oldTransaction.amount;
+      const balanceChange =
+        oldTransaction.type === 'debt'
+          ? amountDifference
+          : -amountDifference;
+      mockDataStore.customers[customerIndex].balance += balanceChange;
+
+      // Update transaction
+      const updatedTransaction = {
+        ...oldTransaction,
+        ...data,
+      };
+      mockDataStore.transactions[transactionIndex] = updatedTransaction;
+
+      saveData();
+      resolve(JSON.parse(JSON.stringify(updatedTransaction)));
+    }, MOCK_API_LATENCY);
+  });
+};
+
+export const deleteTransaction = async (id: string): Promise<{ id: string }> => {
+  console.log(`Deleting transaction with id: ${id}`);
+  return new Promise((resolve, reject) => {
+    setTimeout(() => {
+      const transactionIndex = mockDataStore.transactions.findIndex(
+        (t) => t.id === id
+      );
+      if (transactionIndex === -1) {
+        return reject(new Error('Transaction not found'));
+      }
+
+      const transactionToDelete = mockDataStore.transactions[transactionIndex];
+      const customerIndex = mockDataStore.customers.findIndex(
+        (c) => c.id === transactionToDelete.customerId
+      );
+
+      if (customerIndex !== -1) {
+        // Revert balance change
+        const amountToRevert =
+          transactionToDelete.type === 'debt'
+            ? -transactionToDelete.amount
+            : transactionToDelete.amount;
+        mockDataStore.customers[customerIndex].balance += amountToRevert;
+      }
+
+      // Filter out the transaction
+      mockDataStore.transactions = mockDataStore.transactions.filter(
+        (t) => t.id !== id
+      );
+
+      saveData();
+      resolve({ id });
+    }, MOCK_API_LATENCY);
+  });
+};
+
 export const deleteCustomer = async (id: string): Promise<{ id: string }> => {
   console.log(`Deleting customer with id: ${id}`);
   return new Promise((resolve, reject) => {

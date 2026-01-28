@@ -12,6 +12,8 @@ import { Badge } from '@/components/ui/badge';
 import { ArrowUpRight, ArrowDownLeft } from 'lucide-react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
+import { EditTransactionDialog } from './edit-transaction-dialog';
+import { DeleteTransactionDialog } from './delete-transaction-dialog';
 
 export function TransactionsTable({
   transactions,
@@ -27,6 +29,7 @@ export function TransactionsTable({
             <TableHead>Type</TableHead>
             <TableHead>Date</TableHead>
             <TableHead className="text-right">Montant</TableHead>
+            <TableHead className="text-right">Actions</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -66,11 +69,20 @@ export function TransactionsTable({
                   {transaction.type === 'debt' ? '+' : '-'}
                   {formatCurrency(transaction.amount)}
                 </TableCell>
+                <TableCell className="text-right">
+                  <div className="flex items-center justify-end gap-0.5">
+                    <EditTransactionDialog transaction={transaction} />
+                    <DeleteTransactionDialog
+                      transactionId={transaction.id}
+                      transactionDescription={transaction.description}
+                    />
+                  </div>
+                </TableCell>
               </TableRow>
             ))
           ) : (
             <TableRow>
-              <TableCell colSpan={4} className="h-24 text-center">
+              <TableCell colSpan={5} className="h-24 text-center">
                 Aucune transaction pour le moment.
               </TableCell>
             </TableRow>
