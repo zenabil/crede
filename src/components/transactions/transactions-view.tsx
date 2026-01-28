@@ -4,8 +4,6 @@ import type { Transaction } from '@/lib/types';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { TransactionsTable } from './transactions-table';
 import { AddTransactionDialog } from './add-transaction-dialog';
-import { Button } from '../ui/button';
-import { PlusCircle, MinusCircle } from 'lucide-react';
 
 export function TransactionsView({
   transactions,
@@ -20,18 +18,8 @@ export function TransactionsView({
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <CardTitle>Historique des transactions</CardTitle>
           <div className="flex gap-2">
-            <AddTransactionDialog type="debt" customerId={customerId}>
-              <Button variant="outline">
-                <PlusCircle />
-                Ajouter une dette
-              </Button>
-            </AddTransactionDialog>
-            <AddTransactionDialog type="payment" customerId={customerId}>
-              <Button>
-                <MinusCircle />
-                Ajouter un paiement
-              </Button>
-            </AddTransactionDialog>
+            <AddTransactionDialog type="debt" customerId={customerId} />
+            <AddTransactionDialog type="payment" customerId={customerId} />
           </div>
         </div>
       </CardHeader>

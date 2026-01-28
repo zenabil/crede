@@ -12,7 +12,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { ArrowRight, PlusCircle } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { Button } from '@/components/ui/button';
@@ -66,12 +66,11 @@ export function CustomersTable({
                 </TableCell>
                 <TableCell className="text-right">
                   <div className="flex items-center justify-end gap-2">
-                    <AddTransactionDialog type="debt" customerId={customer.id}>
-                      <Button variant="outline" size="sm">
-                        <PlusCircle />
-                        Ajouter une dette
-                      </Button>
-                    </AddTransactionDialog>
+                    <AddTransactionDialog
+                      type="debt"
+                      customerId={customer.id}
+                      buttonProps={{ size: 'sm' }}
+                    />
                     <Button
                       variant="ghost"
                       size="icon"

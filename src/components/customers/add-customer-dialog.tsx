@@ -8,7 +8,7 @@ import { FormDialog } from '@/components/forms/form-dialog';
 export function AddCustomerDialog() {
   return (
     <FormDialog
-      title="Ajouter un nouveau client"
+      title="Ajouter un client"
       description="Remplissez les détails ci-dessous pour créer un nouveau profil client."
       trigger={
         <Button>
