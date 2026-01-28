@@ -75,7 +75,7 @@ export default function CustomerDetailPage() {
             Retour aux clients
           </Link>
         </Button>
-        <CustomerHeader customer={customer} />
+        <CustomerHeader customer={customer} transactions={sortedTransactions} />
       </div>
       <TransactionsView
         transactions={sortedTransactions}
