@@ -3,6 +3,7 @@ export interface Customer {
   name: string;
   phone: string;
   createdAt: string;
+  balance: number;
 }
 
 export type TransactionType = 'debt' | 'payment';
@@ -14,8 +15,4 @@ export interface Transaction {
   amount: number;
   date: string; // ISO Date string
   description: string;
-}
-
-export interface CustomerWithBalance extends Customer {
-  balance: number;
 }

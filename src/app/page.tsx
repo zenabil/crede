@@ -3,7 +3,7 @@
 import { useMemo } from 'react';
 import { collection } from 'firebase/firestore';
 import { useCollection, useFirestore, useUser } from '@/firebase';
-import type { Customer, Transaction, CustomerWithBalance } from '@/lib/types';
+import type { Customer } from '@/lib/types';
 
 import { AddCustomerDialog } from '@/components/customers/add-customer-dialog';
 import { formatCurrency } from '@/lib/utils';
@@ -21,36 +21,15 @@ export default function DashboardPage() {
     return collection(firestore, `users/${user.uid}/customers`);
   }, [firestore, user]);
 
-  const transactionsQuery = useMemo(() => {
-    if (!firestore || !user) return null;
-    return collection(firestore, `users/${user.uid}/transactions`);
-  }, [firestore, user]);
-
   const { data: customers, loading: customersLoading } =
     useCollection<Customer>(customersQuery);
-  const { data: transactions, loading: transactionsLoading } =
-    useCollection<Transaction>(transactionsQuery);
-
-  const customersWithBalance: CustomerWithBalance[] = useMemo(() => {
-    if (!customers || !transactions) return [];
-
-    const balances = transactions.reduce((acc, transaction) => {
-      const { customerId, type, amount } = transaction;
-      const currentBalance = acc.get(customerId) || 0;
-      const newBalance =
-        type === 'debt' ? currentBalance + amount : currentBalance - amount;
-      acc.set(customerId, newBalance);
-      return acc;
-    }, new Map<string, number>());
-
-    return customers.map((customer) => ({
-      ...customer,
-      balance: balances.get(customer.id) || 0,
-    }));
-  }, [customers, transactions]);
 
   const { totalBalance, customersInDebt, customersWithCredit } = useMemo(() => {
-    return customersWithBalance.reduce(
+    if (!customers) {
+      return { totalBalance: 0, customersInDebt: 0, customersWithCredit: 0 };
+    }
+
+    return customers.reduce(
       (acc, customer) => {
         acc.totalBalance += customer.balance;
         if (customer.balance > 0) {
@@ -62,11 +41,11 @@ export default function DashboardPage() {
       },
       { totalBalance: 0, customersInDebt: 0, customersWithCredit: 0 }
     );
-  }, [customersWithBalance]);
+  }, [customers]);
 
-  const totalCustomers = customersWithBalance.length;
+  const totalCustomers = customers?.length || 0;
 
-  if (customersLoading || transactionsLoading) {
+  if (customersLoading) {
     return <Loading />;
   }
 
@@ -106,7 +85,7 @@ export default function DashboardPage() {
         />
       </div>
 
-      <CustomerOverview customers={customersWithBalance} />
+      <CustomerOverview customers={customers || []} />
     </div>
   );
 }

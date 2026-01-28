@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import type { CustomerWithBalance } from '@/lib/types';
+import type { Customer } from '@/lib/types';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { CustomersTable } from './customers-table';
@@ -10,7 +10,7 @@ import { Search } from 'lucide-react';
 export function CustomerOverview({
   customers,
 }: {
-  customers: CustomerWithBalance[];
+  customers: Customer[];
 }) {
   const [searchTerm, setSearchTerm] = useState('');
 

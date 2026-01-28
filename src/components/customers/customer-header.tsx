@@ -1,4 +1,4 @@
-import type { CustomerWithBalance } from '@/lib/types';
+import type { Customer } from '@/lib/types';
 import { formatCurrency } from '@/lib/utils';
 import {
   Card,
@@ -14,7 +14,7 @@ import { fr } from 'date-fns/locale';
 export function CustomerHeader({
   customer,
 }: {
-  customer: CustomerWithBalance;
+  customer: Customer;
 }) {
   return (
     <Card>

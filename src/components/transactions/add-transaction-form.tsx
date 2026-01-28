@@ -3,7 +3,7 @@
 import { useState, useRef, type FormEvent } from 'react';
 import { z } from 'zod';
 import { useFirestore, useUser } from '@/firebase';
-import { collection, addDoc } from 'firebase/firestore';
+import { collection, doc, writeBatch, increment } from 'firebase/firestore';
 
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -67,16 +67,32 @@ export function AddTransactionForm({
     }
 
     try {
-      const transactionsCollection = collection(
-        firestore,
-        `users/${user.uid}/transactions`
+      const batch = writeBatch(firestore);
+
+      // Create new transaction document
+      const transactionRef = doc(
+        collection(firestore, `users/${user.uid}/transactions`)
       );
-      await addDoc(transactionsCollection, {
+      batch.set(transactionRef, {
         ...validatedFields.data,
         customerId,
         type,
         date: new Date().toISOString(),
       });
+
+      // Update customer balance
+      const customerRef = doc(
+        firestore,
+        `users/${user.uid}/customers`,
+        customerId
+      );
+      const incrementAmount =
+        type === 'debt'
+          ? validatedFields.data.amount
+          : -validatedFields.data.amount;
+      batch.update(customerRef, { balance: increment(incrementAmount) });
+
+      await batch.commit();
 
       toast({
         title: 'Succès !',

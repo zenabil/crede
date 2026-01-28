@@ -62,6 +62,7 @@ export function AddCustomerForm({ onSuccess }: { onSuccess?: () => void }) {
       await addDoc(customersCollection, {
         ...validatedFields.data,
         createdAt: new Date().toISOString(),
+        balance: 0,
       });
 
       toast({

@@ -3,7 +3,7 @@
 import { useMemo } from 'react';
 import { collection, doc, query, where } from 'firebase/firestore';
 import { useCollection, useDoc, useFirestore, useUser } from '@/firebase';
-import type { Customer, Transaction, CustomerWithBalance } from '@/lib/types';
+import type { Customer, Transaction } from '@/lib/types';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 
@@ -39,19 +39,6 @@ export default function CustomerDetailPage({
   const { data: transactions, loading: transactionsLoading } =
     useCollection<Transaction>(transactionsQuery);
 
-  const customerWithBalance: CustomerWithBalance | null = useMemo(() => {
-    if (!customer || !transactions) return null;
-
-    const balance = transactions.reduce((acc, t) => {
-      if (t.type === 'debt') {
-        return acc + t.amount;
-      }
-      return acc - t.amount;
-    }, 0);
-
-    return { ...customer, balance };
-  }, [customer, transactions]);
-
   const loading = customerLoading || transactionsLoading;
 
   if (loading) {
@@ -59,7 +46,7 @@ export default function CustomerDetailPage({
   }
 
   // After loading, if there's no customer, it's a 404
-  if (!customerWithBalance) {
+  if (!customer) {
     notFound();
   }
 
@@ -79,11 +66,11 @@ export default function CustomerDetailPage({
             Retour aux clients
           </Link>
         </Button>
-        <CustomerHeader customer={customerWithBalance} />
+        <CustomerHeader customer={customer} />
       </div>
       <TransactionsView
         transactions={sortedTransactions}
-        customerId={customerWithBalance.id}
+        customerId={customer.id}
       />
     </div>
   );

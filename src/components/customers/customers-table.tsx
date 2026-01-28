@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import type { CustomerWithBalance } from '@/lib/types';
+import type { Customer } from '@/lib/types';
 import { formatCurrency } from '@/lib/utils';
 import {
   Table,
@@ -19,7 +19,7 @@ import { AddTransactionDialog } from '@/components/transactions/add-transaction-
 export function CustomersTable({
   customers,
 }: {
-  customers: CustomerWithBalance[];
+  customers: Customer[];
 }) {
   return (
     <div className="overflow-hidden rounded-lg border">
