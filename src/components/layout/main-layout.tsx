@@ -14,9 +14,7 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (!loading && !user && auth) {
-      signInAnonymously(auth).catch((error) => {
-        console.error('Anonymous sign-in failed:', error);
-      });
+      signInAnonymously(auth);
     }
   }, [user, loading, auth]);
 
