@@ -15,31 +15,23 @@ export function useDocOnce<T>(docRef: DocumentReference<DocumentData> | null) {
       return;
     }
 
-    let isMounted = true;
     setLoading(true);
 
     getDoc(docRef)
       .then((doc) => {
-        if (isMounted) {
-          if (doc.exists()) {
-            setData({ id: doc.id, ...doc.data() } as T);
-          } else {
-            setData(null);
-          }
-          setLoading(false);
+        if (doc.exists()) {
+          setData({ id: doc.id, ...doc.data() } as T);
+        } else {
+          setData(null);
         }
       })
       .catch((err) => {
-        if (isMounted) {
-          console.error(err);
-          setError(err);
-          setLoading(false);
-        }
+        console.error(err);
+        setError(err);
+      })
+      .finally(() => {
+        setLoading(false);
       });
-
-    return () => {
-      isMounted = false;
-    };
   }, [docRef]);
 
   return { data, loading, error };

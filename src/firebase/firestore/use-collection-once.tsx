@@ -15,31 +15,23 @@ export function useCollectionOnce<T>(query: Query<DocumentData> | null) {
       return;
     }
 
-    let isMounted = true;
     setLoading(true);
 
     getDocs(query)
       .then((snapshot) => {
-        if (isMounted) {
-          const docs = snapshot.docs.map((doc) => ({
-            id: doc.id,
-            ...doc.data(),
-          })) as T[];
-          setData(docs);
-          setLoading(false);
-        }
+        const docs = snapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        })) as T[];
+        setData(docs);
       })
       .catch((err) => {
-        if (isMounted) {
-          console.error(err);
-          setError(err);
-          setLoading(false);
-        }
+        console.error(err);
+        setError(err);
+      })
+      .finally(() => {
+        setLoading(false);
       });
-
-    return () => {
-      isMounted = false;
-    };
   }, [query]);
 
   return { data, loading, error };
