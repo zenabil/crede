@@ -31,8 +31,7 @@ export function CustomersTable({
         <TableHeader>
           <TableRow>
             <TableHead>Nom</TableHead>
-            <TableHead className="hidden sm:table-cell">Email</TableHead>
-            <TableHead className="hidden md:table-cell">Téléphone</TableHead>
+            <TableHead className="hidden sm:table-cell">Téléphone</TableHead>
             <TableHead className="text-right">Solde</TableHead>
             <TableHead>
               <span className="sr-only">Voir</span>
@@ -49,9 +48,6 @@ export function CustomersTable({
               >
                 <TableCell className="font-medium">{customer.name}</TableCell>
                 <TableCell className="hidden sm:table-cell text-muted-foreground">
-                  {customer.email}
-                </TableCell>
-                <TableCell className="hidden md:table-cell text-muted-foreground">
                   {customer.phone}
                 </TableCell>
                 <TableCell className="text-right">
@@ -75,7 +71,7 @@ export function CustomersTable({
             ))
           ) : (
             <TableRow>
-              <TableCell colSpan={5} className="text-center h-24">
+              <TableCell colSpan={4} className="text-center h-24">
                 Aucun client trouvé.
               </TableCell>
             </TableRow>

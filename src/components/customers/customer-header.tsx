@@ -8,7 +8,7 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Mail, Phone } from 'lucide-react';
+import { Phone } from 'lucide-react';
 
 export function CustomerHeader({
   customer,
@@ -47,10 +47,6 @@ export function CustomerHeader({
       </CardHeader>
       <CardContent>
         <div className="flex flex-col sm:flex-row gap-4 sm:gap-8 text-sm text-muted-foreground">
-          <div className="flex items-center gap-2">
-            <Mail className="h-4 w-4" />
-            <span>{customer.email}</span>
-          </div>
           <div className="flex items-center gap-2">
             <Phone className="h-4 w-4" />
             <span>{customer.phone}</span>

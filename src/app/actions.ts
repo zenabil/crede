@@ -7,7 +7,6 @@ import type { TransactionType } from './lib/types';
 
 const customerSchema = z.object({
   name: z.string().min(2, { message: 'Le nom doit comporter au moins 2 caractères.' }),
-  email: z.string().email({ message: 'Veuillez saisir un e-mail valide.' }),
   phone: z
     .string()
     .min(10, { message: 'Le numéro de téléphone doit comporter au moins 10 caractères.' }),
@@ -28,7 +27,6 @@ export async function addCustomerAction(prevState: any, formData: FormData) {
   try {
     const validatedFields = customerSchema.safeParse({
       name: formData.get('name'),
-      email: formData.get('email'),
       phone: formData.get('phone'),
     });
 

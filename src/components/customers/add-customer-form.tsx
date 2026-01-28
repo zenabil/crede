@@ -22,7 +22,6 @@ import { Loader2 } from 'lucide-react';
 
 const customerSchema = z.object({
   name: z.string().min(2, { message: 'Le nom doit comporter au moins 2 caractères.' }),
-  email: z.string().email({ message: 'Veuillez saisir une adresse e-mail valide.' }),
   phone: z
     .string()
     .min(10, { message: 'Le numéro de téléphone doit comporter au moins 10 caractères.' }),
@@ -52,7 +51,6 @@ export function AddCustomerForm({ onSuccess }: { onSuccess: () => void }) {
     resolver: zodResolver(customerSchema),
     defaultValues: {
       name: '',
-      email: '',
       phone: '',
     },
   });
@@ -84,19 +82,6 @@ export function AddCustomerForm({ onSuccess }: { onSuccess: () => void }) {
               <FormLabel>Nom complet</FormLabel>
               <FormControl>
                 <Input placeholder="Jean Dupont" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
-          name="email"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Adresse e-mail</FormLabel>
-              <FormControl>
-                <Input placeholder="jean.dupont@example.com" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
