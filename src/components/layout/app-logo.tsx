@@ -9,18 +9,20 @@ export function AppLogo() {
       className="rounded-lg"
     >
       <rect width="32" height="32" rx="8" fill="hsl(var(--primary))" />
-      <text
-        x="50%"
-        y="50%"
-        dominantBaseline="middle"
-        textAnchor="middle"
-        fill="hsl(var(--primary-foreground))"
-        fontSize="16"
-        fontFamily="sans-serif"
-        fontWeight="bold"
-      >
-        CZ
-      </text>
+      <path
+        d="M9 22V10C9 8.89543 9.89543 8 11 8H21C22.1046 8 23 8.89543 23 10V22L16 19L9 22Z"
+        stroke="hsl(var(--primary-foreground))"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M9 22V10C9 8.89543 9.89543 8 11 8H13"
+        stroke="hsl(var(--primary-foreground))"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
     </svg>
   );
 }
