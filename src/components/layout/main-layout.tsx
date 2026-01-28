@@ -16,13 +16,12 @@ import {
 } from '@/components/ui/sidebar';
 import { Button } from '@/components/ui/button';
 import { AppLogo } from './app-logo';
-import { BarChart3, Users, PanelLeft } from 'lucide-react';
+import { Users, PanelLeft } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Sheet, SheetContent, SheetTrigger } from '../ui/sheet';
 
 const navItems = [
   { href: '/', label: 'Customers', icon: Users },
-  { href: '/reports', label: 'Reports', icon: BarChart3 },
 ];
 
 function NavContent() {

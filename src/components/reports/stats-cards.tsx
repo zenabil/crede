@@ -1,61 +1,103 @@
+'use client';
+
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
-import { formatCurrency } from '@/lib/utils';
-import { Users, CreditCard, Landmark, CircleDollarSign } from 'lucide-react';
+  SidebarProvider,
+  Sidebar,
+  SidebarTrigger,
+  SidebarInset,
+  SidebarHeader,
+  SidebarContent,
+  SidebarMenu,
+  SidebarMenuItem,
+  SidebarMenuButton,
+  SidebarFooter,
+} from '@/components/ui/sidebar';
+import { Button } from '@/components/ui/button';
+import { AppLogo } from './app-logo';
+import { Users, PanelLeft } from 'lucide-react';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { Sheet, SheetContent, SheetTrigger } from '../ui/sheet';
 
-type ReportData = {
-  totalDebts: number;
-  totalPayments: number;
-  netBalance: number;
-  customerCount: number;
-};
+const navItems = [
+  { href: '/', label: 'Customers', icon: Users },
+];
 
-export function StatsCards({ data }: { data: ReportData }) {
-  const stats = [
-    {
-      title: 'Net Balance',
-      value: formatCurrency(data.netBalance),
-      icon: CircleDollarSign,
-      description: 'Total debts minus total payments',
-    },
-    {
-      title: 'Total Debts',
-      value: formatCurrency(data.totalDebts),
-      icon: CreditCard,
-      description: 'Sum of all recorded debts',
-    },
-    {
-      title: 'Total Payments',
-      value: formatCurrency(data.totalPayments),
-      icon: Landmark,
-      description: 'Sum of all payments received',
-    },
-    {
-      title: 'Total Customers',
-      value: data.customerCount,
-      icon: Users,
-      description: 'Total number of customer profiles',
-    },
-  ];
+function NavContent() {
+  const pathname = usePathname();
+  return (
+    <>
+      <SidebarHeader className="p-4">
+        <div className="flex items-center gap-3">
+          <AppLogo />
+          <span className="text-xl font-semibold text-foreground">
+            Crédé zenagui
+          </span>
+        </div>
+      </SidebarHeader>
+      <SidebarContent>
+        <SidebarMenu>
+          {navItems.map((item) => (
+            <SidebarMenuItem key={item.href}>
+              <SidebarMenuButton
+                asChild
+                isActive={pathname === item.href}
+                tooltip={item.label}
+              >
+                <Link href={item.href}>
+                  <item.icon />
+                  <span>{item.label}</span>
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          ))}
+        </SidebarMenu>
+      </SidebarContent>
+      <SidebarFooter className="p-4">
+        <p className="text-xs text-muted-foreground">© 2024 Crédé zenagui</p>
+      </SidebarFooter>
+    </>
+  );
+}
+
+export function MainLayout({ children }: { children: React.ReactNode }) {
+  const isMobile = useIsMobile();
+  const pathname = usePathname();
+
+  if (isMobile) {
+    return (
+      <div className="flex min-h-screen w-full flex-col">
+        <header className="sticky top-0 z-10 flex h-16 items-center gap-4 border-b bg-background px-4 md:px-6">
+          <Sheet>
+            <SheetTrigger asChild>
+              <Button variant="outline" size="icon" className="shrink-0">
+                <PanelLeft className="h-5 w-5" />
+                <span className="sr-only">Toggle navigation menu</span>
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="left" className="flex flex-col p-0">
+              <NavContent />
+            </SheetContent>
+          </Sheet>
+          <div className="flex items-center gap-2">
+            <AppLogo />
+            <span className="text-lg font-semibold">Crédé zenagui</span>
+          </div>
+        </header>
+        <main className="flex-1 p-4 sm:p-6">{children}</main>
+      </div>
+    );
+  }
 
   return (
-    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-      {stats.map((stat) => (
-        <Card key={stat.title}>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">{stat.title}</CardTitle>
-            <stat.icon className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stat.value}</div>
-            <p className="text-xs text-muted-foreground">{stat.description}</p>
-          </CardContent>
-        </Card>
-      ))}
-    </div>
+    <SidebarProvider>
+      <Sidebar>
+        <NavContent />
+      </Sidebar>
+      <SidebarInset>
+        <main className="flex-1 p-6">{children}</main>
+      </SidebarInset>
+    </SidebarProvider>
   );
 }

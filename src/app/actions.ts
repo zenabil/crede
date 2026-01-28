@@ -79,7 +79,6 @@ export async function addTransactionAction(
 
     revalidatePath('/');
     revalidatePath(`/customers/${validatedFields.data.customerId}`);
-    revalidatePath('/reports');
     return {
       type: 'success',
       message: 'Transaction recorded successfully.',
