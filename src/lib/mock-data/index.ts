@@ -1,3 +1,6 @@
+// This file simulates the data structure of a database.xlsx file
+// with 'customers' and 'transactions' sheets.
+
 import type { Customer, Transaction } from '@/lib/types';
 import { subDays } from 'date-fns';
 
