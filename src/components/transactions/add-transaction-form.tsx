@@ -23,7 +23,7 @@ export function AddTransactionForm({
 }: {
   type: TransactionType;
   customerId: string;
-  onSuccess: () => void;
+  onSuccess?: () => void;
 }) {
   const [state, formAction] = useActionState(addTransactionAction, initialState);
   const formRef = useRef<HTMLFormElement>(null);
@@ -31,7 +31,7 @@ export function AddTransactionForm({
 
   useFormFeedback(state, () => {
     formRef.current?.reset();
-    onSuccess();
+    onSuccess?.();
   });
 
   return (

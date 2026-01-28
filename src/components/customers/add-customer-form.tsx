@@ -14,13 +14,13 @@ const initialState: ActionState = {
   errors: {},
 };
 
-export function AddCustomerForm({ onSuccess }: { onSuccess: () => void }) {
+export function AddCustomerForm({ onSuccess }: { onSuccess?: () => void }) {
   const [state, formAction] = useActionState(addCustomerAction, initialState);
   const formRef = useRef<HTMLFormElement>(null);
 
   useFormFeedback(state, () => {
     formRef.current?.reset();
-    onSuccess();
+    onSuccess?.();
   });
 
   return (

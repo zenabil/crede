@@ -1,16 +1,8 @@
 'use client';
 
-import { useState } from 'react';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from '@/components/ui/dialog';
 import { AddTransactionForm } from './add-transaction-form';
 import type { TransactionType } from '@/lib/types';
+import { FormDialog } from '@/components/forms/form-dialog';
 
 export function AddTransactionDialog({
   type,
@@ -21,31 +13,21 @@ export function AddTransactionDialog({
   customerId: string;
   children: React.ReactNode;
 }) {
-  const [open, setOpen] = useState(false);
-
   const title =
-    type === 'debt' ? 'Ajouter une nouvelle dette' : 'Ajouter un nouveau paiement';
+    type === 'debt'
+      ? 'Ajouter une nouvelle dette'
+      : 'Ajouter un nouveau paiement';
   const description =
     type === 'debt'
       ? "Ajoutez une nouvelle dette due par le client. Cela augmentera le solde du client."
       : "Ajoutez un paiement reçu du client. Cela diminuera le solde du client.";
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>{children}</DialogTrigger>
-      <DialogContent className="sm:max-w-[425px]">
-        <DialogHeader>
-          <DialogTitle>{title}</DialogTitle>
-          <DialogDescription>{description}</DialogDescription>
-        </DialogHeader>
-        <div className="py-4">
-          <AddTransactionForm
-            type={type}
-            customerId={customerId}
-            onSuccess={() => setOpen(false)}
-          />
-        </div>
-      </DialogContent>
-    </Dialog>
+    <FormDialog
+      title={title}
+      description={description}
+      trigger={children}
+      form={<AddTransactionForm type={type} customerId={customerId} />}
+    />
   );
 }
