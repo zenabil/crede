@@ -24,11 +24,11 @@ export function AddTransactionDialog({
   const [open, setOpen] = useState(false);
 
   const title =
-    type === 'debt' ? 'Record New Debt' : 'Record New Payment';
+    type === 'debt' ? 'Enregistrer une nouvelle dette' : 'Enregistrer un nouveau paiement';
   const description =
     type === 'debt'
-      ? "Add a new debt owed by the customer. This will increase the customer's balance."
-      : "Record a payment received from the customer. This will decrease the customer's balance.";
+      ? "Ajoutez une nouvelle dette due par le client. Cela augmentera le solde du client."
+      : "Enregistrez un paiement reçu du client. Cela diminuera le solde du client.";
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>

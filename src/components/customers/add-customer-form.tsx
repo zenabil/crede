@@ -21,11 +21,11 @@ import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
 
 const customerSchema = z.object({
-  name: z.string().min(2, { message: 'Name must be at least 2 characters.' }),
-  email: z.string().email({ message: 'Please enter a valid email.' }),
+  name: z.string().min(2, { message: 'Le nom doit comporter au moins 2 caractères.' }),
+  email: z.string().email({ message: 'Veuillez saisir une adresse e-mail valide.' }),
   phone: z
     .string()
-    .min(10, { message: 'Phone number must be at least 10 characters.' }),
+    .min(10, { message: 'Le numéro de téléphone doit comporter au moins 10 caractères.' }),
 });
 
 type CustomerFormValues = z.infer<typeof customerSchema>;
@@ -39,7 +39,7 @@ function SubmitButton() {
   const { pending } = useFormStatus();
   return (
     <Button type="submit" disabled={pending} className="w-full">
-      {pending ? <Loader2 className="animate-spin" /> : 'Add Customer'}
+      {pending ? <Loader2 className="animate-spin" /> : 'Ajouter le client'}
     </Button>
   );
 }
@@ -60,13 +60,13 @@ export function AddCustomerForm({ onSuccess }: { onSuccess: () => void }) {
   useEffect(() => {
     if (state.type === 'success') {
       toast({
-        title: 'Success!',
+        title: 'Succès !',
         description: state.message,
       });
       onSuccess();
     } else if (state.type === 'error') {
       toast({
-        title: 'Error',
+        title: 'Erreur',
         description: state.message,
         variant: 'destructive',
       });
@@ -81,9 +81,9 @@ export function AddCustomerForm({ onSuccess }: { onSuccess: () => void }) {
           name="name"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Full Name</FormLabel>
+              <FormLabel>Nom complet</FormLabel>
               <FormControl>
-                <Input placeholder="John Doe" {...field} />
+                <Input placeholder="Jean Dupont" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -94,9 +94,9 @@ export function AddCustomerForm({ onSuccess }: { onSuccess: () => void }) {
           name="email"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Email Address</FormLabel>
+              <FormLabel>Adresse e-mail</FormLabel>
               <FormControl>
-                <Input placeholder="john.doe@example.com" {...field} />
+                <Input placeholder="jean.dupont@example.com" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -107,9 +107,9 @@ export function AddCustomerForm({ onSuccess }: { onSuccess: () => void }) {
           name="phone"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Phone Number</FormLabel>
+              <FormLabel>Numéro de téléphone</FormLabel>
               <FormControl>
-                <Input placeholder="123-456-7890" {...field} />
+                <Input placeholder="01-23-45-67-89" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>

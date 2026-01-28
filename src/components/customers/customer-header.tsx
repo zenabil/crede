@@ -22,15 +22,15 @@ export function CustomerHeader({
           <div>
             <CardTitle className="text-2xl">{customer.name}</CardTitle>
             <CardDescription>
-              Customer since{' '}
-              {new Date().toLocaleDateString('en-US', {
+              Client depuis{' '}
+              {new Date().toLocaleDateString('fr-FR', {
                 year: 'numeric',
                 month: 'long',
               })}
             </CardDescription>
           </div>
           <div className="text-left sm:text-right">
-            <p className="text-sm text-muted-foreground">Current Balance</p>
+            <p className="text-sm text-muted-foreground">Solde actuel</p>
             <p
               className={`text-3xl font-bold ${
                 customer.balance > 0

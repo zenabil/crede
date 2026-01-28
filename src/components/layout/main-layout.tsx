@@ -10,7 +10,7 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
         <Link href="/" className="flex items-center gap-3">
           <AppLogo />
           <span className="text-xl font-semibold text-foreground">
-            Crédé zenagui
+            Gestion de Crédit
           </span>
         </Link>
       </header>

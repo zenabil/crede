@@ -21,14 +21,14 @@ export function AddCustomerDialog() {
       <DialogTrigger asChild>
         <Button>
           <PlusCircle className="mr-2 h-4 w-4" />
-          Add Customer
+          Ajouter un client
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Add a New Customer</DialogTitle>
+          <DialogTitle>Ajouter un nouveau client</DialogTitle>
           <DialogDescription>
-            Fill in the details below to create a new customer profile.
+            Remplissez les détails ci-dessous pour créer un nouveau profil client.
           </DialogDescription>
         </DialogHeader>
         <div className="py-4">

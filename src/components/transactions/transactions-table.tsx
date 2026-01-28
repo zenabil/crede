@@ -11,6 +11,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { ArrowUpRight, ArrowDownLeft } from 'lucide-react';
 import { format } from 'date-fns';
+import { fr } from 'date-fns/locale';
 
 export function TransactionsTable({
   transactions,
@@ -25,7 +26,7 @@ export function TransactionsTable({
             <TableHead>Description</TableHead>
             <TableHead>Type</TableHead>
             <TableHead>Date</TableHead>
-            <TableHead className="text-right">Amount</TableHead>
+            <TableHead className="text-right">Montant</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -47,11 +48,13 @@ export function TransactionsTable({
                     ) : (
                       <ArrowDownLeft className="mr-1 h-3 w-3" />
                     )}
-                    {transaction.type}
+                    {transaction.type === 'debt' ? 'Dette' : 'Paiement'}
                   </Badge>
                 </TableCell>
                 <TableCell className="text-muted-foreground">
-                  {format(new Date(transaction.date), 'MMM dd, yyyy')}
+                  {format(new Date(transaction.date), 'dd MMM yyyy', {
+                    locale: fr,
+                  })}
                 </TableCell>
                 <TableCell
                   className={`text-right font-mono font-medium ${
@@ -68,7 +71,7 @@ export function TransactionsTable({
           ) : (
             <TableRow>
               <TableCell colSpan={4} className="h-24 text-center">
-                No transactions yet.
+                Aucune transaction pour le moment.
               </TableCell>
             </TableRow>
           )}

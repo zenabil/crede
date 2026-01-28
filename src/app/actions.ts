@@ -6,20 +6,20 @@ import { revalidatePath } from 'next/cache';
 import type { TransactionType } from './lib/types';
 
 const customerSchema = z.object({
-  name: z.string().min(2, { message: 'Name must be at least 2 characters.' }),
-  email: z.string().email({ message: 'Please enter a valid email.' }),
+  name: z.string().min(2, { message: 'Le nom doit comporter au moins 2 caractères.' }),
+  email: z.string().email({ message: 'Veuillez saisir un e-mail valide.' }),
   phone: z
     .string()
-    .min(10, { message: 'Phone number must be at least 10 characters.' }),
+    .min(10, { message: 'Le numéro de téléphone doit comporter au moins 10 caractères.' }),
 });
 
 const transactionSchema = z.object({
   amount: z.coerce
     .number()
-    .positive({ message: 'Amount must be a positive number.' }),
+    .positive({ message: 'Le montant doit être un nombre positif.' }),
   description: z
     .string()
-    .min(3, { message: 'Description must be at least 3 characters.' }),
+    .min(3, { message: 'La description doit comporter au moins 3 caractères.' }),
   customerId: z.string(),
   type: z.enum(['debt', 'payment']),
 });
@@ -36,18 +36,18 @@ export async function addCustomerAction(prevState: any, formData: FormData) {
       return {
         type: 'error',
         errors: validatedFields.error.flatten().fieldErrors,
-        message: 'Please correct the errors below.',
+        message: 'Veuillez corriger les erreurs ci-dessous.',
       };
     }
 
     await db.addCustomer(validatedFields.data);
 
     revalidatePath('/');
-    return { type: 'success', message: 'Customer added successfully.' };
+    return { type: 'success', message: 'Client ajouté avec succès.' };
   } catch (e) {
     return {
       type: 'error',
-      message: 'An unexpected error occurred.',
+      message: 'Une erreur inattendue est survenue.',
     };
   }
 }
@@ -68,7 +68,7 @@ export async function addTransactionAction(
       return {
         type: 'error',
         errors: validatedFields.error.flatten().fieldErrors,
-        message: 'Please correct the errors below.',
+        message: 'Veuillez corriger les erreurs ci-dessous.',
       };
     }
     
@@ -81,12 +81,12 @@ export async function addTransactionAction(
     revalidatePath(`/customers/${validatedFields.data.customerId}`);
     return {
       type: 'success',
-      message: 'Transaction recorded successfully.',
+      message: 'Transaction enregistrée avec succès.',
     };
   } catch (e) {
     return {
       type: 'error',
-      message: 'An unexpected error occurred.',
+      message: 'Une erreur inattendue est survenue.',
     };
   }
 }

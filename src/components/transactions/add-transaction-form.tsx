@@ -25,10 +25,10 @@ import type { TransactionType } from '@/lib/types';
 const transactionSchema = z.object({
   amount: z.coerce
     .number()
-    .positive({ message: 'Amount must be a positive number.' }),
+    .positive({ message: 'Le montant doit être un nombre positif.' }),
   description: z
     .string()
-    .min(3, { message: 'Description must be at least 3 characters.' }),
+    .min(3, { message: 'La description doit comporter au moins 3 caractères.' }),
 });
 
 type TransactionFormValues = z.infer<typeof transactionSchema>;
@@ -40,7 +40,7 @@ const initialState = {
 
 function SubmitButton({ type }: { type: TransactionType }) {
   const { pending } = useFormStatus();
-  const text = type === 'debt' ? 'Add Debt' : 'Add Payment';
+  const text = type === 'debt' ? 'Ajouter une dette' : 'Ajouter un paiement';
   return (
     <Button type="submit" disabled={pending} className="w-full">
       {pending ? <Loader2 className="animate-spin" /> : text}
@@ -71,13 +71,13 @@ export function AddTransactionForm({
   useEffect(() => {
     if (state.type === 'success') {
       toast({
-        title: 'Success!',
+        title: 'Succès !',
         description: state.message,
       });
       onSuccess();
     } else if (state.type === 'error') {
       toast({
-        title: 'Error',
+        title: 'Erreur',
         description: state.message,
         variant: 'destructive',
       });
@@ -95,7 +95,7 @@ export function AddTransactionForm({
           name="amount"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Amount</FormLabel>
+              <FormLabel>Montant</FormLabel>
               <FormControl>
                 <Input type="number" step="0.01" {...field} />
               </FormControl>
@@ -110,7 +110,7 @@ export function AddTransactionForm({
             <FormItem>
               <FormLabel>Description</FormLabel>
               <FormControl>
-                <Textarea placeholder="e.g. Website design services" {...field} />
+                <Textarea placeholder="ex: Services de conception de sites Web" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>

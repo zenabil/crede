@@ -30,12 +30,12 @@ export function CustomersTable({
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>Name</TableHead>
+            <TableHead>Nom</TableHead>
             <TableHead className="hidden sm:table-cell">Email</TableHead>
-            <TableHead className="hidden md:table-cell">Phone</TableHead>
-            <TableHead className="text-right">Balance</TableHead>
+            <TableHead className="hidden md:table-cell">Téléphone</TableHead>
+            <TableHead className="text-right">Solde</TableHead>
             <TableHead>
-              <span className="sr-only">View</span>
+              <span className="sr-only">Voir</span>
             </TableHead>
           </TableRow>
         </TableHeader>
@@ -76,7 +76,7 @@ export function CustomersTable({
           ) : (
             <TableRow>
               <TableCell colSpan={5} className="text-center h-24">
-                No customers found.
+                Aucun client trouvé.
               </TableCell>
             </TableRow>
           )}

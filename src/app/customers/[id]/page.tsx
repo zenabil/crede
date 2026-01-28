@@ -25,7 +25,7 @@ export default async function CustomerDetailPage({
         <Button asChild variant="ghost" className="mb-4">
           <Link href="/">
             <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to Customers
+            Retour aux clients
           </Link>
         </Button>
         <CustomerHeader customer={customer} />

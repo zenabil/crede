@@ -18,18 +18,18 @@ export function TransactionsView({
     <Card>
       <CardHeader>
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-          <CardTitle>Transaction History</CardTitle>
+          <CardTitle>Historique des transactions</CardTitle>
           <div className="flex gap-2">
             <AddTransactionDialog type="debt" customerId={customerId}>
               <Button variant="outline">
                 <PlusCircle className="mr-2 h-4 w-4" />
-                Record Debt
+                Enregistrer une dette
               </Button>
             </AddTransactionDialog>
             <AddTransactionDialog type="payment" customerId={customerId}>
               <Button>
                 <MinusCircle className="mr-2 h-4 w-4" />
-                Record Payment
+                Enregistrer un paiement
               </Button>
             </AddTransactionDialog>
           </div>
