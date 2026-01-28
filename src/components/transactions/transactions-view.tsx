@@ -23,13 +23,13 @@ export function TransactionsView({
             <AddTransactionDialog type="debt" customerId={customerId}>
               <Button variant="outline">
                 <PlusCircle />
-                Enregistrer une dette
+                Ajouter une dette
               </Button>
             </AddTransactionDialog>
             <AddTransactionDialog type="payment" customerId={customerId}>
               <Button>
                 <MinusCircle />
-                Enregistrer un paiement
+                Ajouter un paiement
               </Button>
             </AddTransactionDialog>
           </div>

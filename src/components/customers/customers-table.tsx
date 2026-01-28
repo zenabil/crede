@@ -25,10 +25,6 @@ export function CustomersTable({
 }) {
   const router = useRouter();
 
-  const handleRowClick = (customerId: string) => {
-    router.push(`/customers/${customerId}`);
-  };
-
   return (
     <div className="overflow-hidden rounded-lg border">
       <Table>
@@ -79,7 +75,7 @@ export function CustomersTable({
                     <Button
                       variant="ghost"
                       size="icon"
-                      onClick={() => handleRowClick(customer.id)}
+                      onClick={() => router.push(`/customers/${customer.id}`)}
                     >
                       <span className="sr-only">Voir les détails</span>
                       <ArrowRight />
