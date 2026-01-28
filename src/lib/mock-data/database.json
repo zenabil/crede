@@ -1,0 +1,59 @@
+{
+  "customers": [
+    {
+      "id": "1",
+      "name": "Jean Dupont",
+      "phone": "01-23-45-67-89",
+      "createdAt": "2024-07-15T10:30:00Z",
+      "balance": 15000
+    },
+    {
+      "id": "2",
+      "name": "Marie Curie",
+      "phone": "09-87-65-43-21",
+      "createdAt": "2024-06-25T15:00:00Z",
+      "balance": -5000
+    },
+    {
+      "id": "3",
+      "name": "Pierre Martin",
+      "phone": "06-11-22-33-44",
+      "createdAt": "2024-07-20T09:00:00Z",
+      "balance": 0
+    }
+  ],
+  "transactions": [
+    {
+      "id": "t1",
+      "customerId": "1",
+      "type": "debt",
+      "amount": 20000,
+      "date": "2024-07-17T11:00:00Z",
+      "description": "Achat de matériel"
+    },
+    {
+      "id": "t2",
+      "customerId": "1",
+      "type": "payment",
+      "amount": 5000,
+      "date": "2024-07-23T14:20:00Z",
+      "description": "Paiement partiel"
+    },
+    {
+      "id": "t3",
+      "customerId": "2",
+      "type": "debt",
+      "amount": 10000,
+      "date": "2024-06-30T18:00:00Z",
+      "description": "Services rendus"
+    },
+    {
+      "id": "t4",
+      "customerId": "2",
+      "type": "payment",
+      "amount": 15000,
+      "date": "2024-07-10T13:00:00Z",
+      "description": "Paiement complet et avance"
+    }
+  ]
+}
