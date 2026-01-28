@@ -1,7 +1,6 @@
 'use client';
 
-import { useFormState } from 'react-dom';
-import { useRef } from 'react';
+import { useActionState, useRef } from 'react';
 import { addCustomerAction, type ActionState } from '@/app/actions';
 
 import { Input } from '@/components/ui/input';
@@ -16,7 +15,7 @@ const initialState: ActionState = {
 };
 
 export function AddCustomerForm({ onSuccess }: { onSuccess: () => void }) {
-  const [state, formAction] = useFormState(addCustomerAction, initialState);
+  const [state, formAction] = useActionState(addCustomerAction, initialState);
   const formRef = useRef<HTMLFormElement>(null);
 
   useFormFeedback(state, () => {

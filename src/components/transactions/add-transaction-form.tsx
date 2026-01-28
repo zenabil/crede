@@ -1,7 +1,6 @@
 'use client';
 
-import { useFormState } from 'react-dom';
-import { useRef } from 'react';
+import { useActionState, useRef } from 'react';
 import { addTransactionAction, type ActionState } from '@/app/actions';
 
 import { Input } from '@/components/ui/input';
@@ -26,7 +25,7 @@ export function AddTransactionForm({
   customerId: string;
   onSuccess: () => void;
 }) {
-  const [state, formAction] = useFormState(addTransactionAction, initialState);
+  const [state, formAction] = useActionState(addTransactionAction, initialState);
   const formRef = useRef<HTMLFormElement>(null);
   const text = type === 'debt' ? 'Ajouter une dette' : 'Ajouter un paiement';
 
