@@ -39,7 +39,7 @@ export function TransactionsTable({
                 <TableCell>
                   <Badge
                     variant={
-                      transaction.type === 'debt' ? 'destructive' : 'secondary'
+                      transaction.type === 'debt' ? 'destructive' : 'success'
                     }
                     className="capitalize"
                   >
@@ -60,7 +60,7 @@ export function TransactionsTable({
                   className={`text-right font-mono font-medium ${
                     transaction.type === 'debt'
                       ? 'text-destructive'
-                      : 'text-green-600'
+                      : 'text-accent'
                   }`}
                 >
                   {transaction.type === 'debt' ? '+' : '-'}

@@ -60,7 +60,7 @@ export function CustomersTable({
                       customer.balance > 0
                         ? 'destructive'
                         : customer.balance < 0
-                        ? 'secondary'
+                        ? 'success'
                         : 'default'
                     }
                     className="font-mono"

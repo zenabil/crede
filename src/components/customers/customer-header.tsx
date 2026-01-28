@@ -37,7 +37,7 @@ export function CustomerHeader({
                 customer.balance > 0
                   ? 'text-destructive'
                   : customer.balance < 0
-                  ? 'text-green-600'
+                  ? 'text-accent'
                   : 'text-foreground'
               }`}
             >
