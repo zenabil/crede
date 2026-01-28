@@ -4,6 +4,7 @@ import { useMemo } from 'react';
 import { collection, query, orderBy } from 'firebase/firestore';
 import { useCollectionOnce, useFirestore } from '@/firebase';
 import type { Customer } from '@/lib/types';
+import { CUSTOMERS_COLLECTION } from '@/lib/firestore-collections';
 
 import { AddCustomerDialog } from '@/components/customers/add-customer-dialog';
 import { formatCurrency } from '@/lib/utils';
@@ -17,7 +18,7 @@ export default function DashboardPage() {
 
   const customersQuery = useMemo(() => {
     if (!firestore) return null;
-    const customersCollection = collection(firestore, `customers`);
+    const customersCollection = collection(firestore, CUSTOMERS_COLLECTION);
     return query(customersCollection, orderBy('createdAt', 'desc'));
   }, [firestore]);
 

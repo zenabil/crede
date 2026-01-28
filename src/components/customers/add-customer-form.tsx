@@ -4,6 +4,7 @@ import { useRef } from 'react';
 import { z } from 'zod';
 import { useFirestore } from '@/firebase';
 import { collection, addDoc } from 'firebase/firestore';
+import { CUSTOMERS_COLLECTION } from '@/lib/firestore-collections';
 
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -33,7 +34,7 @@ export function AddCustomerForm({ onSuccess }: { onSuccess?: () => void }) {
     },
     onSubmit: async (data) => {
       if (!firestore) throw new Error('Firestore not available');
-      const customersCollection = collection(firestore, 'customers');
+      const customersCollection = collection(firestore, CUSTOMERS_COLLECTION);
       await addDoc(customersCollection, {
         ...data,
         createdAt: new Date().toISOString(),

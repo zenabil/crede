@@ -4,6 +4,10 @@ import { useRef } from 'react';
 import { z } from 'zod';
 import { useFirestore } from '@/firebase';
 import { collection, doc, writeBatch, increment } from 'firebase/firestore';
+import {
+  CUSTOMERS_COLLECTION,
+  TRANSACTIONS_COLLECTION,
+} from '@/lib/firestore-collections';
 
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -49,7 +53,7 @@ export function AddTransactionForm({
       const batch = writeBatch(firestore);
 
       // Create new transaction document
-      const transactionRef = doc(collection(firestore, 'transactions'));
+      const transactionRef = doc(collection(firestore, TRANSACTIONS_COLLECTION));
       batch.set(transactionRef, {
         ...data,
         customerId,
@@ -58,7 +62,7 @@ export function AddTransactionForm({
       });
 
       // Update customer balance
-      const customerRef = doc(firestore, 'customers', customerId);
+      const customerRef = doc(firestore, CUSTOMERS_COLLECTION, customerId);
       const incrementAmount =
         type === 'debt' ? data.amount : -data.amount;
       batch.update(customerRef, { balance: increment(incrementAmount) });

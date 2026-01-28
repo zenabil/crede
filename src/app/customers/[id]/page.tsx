@@ -7,6 +7,10 @@ import type { Customer, Transaction } from '@/lib/types';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 
+import {
+  CUSTOMERS_COLLECTION,
+  TRANSACTIONS_COLLECTION,
+} from '@/lib/firestore-collections';
 import { CustomerHeader } from '@/components/customers/customer-header';
 import { TransactionsView } from '@/components/transactions/transactions-view';
 import { Button } from '@/components/ui/button';
@@ -22,14 +26,14 @@ export default function CustomerDetailPage({
 
   const customerRef = useMemo(() => {
     if (!firestore) return null;
-    return doc(firestore, `customers`, params.id);
+    return doc(firestore, CUSTOMERS_COLLECTION, params.id);
   }, [firestore, params.id]);
 
   const transactionsQuery = useMemo(() => {
     if (!firestore) return null;
     const transactionsCollection = collection(
       firestore,
-      `transactions`
+      TRANSACTIONS_COLLECTION
     );
     return query(
       transactionsCollection,
