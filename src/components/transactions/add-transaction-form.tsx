@@ -2,7 +2,7 @@
 
 import { useState, useRef, type FormEvent } from 'react';
 import { z } from 'zod';
-import { useFirestore, useUser } from '@/firebase';
+import { useFirestore } from '@/firebase';
 import { collection, doc, writeBatch, increment } from 'firebase/firestore';
 
 import { Input } from '@/components/ui/input';
@@ -32,7 +32,6 @@ export function AddTransactionForm({
   customerId: string;
   onSuccess?: () => void;
 }) {
-  const { user } = useUser();
   const firestore = useFirestore();
   const formRef = useRef<HTMLFormElement>(null);
   const { toast } = useToast();
@@ -44,7 +43,7 @@ export function AddTransactionForm({
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (!firestore || !user) return;
+    if (!firestore) return;
 
     setIsPending(true);
     setErrors(undefined);
@@ -71,7 +70,7 @@ export function AddTransactionForm({
 
       // Create new transaction document
       const transactionRef = doc(
-        collection(firestore, `users/${user.uid}/transactions`)
+        collection(firestore, `transactions`)
       );
       batch.set(transactionRef, {
         ...validatedFields.data,
@@ -83,7 +82,7 @@ export function AddTransactionForm({
       // Update customer balance
       const customerRef = doc(
         firestore,
-        `users/${user.uid}/customers`,
+        `customers`,
         customerId
       );
       const incrementAmount =

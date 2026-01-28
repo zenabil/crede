@@ -2,7 +2,7 @@
 
 import { useMemo } from 'react';
 import { collection, doc, query, where, orderBy } from 'firebase/firestore';
-import { useCollectionOnce, useDocOnce, useFirestore, useUser } from '@/firebase';
+import { useCollectionOnce, useDocOnce, useFirestore } from '@/firebase';
 import type { Customer, Transaction } from '@/lib/types';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
@@ -18,26 +18,25 @@ export default function CustomerDetailPage({
 }: {
   params: { id: string };
 }) {
-  const { user } = useUser();
   const firestore = useFirestore();
 
   const customerRef = useMemo(() => {
-    if (!firestore || !user) return null;
-    return doc(firestore, `users/${user.uid}/customers`, params.id);
-  }, [firestore, user, params.id]);
+    if (!firestore) return null;
+    return doc(firestore, `customers`, params.id);
+  }, [firestore, params.id]);
 
   const transactionsQuery = useMemo(() => {
-    if (!firestore || !user) return null;
+    if (!firestore) return null;
     const transactionsCollection = collection(
       firestore,
-      `users/${user.uid}/transactions`
+      `transactions`
     );
     return query(
       transactionsCollection,
       where('customerId', '==', params.id),
       orderBy('date', 'desc')
     );
-  }, [firestore, user, params.id]);
+  }, [firestore, params.id]);
 
   const { data: customer, loading: customerLoading } = useDocOnce<Customer>(customerRef);
   const { data: transactions, loading: transactionsLoading } =

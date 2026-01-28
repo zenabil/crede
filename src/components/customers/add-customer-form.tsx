@@ -2,7 +2,7 @@
 
 import { useState, useRef, type FormEvent } from 'react';
 import { z } from 'zod';
-import { useFirestore, useUser } from '@/firebase';
+import { useFirestore } from '@/firebase';
 import { collection, addDoc } from 'firebase/firestore';
 
 import { Input } from '@/components/ui/input';
@@ -22,7 +22,6 @@ const customerSchema = z.object({
 type FormErrors = z.inferFormattedError<typeof customerSchema> | undefined;
 
 export function AddCustomerForm({ onSuccess }: { onSuccess?: () => void }) {
-  const { user } = useUser();
   const firestore = useFirestore();
   const formRef = useRef<HTMLFormElement>(null);
   const { toast } = useToast();
@@ -32,7 +31,7 @@ export function AddCustomerForm({ onSuccess }: { onSuccess?: () => void }) {
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (!firestore || !user) return;
+    if (!firestore) return;
 
     setIsPending(true);
     setErrors(undefined);
@@ -57,7 +56,7 @@ export function AddCustomerForm({ onSuccess }: { onSuccess?: () => void }) {
     try {
       const customersCollection = collection(
         firestore,
-        `users/${user.uid}/customers`
+        `customers`
       );
       await addDoc(customersCollection, {
         ...validatedFields.data,

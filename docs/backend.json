@@ -61,22 +61,20 @@
     }
   },
   "auth": {
-    "providers": [
-      "anonymous"
-    ]
+    "providers": []
   },
   "firestore": {
-    "/users/{userId}/customers/{customerId}": {
+    "/customers/{customerId}": {
       "schema": {
         "$ref": "#/entities/customer"
       },
-      "description": "Stores customers for a specific user."
+      "description": "Stores customers."
     },
-    "/users/{userId}/transactions/{transactionId}": {
+    "/transactions/{transactionId}": {
       "schema": {
         "$ref": "#/entities/transaction"
       },
-      "description": "Stores transactions for a specific user."
+      "description": "Stores transactions."
     }
   }
 }

@@ -2,7 +2,7 @@
 
 import { useMemo } from 'react';
 import { collection, query, orderBy } from 'firebase/firestore';
-import { useCollectionOnce, useFirestore, useUser } from '@/firebase';
+import { useCollectionOnce, useFirestore } from '@/firebase';
 import type { Customer } from '@/lib/types';
 
 import { AddCustomerDialog } from '@/components/customers/add-customer-dialog';
@@ -13,14 +13,13 @@ import { StatCard } from '@/components/dashboard/stat-card';
 import Loading from './loading';
 
 export default function DashboardPage() {
-  const { user } = useUser();
   const firestore = useFirestore();
 
   const customersQuery = useMemo(() => {
-    if (!firestore || !user) return null;
-    const customersCollection = collection(firestore, `users/${user.uid}/customers`);
+    if (!firestore) return null;
+    const customersCollection = collection(firestore, `customers`);
     return query(customersCollection, orderBy('createdAt', 'desc'));
-  }, [firestore, user]);
+  }, [firestore]);
 
   const { data: customers, loading: customersLoading } =
     useCollectionOnce<Customer>(customersQuery);
