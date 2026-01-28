@@ -3,36 +3,15 @@ import { getAuth, type Auth } from 'firebase/auth';
 import { getFirestore, type Firestore } from 'firebase/firestore';
 import { firebaseConfig } from './config';
 
-let firebaseApp: FirebaseApp;
-let auth: Auth;
-let firestore: Firestore;
-
 function initializeFirebase() {
-  if (!getApps().length) {
-    try {
-      firebaseApp = initializeApp(firebaseConfig);
-      auth = getAuth(firebaseApp);
-      firestore = getFirestore(firebaseApp);
-    } catch (e) {
-      console.error(
-        'Failed to initialize Firebase. Did you paste your config in src/firebase/config.ts?',
-        e
-      );
-      return {
-        firebaseApp: null,
-        auth: null,
-        firestore: null,
-      } as unknown as {
-        firebaseApp: FirebaseApp;
-        auth: Auth;
-        firestore: Firestore;
-      };
-    }
+  let firebaseApp: FirebaseApp;
+  if (getApps().length === 0) {
+    firebaseApp = initializeApp(firebaseConfig);
   } else {
     firebaseApp = getApp();
-    auth = getAuth(firebaseApp);
-    firestore = getFirestore(firebaseApp);
   }
+  const auth = getAuth(firebaseApp);
+  const firestore = getFirestore(firebaseApp);
   return { firebaseApp, auth, firestore };
 }
 
