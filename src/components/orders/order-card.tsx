@@ -3,7 +3,7 @@
 import type { BreadOrder } from '@/lib/types';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Package, Check, CreditCard, Loader2 } from 'lucide-react';
+import { Package, Check, CreditCard, Loader2, Undo2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { updateBreadOrder } from '@/lib/mock-data/api';
 import { useState } from 'react';
@@ -50,14 +50,14 @@ export function OrderCard({ order }: { order: BreadOrder }) {
           <Button
             variant={order.isPaid ? 'secondary' : 'outline'}
             className="flex-1"
-            disabled={isUpdating || order.isPaid}
-            onClick={() => handleUpdate({ isPaid: true })}
+            disabled={isUpdating}
+            onClick={() => handleUpdate({ isPaid: !order.isPaid })}
           >
             {isUpdating && <Loader2 className="animate-spin" />}
             {order.isPaid ? (
               <>
-                <Check />
-                Payé
+                <Undo2 />
+                Annuler le paiement
               </>
             ) : (
               <>
@@ -69,14 +69,14 @@ export function OrderCard({ order }: { order: BreadOrder }) {
           <Button
             variant={order.isDelivered ? 'secondary' : 'default'}
             className="flex-1"
-            disabled={isUpdating || order.isDelivered}
-            onClick={() => handleUpdate({ isDelivered: true })}
+            disabled={isUpdating}
+            onClick={() => handleUpdate({ isDelivered: !order.isDelivered })}
           >
             {isUpdating && <Loader2 className="animate-spin" />}
             {order.isDelivered ? (
               <>
-                <Check />
-                Livré
+                <Undo2 />
+                Annuler la livraison
               </>
             ) : (
               <>
