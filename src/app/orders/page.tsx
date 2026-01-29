@@ -35,11 +35,11 @@ export default function OrdersPage() {
 
   const { data: orders, loading } = useCollectionOnce<BreadOrder>(fetchOrders);
 
-  const { totalOrders, deliveredQuantity, undeliveredQuantity } =
+  const { totalQuantity, deliveredQuantity, undeliveredQuantity } =
     useMemo(() => {
       if (!orders) {
         return {
-          totalOrders: 0,
+          totalQuantity: 0,
           deliveredQuantity: 0,
           undeliveredQuantity: 0,
         };
@@ -47,6 +47,7 @@ export default function OrdersPage() {
 
       return orders.reduce(
         (acc, order) => {
+          acc.totalQuantity += order.quantity;
           if (order.isDelivered) {
             acc.deliveredQuantity += order.quantity;
           } else {
@@ -55,7 +56,7 @@ export default function OrdersPage() {
           return acc;
         },
         {
-          totalOrders: orders.length,
+          totalQuantity: 0,
           deliveredQuantity: 0,
           undeliveredQuantity: 0,
         }
@@ -77,9 +78,9 @@ export default function OrdersPage() {
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         <StatCard
-          title="Total des commandes"
-          value={totalOrders}
-          description="Nombre total de commandes enregistrées"
+          title="Quantité totale"
+          value={totalQuantity}
+          description="Quantité totale de pain commandée"
           Icon={ShoppingCart}
         />
         <StatCard
