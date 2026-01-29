@@ -328,3 +328,14 @@ export const updateBreadOrder = async (
     }, MOCK_API_LATENCY);
   });
 };
+
+export const resetBreadOrders = async (): Promise<{ success: boolean }> => {
+  console.log('Resetting all bread orders...');
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      mockDataStore.breadOrders = [];
+      saveData();
+      resolve({ success: true });
+    }, MOCK_API_LATENCY);
+  });
+};

@@ -10,6 +10,7 @@ import OrdersLoading from './loading';
 import { useCollectionOnce } from '@/hooks/use-collection-once';
 import { getBreadOrders } from '@/lib/mock-data/api';
 import { Hourglass, Check, ShoppingCart } from 'lucide-react';
+import { ResetOrdersDialog } from '@/components/orders/reset-orders-dialog';
 
 export default function OrdersPage() {
   const [refreshTrigger, setRefreshTrigger] = useState(0);
@@ -75,7 +76,10 @@ export default function OrdersPage() {
         <h1 className="text-3xl font-bold tracking-tight text-foreground">
           Commandes de Pain
         </h1>
-        <AddOrderDialog />
+        <div className="flex gap-2">
+          <ResetOrdersDialog />
+          <AddOrderDialog />
+        </div>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
