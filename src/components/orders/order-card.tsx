@@ -3,7 +3,7 @@
 import type { BreadOrder } from '@/lib/types';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Package, Check, CreditCard, Loader2, Undo2 } from 'lucide-react';
+import { Package, CreditCard, Loader2, Undo2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { updateBreadOrder } from '@/lib/mock-data/api';
 import { useState } from 'react';
@@ -48,8 +48,11 @@ export function OrderCard({ order }: { order: BreadOrder }) {
         </div>
         <div className="flex flex-col sm:flex-row gap-2">
           <Button
-            variant={order.isPaid ? 'secondary' : 'outline'}
-            className="flex-1"
+            variant={order.isPaid ? 'ghost' : 'outline'}
+            className={cn(
+              'flex-1',
+              order.isPaid && 'text-accent hover:bg-accent/10 hover:text-accent'
+            )}
             disabled={isUpdating}
             onClick={() => handleUpdate({ isPaid: !order.isPaid })}
           >
@@ -67,8 +70,12 @@ export function OrderCard({ order }: { order: BreadOrder }) {
             )}
           </Button>
           <Button
-            variant={order.isDelivered ? 'secondary' : 'default'}
-            className="flex-1"
+            variant={order.isDelivered ? 'ghost' : 'default'}
+            className={cn(
+              'flex-1',
+              order.isDelivered &&
+                'text-accent hover:bg-accent/10 hover:text-accent'
+            )}
             disabled={isUpdating}
             onClick={() => handleUpdate({ isDelivered: !order.isDelivered })}
           >
