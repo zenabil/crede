@@ -10,7 +10,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight, PlusCircle, MinusCircle } from 'lucide-react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { Button } from '@/components/ui/button';
@@ -57,15 +57,27 @@ export function CustomersTable({ customers }: { customers: Customer[] }) {
                     <AddTransactionDialog
                       type="debt"
                       customerId={customer.id}
-                      buttonProps={{ size: 'sm', variant: 'ghost' }}
+                      trigger={
+                        <Button variant="ghost" size="icon">
+                          <PlusCircle />
+                          <span className="sr-only">Ajouter une dette</span>
+                        </Button>
+                      }
                     />
                     {customer.balance > 0 && (
                       <AddTransactionDialog
                         type="payment"
                         customerId={customer.id}
-                        buttonProps={{ size: 'sm', variant: 'ghost' }}
                         defaultAmount={customer.balance}
                         defaultDescription="Règlement du solde"
+                        trigger={
+                          <Button variant="ghost" size="icon">
+                            <MinusCircle className="text-accent" />
+                            <span className="sr-only">
+                              Ajouter un paiement
+                            </span>
+                          </Button>
+                        }
                       />
                     )}
                     <EditCustomerDialog customer={customer} />

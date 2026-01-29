@@ -1,19 +1,19 @@
 import { AddTransactionForm } from './add-transaction-form';
 import type { TransactionType } from '@/lib/types';
 import { FormDialog } from '@/components/forms/form-dialog';
-import { Button, type ButtonProps } from '@/components/ui/button';
+import { Button } from '@/components/ui/button';
 import { PlusCircle, MinusCircle } from 'lucide-react';
 
 export function AddTransactionDialog({
   type,
   customerId,
-  buttonProps,
+  trigger,
   defaultAmount,
   defaultDescription,
 }: {
   type: TransactionType;
   customerId: string;
-  buttonProps?: Omit<ButtonProps, 'children' | 'onClick'>;
+  trigger?: React.ReactNode;
   defaultAmount?: number;
   defaultDescription?: string;
 }) {
@@ -28,16 +28,18 @@ export function AddTransactionDialog({
 
   const variant = isDebt ? 'outline' : 'default';
 
+  const defaultTrigger = (
+    <Button variant={variant}>
+      <Icon />
+      {buttonText}
+    </Button>
+  );
+
   return (
     <FormDialog
       title={title}
       description={description}
-      trigger={
-        <Button variant={variant} {...buttonProps}>
-          <Icon />
-          {buttonText}
-        </Button>
-      }
+      trigger={trigger || defaultTrigger}
       form={
         <AddTransactionForm
           type={type}
