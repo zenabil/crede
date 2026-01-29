@@ -8,6 +8,11 @@ import { cn } from '@/lib/utils';
 export function MainLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
 
+  const navLinks = [
+    { href: '/', label: 'Tableau de bord' },
+    { href: '/orders', label: 'Commandes' },
+  ];
+
   return (
     <div className="flex min-h-screen w-full flex-col bg-muted/40">
       <header className="sticky top-0 z-10 flex h-16 items-center gap-4 border-b bg-background px-4 md:px-6">
@@ -18,12 +23,20 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
           </span>
         </Link>
         <nav className="flex items-center gap-4 text-sm font-medium">
-            <Link href="/" className={cn(
-                "transition-colors hover:text-foreground",
-                pathname === '/' ? "text-foreground" : "text-muted-foreground"
-            )}>
-                Tableau de bord
+          {navLinks.map((link) => (
+            <Link
+              key={link.href}
+              href={link.href}
+              className={cn(
+                'transition-colors hover:text-foreground',
+                pathname === link.href
+                  ? 'text-foreground'
+                  : 'text-muted-foreground'
+              )}
+            >
+              {link.label}
             </Link>
+          ))}
         </nav>
       </header>
       <main className="flex-1 p-4 sm:p-6 md:p-8">

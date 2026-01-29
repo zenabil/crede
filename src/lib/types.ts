@@ -18,3 +18,12 @@ export interface Transaction {
   date: string; // ISO Date string
   description: string;
 }
+
+export interface BreadOrder {
+  id: string;
+  name: string;
+  quantity: number;
+  isPaid: boolean;
+  isDelivered: boolean;
+  createdAt: string; // ISO Date string
+}

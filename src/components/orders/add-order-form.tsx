@@ -1,0 +1,66 @@
+'use client';
+
+import { useRef } from 'react';
+import { z } from 'zod';
+
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { SubmitButton } from '@/components/forms/submit-button';
+import { useFormSubmission } from '@/hooks/use-form-submission';
+import { addBreadOrder } from '@/lib/mock-data/api';
+
+const orderSchema = z.object({
+  name: z
+    .string()
+    .min(2, { message: 'Le nom doit comporter au moins 2 caractères.' }),
+  quantity: z.coerce
+    .number()
+    .int()
+    .positive({ message: 'La quantité doit être un nombre entier positif.' }),
+});
+
+export function AddOrderForm({ onSuccess }: { onSuccess?: () => void }) {
+  const formRef = useRef<HTMLFormElement>(null);
+
+  const { isPending, errors, handleSubmit } = useFormSubmission({
+    formRef,
+    schema: orderSchema,
+    onSuccess,
+    config: {
+      successMessage: 'Commande ajoutée avec succès.',
+      errorMessage: "Une erreur est survenue lors de l'ajout de la commande.",
+    },
+    onSubmit: async (data) => {
+      await addBreadOrder(data);
+    },
+  });
+
+  return (
+    <form ref={formRef} onSubmit={handleSubmit} className="space-y-4">
+      <div className="space-y-2">
+        <Label htmlFor="name">Nom de la commande</Label>
+        <Input id="name" name="name" placeholder="Ex: Boulangerie Al-Amal" />
+        {errors?.name && (
+          <p className="text-sm font-medium text-destructive">
+            {errors.name._errors[0]}
+          </p>
+        )}
+      </div>
+      <div className="space-y-2">
+        <Label htmlFor="quantity">Quantité</Label>
+        <Input
+          id="quantity"
+          name="quantity"
+          type="number"
+          placeholder="Ex: 50"
+        />
+        {errors?.quantity && (
+          <p className="text-sm font-medium text-destructive">
+            {errors.quantity._errors[0]}
+          </p>
+        )}
+      </div>
+      <SubmitButton isPending={isPending}>Ajouter la commande</SubmitButton>
+    </form>
+  );
+}

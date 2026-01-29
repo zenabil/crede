@@ -1,5 +1,5 @@
 import { mockDataStore, saveData } from './index';
-import type { Customer, Transaction, TransactionType } from '@/lib/types';
+import type { Customer, Transaction, TransactionType, BreadOrder } from '@/lib/types';
 
 const MOCK_API_LATENCY = 100; // ms
 
@@ -46,6 +46,16 @@ export const getTransactionsByCustomerId = async (
         (t) => t.customerId === customerId
       );
       resolve(JSON.parse(JSON.stringify(customerTransactions)));
+    }, MOCK_API_LATENCY);
+  });
+};
+
+
+export const getBreadOrders = async (): Promise<BreadOrder[]> => {
+  console.log('Fetching all bread orders...');
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      resolve(JSON.parse(JSON.stringify(mockDataStore.breadOrders || [])));
     }, MOCK_API_LATENCY);
   });
 };
@@ -254,6 +264,66 @@ export const deleteCustomer = async (id: string): Promise<{ id: string }> => {
 
       saveData();
       resolve({ id });
+    }, MOCK_API_LATENCY);
+  });
+};
+
+
+// --- BREAD ORDER WRITE OPERATIONS ---
+
+interface AddBreadOrderData {
+  name: string;
+  quantity: number;
+}
+
+export const addBreadOrder = async (data: AddBreadOrderData): Promise<BreadOrder> => {
+  console.log('Adding new bread order:', data);
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      const maxId = (mockDataStore.breadOrders || []).reduce((max, order) => {
+        const orderId = parseInt(order.id.replace('bo', ''), 10);
+        return !isNaN(orderId) && orderId > max ? orderId : max;
+      }, 0);
+
+      const newOrder: BreadOrder = {
+        id: `bo${maxId + 1}`,
+        createdAt: new Date().toISOString(),
+        isPaid: false,
+        isDelivered: false,
+        ...data,
+      };
+      if (!mockDataStore.breadOrders) {
+        mockDataStore.breadOrders = [];
+      }
+      mockDataStore.breadOrders.push(newOrder);
+      saveData();
+      resolve(JSON.parse(JSON.stringify(newOrder)));
+    }, MOCK_API_LATENCY);
+  });
+};
+
+
+export const updateBreadOrder = async (
+  id: string,
+  data: Partial<Omit<BreadOrder, 'id'>>
+): Promise<BreadOrder> => {
+  console.log(`Updating bread order ${id} with:`, data);
+  return new Promise((resolve, reject) => {
+    setTimeout(() => {
+      const orderIndex = (mockDataStore.breadOrders || []).findIndex(
+        (o) => o.id === id
+      );
+      if (orderIndex === -1) {
+        return reject(new Error('Bread order not found'));
+      }
+      mockDataStore.breadOrders[orderIndex] = {
+        ...mockDataStore.breadOrders[orderIndex],
+        ...data,
+      };
+      saveData();
+      resolve(
+        JSON.parse(JSON.stringify(mockDataStore.breadOrders[orderIndex]))
+      );
     }, MOCK_API_LATENCY);
   });
 };

@@ -58,5 +58,31 @@
       "date": "2024-07-10T13:00:00Z",
       "description": "Paiement complet et avance"
     }
+  ],
+  "breadOrders": [
+    {
+      "id": "bo1",
+      "name": "Commande Boulangerie A",
+      "quantity": 50,
+      "isPaid": true,
+      "isDelivered": true,
+      "createdAt": "2024-07-28T08:00:00Z"
+    },
+    {
+      "id": "bo2",
+      "name": "Commande Hotel B",
+      "quantity": 120,
+      "isPaid": false,
+      "isDelivered": true,
+      "createdAt": "2024-07-28T09:00:00Z"
+    },
+    {
+      "id": "bo3",
+      "name": "Client Particulier C",
+      "quantity": 5,
+      "isPaid": true,
+      "isDelivered": false,
+      "createdAt": "2024-07-28T10:00:00Z"
+    }
   ]
 }

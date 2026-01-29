@@ -1,4 +1,4 @@
-import type { Customer, Transaction } from '@/lib/types';
+import type { Customer, Transaction, BreadOrder } from '@/lib/types';
 import database from './database.json';
 
 const DATA_KEY = 'crede-zenagui-data';
@@ -11,6 +11,7 @@ function getInitialData() {
     return {
       customers: JSON.parse(JSON.stringify(database.customers)),
       transactions: JSON.parse(JSON.stringify(database.transactions)),
+      breadOrders: JSON.parse(JSON.stringify(database.breadOrders || [])),
     };
   }
 
@@ -24,6 +25,10 @@ function getInitialData() {
         Array.isArray(parsedData.customers) &&
         Array.isArray(parsedData.transactions)
       ) {
+        // Ensure breadOrders exists for backwards compatibility
+        if (!parsedData.breadOrders) {
+          parsedData.breadOrders = [];
+        }
         return parsedData;
       }
     }
@@ -35,6 +40,7 @@ function getInitialData() {
   const fallbackData = {
     customers: JSON.parse(JSON.stringify(database.customers)),
     transactions: JSON.parse(JSON.stringify(database.transactions)),
+    breadOrders: JSON.parse(JSON.stringify(database.breadOrders || [])),
   };
 
   try {
@@ -50,6 +56,7 @@ function getInitialData() {
 export const mockDataStore: {
   customers: Customer[];
   transactions: Transaction[];
+  breadOrders: BreadOrder[];
 } = getInitialData();
 
 /**
