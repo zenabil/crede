@@ -23,23 +23,23 @@ export function CustomerOverview({
     customer.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const handleBackup = () => {
-    // Use the current state from the mockDataStore for the backup.
+  const handleExport = () => {
+    // Use the current state from the mockDataStore for the export.
     // This store is initialized from localStorage, so it's the latest data.
-    const dataToBackup = JSON.stringify(mockDataStore, null, 2);
-    const blob = new Blob([dataToBackup], { type: 'application/json' });
+    const dataToExport = JSON.stringify(mockDataStore, null, 2);
+    const blob = new Blob([dataToExport], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
     const date = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
-    link.download = `backup-crede-zenagui-${date}.json`;
+    link.download = `export-crede-zenagui-${date}.json`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
   };
 
-  const handleRestoreClick = () => {
+  const handleImportClick = () => {
     fileInputRef.current?.click();
   };
 
@@ -64,7 +64,7 @@ export function CustomerOverview({
           !Array.isArray(data.customers) ||
           !Array.isArray(data.transactions)
         ) {
-          throw new Error('Format de fichier de sauvegarde invalide.');
+          throw new Error('Format de fichier invalide.');
         }
 
         // Restore data into the in-memory store
@@ -79,13 +79,13 @@ export function CustomerOverview({
 
         toast({
           title: 'Succès !',
-          description: 'La sauvegarde a été restaurée avec succès !',
+          description: 'Les données ont été importées avec succès !',
         });
       } catch (error) {
-        console.error('Failed to restore backup:', error);
+        console.error('Failed to import data:', error);
         toast({
           title: 'Erreur',
-          description: `Erreur lors de la restauration: ${
+          description: `Erreur lors de l'importation: ${
             error instanceof Error ? error.message : 'Erreur inconnue'
           }`,
           variant: 'destructive',
@@ -115,13 +115,13 @@ export function CustomerOverview({
                 className="pl-10 w-full"
               />
             </div>
-            <Button variant="outline" onClick={handleRestoreClick}>
+            <Button variant="outline" onClick={handleImportClick}>
               <Upload />
-              Charger une sauvegarde
+              Importer
             </Button>
-            <Button variant="outline" onClick={handleBackup}>
+            <Button variant="outline" onClick={handleExport}>
               <Download />
-              Prendre une copie de sauvegarde
+              Exporter
             </Button>
             <input
               type="file"
