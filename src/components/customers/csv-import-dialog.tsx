@@ -291,7 +291,7 @@ export function CsvImportDialog() {
             </h3>
             <p className="text-sm text-muted-foreground mb-4">
               Associez chaque colonne de votre fichier CSV à un champ client. Le
-              champ `name` est obligatoire. Les champs comme `id` seront créés
+              champ \`name\` est obligatoire. Les champs comme \`id\` seront créés
               automatiquement s'ils ne sont pas mappés.
             </p>
             <div className="overflow-auto flex-grow">
