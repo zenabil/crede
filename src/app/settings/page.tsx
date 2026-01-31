@@ -10,10 +10,11 @@ import {
 import { Button } from '@/components/ui/button';
 import { Download } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { mockDataStore } from '@/lib/mock-data';
+import { mockDataStore, saveData } from '@/lib/mock-data';
 import { CsvImportDialog } from '@/components/customers/csv-import-dialog';
 import { ResetAppDataDialog } from '@/components/settings/reset-app-data-dialog';
 import { BreadPriceSetting } from '@/components/settings/bread-price-setting';
+import { ResetOrdersDialog } from '@/components/orders/reset-orders-dialog';
 
 export default function SettingsPage() {
   const { toast } = useToast();
@@ -101,6 +102,18 @@ export default function SettingsPage() {
             </div>
             <div className="mt-2 sm:mt-0">
               <CsvImportDialog />
+            </div>
+          </div>
+
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 border rounded-lg">
+            <div>
+              <h3 className="font-semibold">Réinitialiser les commandes du jour</h3>
+              <p className="text-sm text-muted-foreground">
+                Supprime toutes les commandes de pain non épinglées. Les commandes épinglées seront conservées.
+              </p>
+            </div>
+            <div className="mt-2 sm:mt-0">
+              <ResetOrdersDialog />
             </div>
           </div>
 

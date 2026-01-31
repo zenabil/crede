@@ -41,6 +41,13 @@ export default function SettingsLoading() {
           </div>
           <div className="flex items-center justify-between p-4 border rounded-lg">
             <div className="space-y-2">
+              <Skeleton className="h-6 w-56" />
+              <Skeleton className="h-4 w-80" />
+            </div>
+            <Skeleton className="h-10 w-32" />
+          </div>
+          <div className="flex items-center justify-between p-4 border rounded-lg">
+            <div className="space-y-2">
               <Skeleton className="h-6 w-28" />
               <Skeleton className="h-4 w-64" />
             </div>
