@@ -19,7 +19,7 @@ import { cn } from "@/lib/utils"
 // #region Chart Types
 type ChartContainerProps = React.HTMLAttributes<HTMLDivElement> & {
   config: ChartConfig
-  children: React.ReactElement<ResponsiveContainerProps>
+  children: React.ReactNode
 }
 
 type ChartConfig = {
@@ -113,7 +113,7 @@ ${Object.entries(CHART_COLORS)
 `,
           }}
         />
-        <ResponsiveContainer {...children.props} />
+        <ResponsiveContainer>{children}</ResponsiveContainer>
       </div>
     </ChartContext.Provider>
   )
