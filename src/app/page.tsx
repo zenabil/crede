@@ -26,6 +26,47 @@ export default function DashboardPage() {
     };
   }, []);
 
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      const target = event.target as HTMLElement;
+
+      // Ignore shortcuts if user is typing in an input, textarea, or select
+      if (
+        ['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName) &&
+        !target.isContentEditable
+      ) {
+        return;
+      }
+
+      switch (event.key.toLowerCase()) {
+        case 'a':
+          event.preventDefault();
+          document.getElementById('add-customer-btn')?.click();
+          break;
+        case 's':
+          event.preventDefault();
+          document.getElementById('customer-search-input')?.focus();
+          break;
+        case 'i':
+          event.preventDefault();
+          document.getElementById('import-customers-btn')?.click();
+          break;
+        case 'e':
+          event.preventDefault();
+          document.getElementById('export-customers-btn')?.click();
+          break;
+        default:
+          break;
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, []);
+
   const fetchCustomers = useCallback(async () => {
     const data = await getCustomers();
     // Sort data here since the mock API doesn't support sorting

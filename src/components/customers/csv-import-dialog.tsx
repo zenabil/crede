@@ -44,7 +44,7 @@ const CUSTOMER_MODEL_FIELDS: (keyof Omit<Customer, 'totalExpenses'>)[] = [
 
 const MINIMUM_MAPPED_FIELDS: (keyof Customer)[] = ['name'];
 
-export function CsvImportDialog() {
+export function CsvImportDialog({ trigger }: { trigger?: React.ReactNode }) {
   const [open, setOpen] = useState(false);
   const [step, setStep] = useState(1);
   const [csvData, setCsvData] = useState<string[][]>([]);
@@ -56,6 +56,13 @@ export function CsvImportDialog() {
 
   const { CSVReader } = useCSVReader();
   const { toast } = useToast();
+
+  const defaultTrigger = (
+    <Button variant="outline">
+      <Upload />
+      Importer
+    </Button>
+  );
 
   const handleUploadAccepted = (results: any) => {
     const data = results.data;
@@ -253,12 +260,7 @@ export function CsvImportDialog() {
         else setOpen(true);
       }}
     >
-      <DialogTrigger asChild>
-        <Button variant="outline">
-          <Upload />
-          Importer
-        </Button>
-      </DialogTrigger>
+      <DialogTrigger asChild>{trigger || defaultTrigger}</DialogTrigger>
       <DialogContent className="max-w-4xl h-[90vh] flex flex-col">
         <DialogHeader>
           <DialogTitle>Importer des clients depuis un fichier CSV</DialogTitle>

@@ -9,7 +9,7 @@ export function AddCustomerDialog() {
       title="Ajouter un client"
       description="Remplissez les détails ci-dessous pour créer un nouveau profil client."
       trigger={
-        <Button>
+        <Button id="add-customer-btn">
           <PlusCircle />
           Ajouter un client
         </Button>

@@ -5,7 +5,7 @@ import type { Customer } from '@/lib/types';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { CustomersTable } from './customers-table';
-import { Search, Download } from 'lucide-react';
+import { Search, Download, Upload } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { mockDataStore } from '@/lib/mock-data';
 import { useToast } from '@/hooks/use-toast';
@@ -143,14 +143,26 @@ export function CustomerOverview({
             <div className="relative w-full sm:w-auto sm:max-w-xs">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
+                id="customer-search-input"
                 placeholder="Rechercher par nom..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-10 w-full"
               />
             </div>
-            <CsvImportDialog />
-            <Button variant="outline" onClick={handleExport}>
+            <CsvImportDialog
+              trigger={
+                <Button variant="outline" id="import-customers-btn">
+                  <Upload />
+                  Importer
+                </Button>
+              }
+            />
+            <Button
+              variant="outline"
+              onClick={handleExport}
+              id="export-customers-btn"
+            >
               <Download />
               Exporter
             </Button>
