@@ -17,6 +17,7 @@ export interface Transaction {
   amount: number;
   date: string; // ISO Date string
   description: string;
+  orderId?: string;
 }
 
 export interface BreadOrder {

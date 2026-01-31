@@ -118,6 +118,7 @@ interface AddTransactionData {
   amount: number;
   description: string;
   date: string;
+  orderId?: string;
 }
 
 export const addTransaction = async (
@@ -135,7 +136,7 @@ export const addTransaction = async (
       }
 
       const newTransaction: Transaction = {
-        id: `t-${Date.now()}`,
+        id: `t-${Date.now()}-${Math.random()}`,
         ...data,
       };
 
@@ -204,7 +205,10 @@ export const updateTransaction = async (
         (c) => c.id === oldTransaction.customerId
       );
       if (customerIndex === -1) {
-        return reject(new Error('Associated customer not found'));
+        // This can happen if customer was deleted, just remove the orphaned transaction
+        mockDataStore.transactions = mockDataStore.transactions.filter(t => t.id !== id);
+        saveData();
+        return reject(new Error('Associated customer not found, transaction removed.'));
       }
 
       const amountDifference = data.amount - oldTransaction.amount;
@@ -235,7 +239,8 @@ export const deleteTransaction = async (id: string): Promise<{ id: string }> => 
         (t) => t.id === id
       );
       if (transactionIndex === -1) {
-        return reject(new Error('Transaction not found'));
+        // Silently fail if not found, it might have been deleted already.
+        return resolve({ id });
       }
 
       const transactionToDelete = mockDataStore.transactions[transactionIndex];
@@ -304,7 +309,7 @@ interface AddBreadOrderData {
 export const addBreadOrder = async (data: AddBreadOrderData): Promise<BreadOrder> => {
   console.log('Adding new bread order:', data);
   return new Promise((resolve) => {
-    setTimeout(() => {
+    setTimeout(async () => {
       const maxId = (mockDataStore.breadOrders || []).reduce((max, order) => {
         const orderId = parseInt(order.id.replace('bo', ''), 10);
         return !isNaN(orderId) && orderId > max ? orderId : max;
@@ -322,6 +327,23 @@ export const addBreadOrder = async (data: AddBreadOrderData): Promise<BreadOrder
         mockDataStore.breadOrders = [];
       }
       mockDataStore.breadOrders.push(newOrder);
+
+      // If the order is for a customer, create a debt transaction
+      if (newOrder.customerId && newOrder.totalAmount > 0) {
+        try {
+          await addTransaction({
+            customerId: newOrder.customerId,
+            type: 'debt',
+            amount: newOrder.totalAmount,
+            description: `Commande: ${newOrder.name}`,
+            date: newOrder.createdAt,
+            orderId: newOrder.id,
+          });
+        } catch (err) {
+          console.error("Failed to create linked transaction for order.", err);
+        }
+      }
+
       saveData();
       resolve(JSON.parse(JSON.stringify(newOrder)));
     }, MOCK_API_LATENCY);
@@ -335,21 +357,95 @@ export const updateBreadOrder = async (
 ): Promise<BreadOrder> => {
   console.log(`Updating bread order ${id} with:`, data);
   return new Promise((resolve, reject) => {
-    setTimeout(() => {
+    setTimeout(async () => {
       const orderIndex = (mockDataStore.breadOrders || []).findIndex(
         (o) => o.id === id
       );
       if (orderIndex === -1) {
         return reject(new Error('Bread order not found'));
       }
-      mockDataStore.breadOrders[orderIndex] = {
-        ...mockDataStore.breadOrders[orderIndex],
-        ...data,
-      };
+      
+      const oldOrder = { ...mockDataStore.breadOrders[orderIndex] };
+      const updatedOrder = { ...oldOrder, ...data };
+      
+      mockDataStore.breadOrders[orderIndex] = updatedOrder;
+
+      try {
+        const debtTransaction = mockDataStore.transactions.find(t => t.orderId === id && t.type === 'debt');
+        const paymentTransaction = mockDataStore.transactions.find(t => t.orderId === id && t.type === 'payment');
+
+        const customerIdChanged = 'customerId' in data && data.customerId !== oldOrder.customerId;
+        const amountChanged = 'totalAmount' in data && data.totalAmount !== oldOrder.totalAmount;
+        const nameChanged = 'name' in data && data.name !== oldOrder.name;
+
+        // Customer assignment changed
+        if (customerIdChanged) {
+          // Delete old transactions if they exist
+          if (debtTransaction) await deleteTransaction(debtTransaction.id);
+          if (paymentTransaction) await deleteTransaction(paymentTransaction.id);
+          
+          // Create new transactions for the new customer
+          if (updatedOrder.customerId) {
+            await addTransaction({
+              customerId: updatedOrder.customerId,
+              type: 'debt',
+              amount: updatedOrder.totalAmount,
+              description: `Commande: ${updatedOrder.name}`,
+              date: updatedOrder.createdAt,
+              orderId: id,
+            });
+            if (updatedOrder.isPaid) {
+              await addTransaction({
+                customerId: updatedOrder.customerId,
+                type: 'payment',
+                amount: updatedOrder.totalAmount,
+                description: `Paiement commande: ${updatedOrder.name}`,
+                date: new Date().toISOString(),
+                orderId: id,
+              });
+            }
+          }
+        } else if (amountChanged || nameChanged) {
+          // Amount or name changed, update transactions
+          if (debtTransaction) {
+            await updateTransaction(debtTransaction.id, {
+              amount: updatedOrder.totalAmount,
+              description: `Commande: ${updatedOrder.name}`,
+              date: debtTransaction.date,
+            });
+          }
+          if (paymentTransaction) {
+             await updateTransaction(paymentTransaction.id, {
+              amount: updatedOrder.totalAmount,
+              description: `Paiement commande: ${updatedOrder.name}`,
+              date: paymentTransaction.date,
+            });
+          }
+        }
+
+        // Order was marked as paid
+        if (data.isPaid === true && !oldOrder.isPaid && updatedOrder.customerId && !paymentTransaction) {
+          await addTransaction({
+            customerId: updatedOrder.customerId,
+            type: 'payment',
+            amount: updatedOrder.totalAmount,
+            description: `Paiement commande: ${updatedOrder.name}`,
+            date: new Date().toISOString(),
+            orderId: id,
+          });
+        }
+        
+        // Order was marked as unpaid
+        if (data.isPaid === false && oldOrder.isPaid && paymentTransaction) {
+          await deleteTransaction(paymentTransaction.id);
+        }
+
+      } catch (err) {
+        console.error(`Error during linked transaction update for order ${id}:`, err);
+      }
+      
       saveData();
-      resolve(
-        JSON.parse(JSON.stringify(mockDataStore.breadOrders[orderIndex]))
-      );
+      resolve(JSON.parse(JSON.stringify(updatedOrder)));
     }, MOCK_API_LATENCY);
   });
 };
@@ -370,18 +466,25 @@ export const resetBreadOrders = async (): Promise<{ success: boolean }> => {
 export const deleteBreadOrder = async (id: string): Promise<{ id: string }> => {
   console.log(`Deleting bread order with id: ${id}`);
   return new Promise((resolve, reject) => {
-    setTimeout(() => {
-      if (!mockDataStore.breadOrders) {
-        mockDataStore.breadOrders = [];
-      }
-      const initialOrderCount = mockDataStore.breadOrders.length;
-      mockDataStore.breadOrders = mockDataStore.breadOrders.filter(
-        (o) => o.id !== id
-      );
-
-      if (mockDataStore.breadOrders.length === initialOrderCount) {
+    setTimeout(async () => {
+      const orderIndex = (mockDataStore.breadOrders || []).findIndex(o => o.id === id);
+      if (orderIndex === -1) {
         return reject(new Error('Bread order not found'));
       }
+      
+      const orderToDelete = mockDataStore.breadOrders[orderIndex];
+
+      // Find and delete linked transactions
+      const linkedTransactions = mockDataStore.transactions.filter(t => t.orderId === id);
+      for (const trans of linkedTransactions) {
+        try {
+          await deleteTransaction(trans.id);
+        } catch (err) {
+          console.error(`Failed to delete linked transaction ${trans.id} for order ${id}`, err);
+        }
+      }
+
+      mockDataStore.breadOrders = mockDataStore.breadOrders.filter(o => o.id !== id);
 
       saveData();
       resolve({ id });
