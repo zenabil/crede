@@ -99,5 +99,6 @@
       "customerId": null,
       "customerName": null
     }
-  ]
+  ],
+  "breadUnitPrice": 10
 }

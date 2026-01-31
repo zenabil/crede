@@ -12,6 +12,7 @@ function getInitialData() {
       customers: JSON.parse(JSON.stringify(database.customers)),
       transactions: JSON.parse(JSON.stringify(database.transactions)),
       breadOrders: JSON.parse(JSON.stringify(database.breadOrders || [])),
+      breadUnitPrice: database.breadUnitPrice || 10,
     };
   }
 
@@ -28,6 +29,9 @@ function getInitialData() {
         // Ensure breadOrders exists for backwards compatibility
         if (!parsedData.breadOrders) {
           parsedData.breadOrders = [];
+        }
+        if (parsedData.breadUnitPrice === undefined) {
+          parsedData.breadUnitPrice = database.breadUnitPrice || 10;
         }
         // Add isPinned property to existing orders if it's missing (migration)
         parsedData.breadOrders.forEach((order: BreadOrder) => {
@@ -59,6 +63,7 @@ function getInitialData() {
     customers: JSON.parse(JSON.stringify(database.customers)),
     transactions: JSON.parse(JSON.stringify(database.transactions)),
     breadOrders: JSON.parse(JSON.stringify(database.breadOrders || [])),
+    breadUnitPrice: database.breadUnitPrice || 10,
   };
 
   try {
@@ -75,6 +80,7 @@ export const mockDataStore: {
   customers: Customer[];
   transactions: Transaction[];
   breadOrders: BreadOrder[];
+  breadUnitPrice: number;
 } = getInitialData();
 
 /**

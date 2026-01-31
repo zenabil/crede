@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useCallback, useState } from 'react';
+import { useRef, useCallback, useState, useEffect } from 'react';
 import { z } from 'zod';
 
 import { Input } from '@/components/ui/input';
@@ -14,9 +14,14 @@ import {
 } from '@/components/ui/select';
 import { SubmitButton } from '@/components/forms/submit-button';
 import { useFormSubmission } from '@/hooks/use-form-submission';
-import { addBreadOrder, getCustomers } from '@/lib/mock-data/api';
+import {
+  addBreadOrder,
+  getCustomers,
+  getBreadUnitPrice,
+} from '@/lib/mock-data/api';
 import { useCollectionOnce } from '@/hooks/use-collection-once';
 import type { Customer } from '@/lib/types';
+import { Skeleton } from '@/components/ui/skeleton';
 
 const orderSchema = z.object({
   name: z
@@ -26,9 +31,6 @@ const orderSchema = z.object({
     .number()
     .int()
     .positive({ message: 'La quantité doit être un nombre entier positif.' }),
-  unitPrice: z.coerce
-    .number()
-    .positive({ message: 'Le prix unitaire doit être un nombre positif.' }),
 });
 
 export function AddOrderForm({ onSuccess }: { onSuccess?: () => void }) {
@@ -36,9 +38,14 @@ export function AddOrderForm({ onSuccess }: { onSuccess?: () => void }) {
   const [selectedCustomerId, setSelectedCustomerId] = useState<string | null>(
     null
   );
+  const [unitPrice, setUnitPrice] = useState<number | null>(null);
 
   const fetchCustomers = useCallback(getCustomers, []);
   const { data: customers } = useCollectionOnce<Customer>(fetchCustomers);
+
+  useEffect(() => {
+    getBreadUnitPrice().then(setUnitPrice);
+  }, []);
 
   const { isPending, errors, handleSubmit } = useFormSubmission({
     formRef,
@@ -49,13 +56,17 @@ export function AddOrderForm({ onSuccess }: { onSuccess?: () => void }) {
       errorMessage: "Une erreur est survenue lors de l'ajout de la commande.",
     },
     onSubmit: async (data) => {
-      const totalAmount = data.quantity * data.unitPrice;
+      if (unitPrice === null) {
+        throw new Error('Le prix unitaire du pain non chargé.');
+      }
+      const totalAmount = data.quantity * unitPrice;
       const selectedCustomer = customers?.find(
         (c) => c.id === selectedCustomerId
       );
 
       await addBreadOrder({
         ...data,
+        unitPrice: unitPrice,
         totalAmount,
         customerId: selectedCustomerId,
         customerName: selectedCustomer?.name || null,
@@ -63,23 +74,19 @@ export function AddOrderForm({ onSuccess }: { onSuccess?: () => void }) {
     },
   });
 
+  if (unitPrice === null) {
+    return (
+      <div className="space-y-4">
+        <Skeleton className="h-10 w-full" />
+        <Skeleton className="h-10 w-full" />
+        <Skeleton className="h-10 w-full" />
+        <Skeleton className="h-10 w-full" />
+      </div>
+    );
+  }
+
   return (
     <form ref={formRef} onSubmit={handleSubmit} className="space-y-4">
-      <div className="space-y-2">
-        <Label htmlFor="unitPrice">Prix Unitaire (DZD)</Label>
-        <Input
-          id="unitPrice"
-          name="unitPrice"
-          type="number"
-          step="0.01"
-          placeholder="Ex: 15"
-        />
-        {errors?.unitPrice && (
-          <p className="text-sm font-medium text-destructive">
-            {errors.unitPrice._errors[0]}
-          </p>
-        )}
-      </div>
       <div className="space-y-2">
         <Label htmlFor="customer">Client (Optionnel)</Label>
         <Select

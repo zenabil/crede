@@ -26,9 +26,6 @@ const orderSchema = z.object({
     .number()
     .int()
     .positive({ message: 'La quantité doit être un nombre entier positif.' }),
-  unitPrice: z.coerce
-    .number()
-    .positive({ message: 'Le prix unitaire doit être un nombre positif.' }),
 });
 
 export function EditOrderForm({
@@ -56,12 +53,13 @@ export function EditOrderForm({
         'Une erreur est survenue lors de la mise à jour de la commande.',
     },
     onSubmit: async (data) => {
-      const totalAmount = data.quantity * data.unitPrice;
+      const totalAmount = data.quantity * order.unitPrice; // Use historical unit price
       const selectedCustomer = customers?.find(
         (c) => c.id === selectedCustomerId
       );
       await updateBreadOrder(order.id, {
         ...data,
+        unitPrice: order.unitPrice,
         totalAmount,
         customerId: selectedCustomerId,
         customerName: selectedCustomer?.name || null,
@@ -71,21 +69,6 @@ export function EditOrderForm({
 
   return (
     <form ref={formRef} onSubmit={handleSubmit} className="space-y-4">
-      <div className="space-y-2">
-        <Label htmlFor="unitPrice">Prix Unitaire (DZD)</Label>
-        <Input
-          id="unitPrice"
-          name="unitPrice"
-          type="number"
-          step="0.01"
-          defaultValue={order.unitPrice}
-        />
-        {errors?.unitPrice && (
-          <p className="text-sm font-medium text-destructive">
-            {errors.unitPrice._errors[0]}
-          </p>
-        )}
-      </div>
       <div className="space-y-2">
         <Label htmlFor="customer">Client (Optionnel)</Label>
         <Select

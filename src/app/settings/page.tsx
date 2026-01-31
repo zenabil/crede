@@ -13,6 +13,7 @@ import { useToast } from '@/hooks/use-toast';
 import { mockDataStore } from '@/lib/mock-data';
 import { CsvImportDialog } from '@/components/customers/csv-import-dialog';
 import { ResetAppDataDialog } from '@/components/settings/reset-app-data-dialog';
+import { BreadPriceSetting } from '@/components/settings/bread-price-setting';
 
 export default function SettingsPage() {
   const { toast } = useToast();
@@ -23,6 +24,7 @@ export default function SettingsPage() {
         customers: mockDataStore.customers,
         transactions: mockDataStore.transactions,
         breadOrders: mockDataStore.breadOrders,
+        breadUnitPrice: mockDataStore.breadUnitPrice,
       };
 
       const jsonString = JSON.stringify(dataToExport, null, 2);
@@ -62,13 +64,15 @@ export default function SettingsPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Gestion des Données</CardTitle>
+          <CardTitle>Paramètres et Données</CardTitle>
           <CardDescription>
-            Importez, exportez ou réinitialisez les données de l'application.
-            Soyez prudent avec ces actions.
+            Gérez les paramètres globaux, importez, exportez ou réinitialisez
+            les données de l'application.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
+          <BreadPriceSetting />
+
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 border rounded-lg">
             <div>
               <h3 className="font-semibold">Exporter toutes les données</h3>

@@ -61,7 +61,27 @@ export const getBreadOrders = async (): Promise<BreadOrder[]> => {
   });
 };
 
+export const getBreadUnitPrice = async (): Promise<number> => {
+  console.log('Fetching bread unit price...');
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      resolve(mockDataStore.breadUnitPrice || 10);
+    }, MOCK_API_LATENCY);
+  });
+};
+
 // --- WRITE OPERATIONS ---
+
+export const updateBreadUnitPrice = async (price: number): Promise<number> => {
+  console.log(`Updating bread unit price to: ${price}`);
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      mockDataStore.breadUnitPrice = price;
+      saveData();
+      resolve(mockDataStore.breadUnitPrice);
+    }, MOCK_API_LATENCY);
+  });
+};
 
 interface AddCustomerData {
   name: string;
@@ -380,6 +400,7 @@ export const resetAllData = async (): Promise<{ success: boolean }> => {
       mockDataStore.breadOrders = JSON.parse(
         JSON.stringify(database.breadOrders || [])
       );
+      mockDataStore.breadUnitPrice = database.breadUnitPrice || 10;
       saveData();
       resolve({ success: true });
     }, MOCK_API_LATENCY);
