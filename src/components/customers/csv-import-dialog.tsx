@@ -33,7 +33,7 @@ import { mockDataStore, saveData } from '@/lib/mock-data';
 import type { Customer } from '@/lib/types';
 import { Upload, Check, ChevronsRight } from 'lucide-react';
 
-const CUSTOMER_MODEL_FIELDS: (keyof Omit<Customer, 'totalExpenses'>)[] = [
+const CUSTOMER_MODEL_FIELDS: (keyof Omit<Customer, 'totalDebts'>)[] = [
   'id',
   'name',
   'phone',

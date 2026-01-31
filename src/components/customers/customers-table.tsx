@@ -70,10 +70,10 @@ export function CustomersTable({
             <TableHead className="hidden md:table-cell">
               <Button
                 variant="ghost"
-                onClick={() => onSort('totalExpenses')}
+                onClick={() => onSort('totalDebts')}
                 className="px-2 py-1"
               >
-                Total Dépenses {getSortIcon('totalExpenses')}
+                Total des Dettes {getSortIcon('totalDebts')}
               </Button>
             </TableHead>
             <TableHead className="text-right">
@@ -101,7 +101,7 @@ export function CustomersTable({
                   {customer.settlementDay}
                 </TableCell>
                 <TableCell className="hidden md:table-cell text-muted-foreground font-mono">
-                  {formatCurrency(customer.totalExpenses || 0)}
+                  {formatCurrency(customer.totalDebts || 0)}
                 </TableCell>
                 <TableCell className="text-right">
                   <Badge

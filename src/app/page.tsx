@@ -89,7 +89,7 @@ export default function DashboardPage() {
   const customers = useMemo(() => {
     if (!rawCustomers || !transactions) return [];
 
-    const expensesByCustomer = transactions.reduce((acc, t) => {
+    const debtsByCustomer = transactions.reduce((acc, t) => {
       if (t.type === 'debt') {
         if (!acc[t.customerId]) {
           acc[t.customerId] = 0;
@@ -101,7 +101,7 @@ export default function DashboardPage() {
 
     return rawCustomers.map((customer) => ({
       ...customer,
-      totalExpenses: expensesByCustomer[customer.id] || 0,
+      totalDebts: debtsByCustomer[customer.id] || 0,
     }));
   }, [rawCustomers, transactions]);
 
