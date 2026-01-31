@@ -1,45 +1,52 @@
 'use client';
 
 import type { BreadOrder } from '@/lib/types';
-import Link from 'next/link';
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-} from '@/components/ui/card';
+import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import {
-  Package,
-  CreditCard,
-  Loader2,
-  Undo2,
-  Pin,
-  WalletCards,
-  User,
-} from 'lucide-react';
+import { MoreVertical, RefreshCw } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { updateBreadOrder } from '@/lib/mock-data/api';
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
 import { EditOrderDialog } from './edit-order-dialog';
 import { DeleteOrderDialog } from './delete-order-dialog';
-import { formatCurrency } from '@/lib/utils';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
+import { Checkbox } from '@/components/ui/checkbox';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
-export function OrderCard({ order }: { order: BreadOrder }) {
+export function OrderCard({
+  order,
+  isSelected,
+  onSelectionChange,
+  onOrderUpdate,
+}: {
+  order: BreadOrder;
+  isSelected: boolean;
+  onSelectionChange: (checked: boolean | 'indeterminate') => void;
+  onOrderUpdate: () => void;
+}) {
   const { toast } = useToast();
-  const [isUpdating, setIsUpdating] = useState(false);
+  const [isUpdating, setIsUpdating] = useState<boolean>(false);
 
-  const handleUpdate = async (updateData: Partial<BreadOrder>) => {
+  const handleStatusChange = async (
+    field: 'isPaid' | 'isDelivered',
+    value: boolean
+  ) => {
     setIsUpdating(true);
     try {
-      await updateBreadOrder(order.id, updateData);
-      window.dispatchEvent(new Event('datachanged'));
+      await updateBreadOrder(order.id, { [field]: value });
       toast({
         title: 'Succès',
         description: 'Le statut de la commande a été mis à jour.',
       });
+      // The parent will re-fetch and re-render.
+      onOrderUpdate();
     } catch (error) {
       toast({
         title: 'Erreur',
@@ -52,107 +59,90 @@ export function OrderCard({ order }: { order: BreadOrder }) {
   };
 
   return (
-    <Card className="relative">
-      <CardHeader>
-        <CardTitle className="truncate text-lg pr-28">{order.name}</CardTitle>
-        {order.customerName && order.customerId && (
-          <CardDescription asChild className="pt-1">
-            <Link
-              href={`/customers/${order.customerId}`}
-              className="flex items-center gap-1.5 hover:underline"
-            >
-              <User className="h-4 w-4" />
-              <span className="font-medium">{order.customerName}</span>
-            </Link>
-          </CardDescription>
-        )}
-        <div className="absolute top-3 right-2 flex items-center">
-          <EditOrderDialog order={order} />
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-8 w-8"
-            disabled={isUpdating}
-            onClick={() => handleUpdate({ isPinned: !order.isPinned })}
-          >
-            <Pin
-              className={cn(
-                'h-5 w-5 transition-colors',
-                order.isPinned
-                  ? 'fill-primary text-primary'
-                  : 'text-muted-foreground'
-              )}
-            />
-            <span className="sr-only">
-              {order.isPinned ? 'Détacher la commande' : 'Épingler la commande'}
-            </span>
-          </Button>
-          <DeleteOrderDialog orderId={order.id} orderName={order.name} />
-        </div>
-      </CardHeader>
-      <CardContent className="flex flex-col gap-4">
-        <div className="space-y-2">
-          <div className="flex items-center gap-2 text-muted-foreground">
-            <Package className="h-5 w-5" />
-            <span className="font-medium text-foreground">
-              {order.quantity} unités x {formatCurrency(order.unitPrice)}
-            </span>
+    <Card
+      className={cn(
+        'p-4 transition-all',
+        isSelected && 'ring-2 ring-primary'
+      )}
+    >
+      <div className="flex items-start gap-4">
+        <Checkbox
+          id={`select-${order.id}`}
+          checked={isSelected}
+          onCheckedChange={onSelectionChange}
+          className="mt-1"
+        />
+        <div className="flex-grow">
+          <div className="flex justify-between items-start">
+            <div>
+              <Label
+                htmlFor={`select-${order.id}`}
+                className="font-bold text-base cursor-pointer"
+              >
+                {order.name}
+              </Label>
+              <div className="flex items-center gap-2 text-primary font-bold">
+                <span className="text-xl">{order.quantity}</span>
+                <RefreshCw className="h-4 w-4" />
+              </div>
+            </div>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0">
+                  <MoreVertical className="h-4 w-4" />
+                  <span className="sr-only">Ouvrir le menu</span>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <EditOrderDialog
+                  order={order}
+                  trigger={
+                    <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                      Modifier
+                    </DropdownMenuItem>
+                  }
+                />
+                <DeleteOrderDialog
+                  orderId={order.id}
+                  orderName={order.name}
+                  trigger={
+                    <DropdownMenuItem
+                      onSelect={(e) => e.preventDefault()}
+                      className="text-destructive focus:bg-destructive/10 focus:text-destructive"
+                    >
+                      Supprimer
+                    </DropdownMenuItem>
+                  }
+                />
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
-          <div className="flex items-center gap-2 text-muted-foreground">
-            <WalletCards className="h-5 w-5" />
-            <span className="text-xl font-bold text-foreground">
-              {formatCurrency(order.totalAmount)}
-            </span>
+          <div className="mt-4 space-y-3">
+            <div className="flex items-center justify-between">
+              <Label htmlFor={`paid-${order.id}`}>Payé</Label>
+              <Switch
+                id={`paid-${order.id}`}
+                checked={order.isPaid}
+                onCheckedChange={(checked) =>
+                  handleStatusChange('isPaid', checked)
+                }
+                disabled={isUpdating}
+              />
+            </div>
+            <div className="flex items-center justify-between">
+              <Label htmlFor={`delivered-${order.id}`}>Livré</Label>
+              <Switch
+                id={`delivered-${order.id}`}
+                checked={order.isDelivered}
+                onCheckedChange={(checked) =>
+                  handleStatusChange('isDelivered', checked)
+                }
+                disabled={isUpdating}
+              />
+            </div>
           </div>
         </div>
-        <div className="flex flex-col sm:flex-row gap-2">
-          <Button
-            variant={order.isPaid ? 'ghost' : 'outline'}
-            className={cn(
-              'flex-1',
-              order.isPaid && 'text-accent hover:bg-accent/10 hover:text-accent'
-            )}
-            disabled={isUpdating}
-            onClick={() => handleUpdate({ isPaid: !order.isPaid })}
-          >
-            {isUpdating && <Loader2 className="animate-spin" />}
-            {order.isPaid ? (
-              <>
-                <Undo2 />
-                Annuler le paiement
-              </>
-            ) : (
-              <>
-                <CreditCard />
-                Marquer payé
-              </>
-            )}
-          </Button>
-          <Button
-            variant={order.isDelivered ? 'ghost' : 'default'}
-            className={cn(
-              'flex-1',
-              order.isDelivered &&
-                'text-accent hover:bg-accent/10 hover:text-accent'
-            )}
-            disabled={isUpdating}
-            onClick={() => handleUpdate({ isDelivered: !order.isDelivered })}
-          >
-            {isUpdating && <Loader2 className="animate-spin" />}
-            {order.isDelivered ? (
-              <>
-                <Undo2 />
-                Annuler la livraison
-              </>
-            ) : (
-              <>
-                <Package />
-                Marquer livré
-              </>
-            )}
-          </Button>
-        </div>
-      </CardContent>
+      </div>
     </Card>
   );
 }

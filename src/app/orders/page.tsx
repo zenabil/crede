@@ -2,154 +2,307 @@
 
 import { useMemo, useCallback, useState, useEffect } from 'react';
 import type { BreadOrder } from '@/lib/types';
-
 import { AddOrderDialog } from '@/components/orders/add-order-dialog';
-import { StatCard } from '@/components/dashboard/stat-card';
 import { OrderCard } from '@/components/orders/order-card';
 import OrdersLoading from './loading';
 import { useCollectionOnce } from '@/hooks/use-collection-once';
 import { getBreadOrders } from '@/lib/mock-data/api';
-import { Hourglass, Check, ShoppingCart, Search } from 'lucide-react';
+import {
+  Search,
+  Printer,
+  Filter,
+  XCircle,
+  Wallet,
+  Package,
+  PackageCheck,
+  PackageOpen,
+} from 'lucide-react';
 import { ResetOrdersDialog } from '@/components/orders/reset-orders-dialog';
 import { Input } from '@/components/ui/input';
 import { formatCurrency } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Label } from '@/components/ui/label';
+
+type StatusFilter = 'all' | 'not-delivered' | 'not-paid';
 
 export default function OrdersPage() {
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
+  const [selectedOrders, setSelectedOrders] = useState<string[]>([]);
+
+  const handleDataChanged = useCallback(() => {
+    setRefreshTrigger((prev) => prev + 1);
+  }, []);
 
   useEffect(() => {
-    const handleDataChanged = () => {
-      setRefreshTrigger((prev) => prev + 1);
-    };
     window.addEventListener('datachanged', handleDataChanged);
     return () => {
       window.removeEventListener('datachanged', handleDataChanged);
     };
-  }, []);
+  }, [handleDataChanged]);
 
   const fetchOrders = useCallback(async () => {
     const data = await getBreadOrders();
     if (!data) return [];
-    // Sort by pinned status first, then by creation date
-    return data.sort((a, b) => {
-      if (a.isPinned && !b.isPinned) return -1;
-      if (!a.isPinned && b.isPinned) return 1;
-      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-    });
+    return data.sort(
+      (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    );
   }, [refreshTrigger]);
 
   const { data: orders, loading } = useCollectionOnce<BreadOrder>(fetchOrders);
 
   const filteredOrders = useMemo(() => {
     if (!orders) return [];
-    if (!searchTerm) return orders;
 
-    return orders.filter(
-      (order) =>
-        order.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (order.customerName || '')
-          .toLowerCase()
-          .includes(searchTerm.toLowerCase())
-    );
-  }, [orders, searchTerm]);
+    let filtered = orders;
 
-  const { totalAmount, paidAmount, unpaidAmount } = useMemo(() => {
-    if (!orders) {
-      return {
-        totalAmount: 0,
-        paidAmount: 0,
-        unpaidAmount: 0,
-      };
+    if (searchTerm) {
+      filtered = filtered.filter(
+        (order) =>
+          order.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          (order.customerName || '')
+            .toLowerCase()
+            .includes(searchTerm.toLowerCase())
+      );
     }
 
-    const amounts = orders.reduce(
-      (acc, order) => {
-        acc.totalAmount += order.totalAmount;
-        if (order.isPaid) {
-          acc.paidAmount += order.totalAmount;
-        }
-        return acc;
-      },
-      {
-        totalAmount: 0,
-        paidAmount: 0,
-      }
-    );
+    if (statusFilter === 'not-delivered') {
+      filtered = filtered.filter((order) => !order.isDelivered);
+    } else if (statusFilter === 'not-paid') {
+      filtered = filtered.filter((order) => !order.isPaid);
+    }
+
+    return filtered;
+  }, [orders, searchTerm, statusFilter]);
+
+  const stats = useMemo(() => {
+    if (!orders) {
+      return {
+        totalOrdered: 0,
+        totalDelivered: 0,
+        totalRemaining: 0,
+        totalCashed: 0,
+        totalDue: 0,
+      };
+    }
+    const totalOrdered = orders.reduce((sum, o) => sum + o.quantity, 0);
+    const totalDelivered = orders
+      .filter((o) => o.isDelivered)
+      .reduce((sum, o) => sum + o.quantity, 0);
+    const totalCashed = orders
+      .filter((o) => o.isPaid)
+      .reduce((sum, o) => sum + o.totalAmount, 0);
+    const totalDue = orders
+      .filter((o) => !o.isPaid)
+      .reduce((sum, o) => sum + o.totalAmount, 0);
 
     return {
-      ...amounts,
-      unpaidAmount: amounts.totalAmount - amounts.paidAmount,
+      totalOrdered,
+      totalDelivered,
+      totalRemaining: totalOrdered - totalDelivered,
+      totalCashed,
+      totalDue,
     };
   }, [orders]);
+
+  const handleSelectAll = (checked: boolean | 'indeterminate') => {
+    if (checked === true) {
+      setSelectedOrders(filteredOrders.map((o) => o.id));
+    } else {
+      setSelectedOrders([]);
+    }
+  };
+
+  const handleSelectionChange = (orderId: string, checked: boolean) => {
+    if (checked) {
+      setSelectedOrders((prev) => [...prev, orderId]);
+    } else {
+      setSelectedOrders((prev) => prev.filter((id) => id !== orderId));
+    }
+  };
+
+  const isAllSelected =
+    filteredOrders.length > 0 &&
+    selectedOrders.length === filteredOrders.length;
+  const isPartiallySelected =
+    selectedOrders.length > 0 && selectedOrders.length < filteredOrders.length;
 
   if (loading) {
     return <OrdersLoading />;
   }
 
   return (
-    <div className="flex flex-col gap-8">
-      <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold tracking-tight text-foreground">
-          Commandes de Pain
+    <div className="space-y-6">
+      <header>
+        <h1 className="text-3xl font-bold tracking-tight">
+          Commandes de Pain du Jour
         </h1>
+        <p className="text-muted-foreground">
+          Gérez les commandes de pain quotidiennes.
+        </p>
+      </header>
+
+      <div className="flex flex-col sm:flex-row gap-2">
+        <div className="relative w-full sm:w-auto sm:flex-grow">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Rechercher par nom..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-10 w-full"
+          />
+        </div>
+        <Select>
+          <SelectTrigger className="w-full sm:w-[180px]">
+            <Filter className="h-4 w-4 mr-2" />
+            <SelectValue placeholder="Par Statut" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Tout statut</SelectItem>
+            <SelectItem value="paid">Payé</SelectItem>
+            <SelectItem value="unpaid">Non Payé</SelectItem>
+            <SelectItem value="delivered">Livré</SelectItem>
+            <SelectItem value="undelivered">Non Livré</SelectItem>
+          </SelectContent>
+        </Select>
+        <Button variant="outline">
+          <Printer /> Imprimer
+        </Button>
+        <ResetOrdersDialog />
+        <AddOrderDialog />
+      </div>
+
+      <div className="flex items-center gap-4">
+        <div className="flex items-center gap-2">
+          <Checkbox
+            id="select-all"
+            checked={isAllSelected ? true : isPartiallySelected ? 'indeterminate' : false}
+            onCheckedChange={handleSelectAll}
+          />
+          <Label htmlFor="select-all">
+            {selectedOrders.length} / {filteredOrders.length} sélectionné(s)
+          </Label>
+        </div>
         <div className="flex gap-2">
-          <ResetOrdersDialog />
-          <AddOrderDialog />
+          <Button
+            size="sm"
+            variant={statusFilter === 'all' ? 'default' : 'outline'}
+            onClick={() => setStatusFilter('all')}
+          >
+            Tout
+          </Button>
+          <Button
+            size="sm"
+            variant={statusFilter === 'not-delivered' ? 'default' : 'outline'}
+            onClick={() => setStatusFilter('not-delivered')}
+          >
+            <XCircle />
+            Non Livré
+          </Button>
+          <Button
+            size="sm"
+            variant={statusFilter === 'not-paid' ? 'default' : 'outline'}
+            onClick={() => setStatusFilter('not-paid')}
+          >
+            <Wallet />
+            Non Payé
+          </Button>
         </div>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        <StatCard
-          title="Montant total"
-          value={formatCurrency(totalAmount)}
-          description="Montant total des commandes"
-          Icon={ShoppingCart}
-        />
-        <StatCard
-          title="Montant payé"
-          value={formatCurrency(paidAmount)}
-          description="Total des commandes payées"
-          Icon={Check}
-        />
-        <StatCard
-          title="Montant non payé"
-          value={formatCurrency(unpaidAmount)}
-          description="Total des commandes en attente de paiement"
-          Icon={Hourglass}
-        />
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">
+              Total Commandé
+            </CardTitle>
+            <Package className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stats.totalOrdered}</div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">
+              Quantité Livrée
+            </CardTitle>
+            <PackageCheck className="h-4 w-4 text-green-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stats.totalDelivered}</div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">
+              Quantité Restante
+            </CardTitle>
+            <PackageOpen className="h-4 w-4 text-orange-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stats.totalRemaining}</div>
+          </CardContent>
+        </Card>
       </div>
 
-      <div>
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-4">
-          <h2 className="text-2xl font-semibold">Liste des commandes</h2>
-          <div className="relative w-full sm:w-auto sm:max-w-xs">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Rechercher par nom..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10 w-full"
+      <Card className="bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800">
+        <CardHeader>
+          <CardTitle className="text-green-900 dark:text-green-200">
+            Analyse Financière
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-2 gap-4 text-center">
+            <div>
+              <p className="text-sm text-muted-foreground">Total Encaissé</p>
+              <p className="text-2xl font-bold text-green-600">
+                {formatCurrency(stats.totalCashed)}
+              </p>
+            </div>
+            <div>
+              <p className="text-sm text-muted-foreground">Total Dû</p>
+              <p className="text-2xl font-bold text-destructive">
+                {formatCurrency(stats.totalDue)}
+              </p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {filteredOrders && filteredOrders.length > 0 ? (
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+          {filteredOrders.map((order) => (
+            <OrderCard
+              key={order.id}
+              order={order}
+              isSelected={selectedOrders.includes(order.id)}
+              onSelectionChange={(checked) =>
+                handleSelectionChange(order.id, !!checked)
+              }
+              onOrderUpdate={handleDataChanged}
             />
-          </div>
+          ))}
         </div>
-
-        {filteredOrders && filteredOrders.length > 0 ? (
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            {filteredOrders.map((order) => (
-              <OrderCard key={order.id} order={order} />
-            ))}
-          </div>
-        ) : (
-          <div className="text-center py-16 border-2 border-dashed rounded-lg">
-            <p className="text-muted-foreground">
-              {searchTerm
-                ? 'Aucune commande ne correspond à votre recherche.'
-                : 'Aucune commande pour le moment.'}
-            </p>
-          </div>
-        )}
-      </div>
+      ) : (
+        <div className="text-center py-16 border-2 border-dashed rounded-lg">
+          <p className="text-muted-foreground">
+            {searchTerm || statusFilter !== 'all'
+              ? 'Aucune commande ne correspond à vos filtres.'
+              : 'Aucune commande pour le moment.'}
+          </p>
+        </div>
+      )}
     </div>
   );
 }

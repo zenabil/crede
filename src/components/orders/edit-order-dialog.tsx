@@ -4,17 +4,24 @@ import type { BreadOrder } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Pencil } from 'lucide-react';
 
-export function EditOrderDialog({ order }: { order: BreadOrder }) {
+export function EditOrderDialog({
+  order,
+  trigger,
+}: {
+  order: BreadOrder;
+  trigger?: React.ReactNode;
+}) {
+  const defaultTrigger = (
+    <Button variant="ghost" size="icon" className="h-8 w-8">
+      <Pencil className="h-5 w-5" />
+      <span className="sr-only">Modifier la commande</span>
+    </Button>
+  );
   return (
     <FormDialog
       title="Modifier la commande"
       description="Mettez à jour les détails de la commande ci-dessous."
-      trigger={
-        <Button variant="ghost" size="icon" className="h-8 w-8">
-          <Pencil className="h-5 w-5" />
-          <span className="sr-only">Modifier la commande</span>
-        </Button>
-      }
+      trigger={trigger || defaultTrigger}
       form={<EditOrderForm order={order} />}
     />
   );

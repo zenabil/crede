@@ -20,9 +20,11 @@ import { deleteBreadOrder } from '@/lib/mock-data/api';
 export function DeleteOrderDialog({
   orderId,
   orderName,
+  trigger,
 }: {
   orderId: string;
   orderName: string;
+  trigger?: React.ReactNode;
 }) {
   const [open, setOpen] = useState(false);
   const [isPending, setIsPending] = useState(false);
@@ -50,14 +52,16 @@ export function DeleteOrderDialog({
     }
   };
 
+  const defaultTrigger = (
+    <Button variant="ghost" size="icon" className="h-8 w-8">
+      <Trash2 className="text-destructive h-5 w-5" />
+      <span className="sr-only">Supprimer la commande</span>
+    </Button>
+  );
+
   return (
     <AlertDialog open={open} onOpenChange={setOpen}>
-      <AlertDialogTrigger asChild>
-        <Button variant="ghost" size="icon" className="h-8 w-8">
-          <Trash2 className="text-destructive h-5 w-5" />
-          <span className="sr-only">Supprimer la commande</span>
-        </Button>
-      </AlertDialogTrigger>
+      <AlertDialogTrigger asChild>{trigger || defaultTrigger}</AlertDialogTrigger>
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle>Êtes-vous sûr ?</AlertDialogTitle>
