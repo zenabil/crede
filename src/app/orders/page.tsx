@@ -134,12 +134,22 @@ export default function OrdersPage() {
         break;
     }
 
+    const getOrderStatusScore = (order: BreadOrder) => {
+      if (!order.isDelivered && !order.isPaid) return 1; // Unpaid and Undelivered
+      if (!order.isDelivered && order.isPaid) return 2; // Paid and Undelivered
+      if (order.isDelivered && !order.isPaid) return 3; // Unpaid and Delivered
+      if (order.isDelivered && order.isPaid) return 4; // Paid and Delivered
+      return 5; // Should not happen
+    };
+
     const [key, direction] = sortOption.split('-');
 
     filtered.sort((a, b) => {
-      // Primary sort: undelivered orders first
-      if (a.isDelivered !== b.isDelivered) {
-        return a.isDelivered ? 1 : -1;
+      // Primary sort based on status
+      const scoreA = getOrderStatusScore(a);
+      const scoreB = getOrderStatusScore(b);
+      if (scoreA !== scoreB) {
+        return scoreA - scoreB;
       }
 
       // Secondary sort: based on user's selection
