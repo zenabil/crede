@@ -56,6 +56,47 @@ export default function OrdersPage() {
     };
   }, [handleDataChanged]);
 
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      const target = event.target as HTMLElement;
+
+      // Ignore shortcuts if user is typing in an input, textarea, or select
+      if (
+        ['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName) &&
+        !target.isContentEditable
+      ) {
+        return;
+      }
+
+      switch (event.key) {
+        case 'F1':
+          event.preventDefault();
+          document.getElementById('add-order-btn')?.click();
+          break;
+        case 'F2':
+          event.preventDefault();
+          document.getElementById('order-search-input')?.focus();
+          break;
+        case 'F3':
+          event.preventDefault();
+          document.getElementById('reset-orders-btn')?.click();
+          break;
+        case 'F4':
+          event.preventDefault();
+          document.getElementById('print-orders-btn')?.click();
+          break;
+        default:
+          break;
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, []);
+
   const fetchOrders = useCallback(async () => {
     const data = await getBreadOrders();
     if (!data) return [];
@@ -234,6 +275,7 @@ export default function OrdersPage() {
         <div className="relative w-full sm:w-auto sm:flex-grow">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
+            id="order-search-input"
             placeholder="Rechercher par nom..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
@@ -270,7 +312,11 @@ export default function OrdersPage() {
             <SelectItem value="undelivered">Non Livré</SelectItem>
           </SelectContent>
         </Select>
-        <Button variant="outline" onClick={() => window.print()}>
+        <Button
+          id="print-orders-btn"
+          variant="outline"
+          onClick={() => window.print()}
+        >
           <Printer /> Imprimer
         </Button>
         <ResetOrdersDialog />

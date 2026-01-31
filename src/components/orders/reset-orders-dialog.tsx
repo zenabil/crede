@@ -47,7 +47,7 @@ export function ResetOrdersDialog() {
   return (
     <AlertDialog open={open} onOpenChange={setOpen}>
       <AlertDialogTrigger asChild>
-        <Button variant="outline">
+        <Button id="reset-orders-btn" variant="outline">
           <RotateCcw />
           Réinitialiser
         </Button>

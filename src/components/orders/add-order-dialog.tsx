@@ -9,7 +9,7 @@ export function AddOrderDialog() {
       title="Ajouter une commande"
       description="Remplissez les détails pour créer une nouvelle commande de pain."
       trigger={
-        <Button>
+        <Button id="add-order-btn">
           <PlusCircle />
           Ajouter une commande
         </Button>
