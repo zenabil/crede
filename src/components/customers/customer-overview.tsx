@@ -5,7 +5,7 @@ import type { Customer } from '@/lib/types';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { CustomersTable } from './customers-table';
-import { Search, Download, Upload } from 'lucide-react';
+import { Search, Download, Upload, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { mockDataStore } from '@/lib/mock-data';
 import { useToast } from '@/hooks/use-toast';
@@ -134,6 +134,9 @@ export function CustomerOverview({
     });
   };
 
+  const hasCustomers = customers.length > 0;
+  const hasResults = sortedAndFilteredCustomers.length > 0;
+
   return (
     <Card className={cn(className)}>
       <CardHeader>
@@ -148,6 +151,7 @@ export function CustomerOverview({
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-10 w-full"
+                disabled={!hasCustomers}
               />
             </div>
             <CsvImportDialog
@@ -162,6 +166,7 @@ export function CustomerOverview({
               variant="outline"
               onClick={handleExport}
               id="export-customers-btn"
+              disabled={!hasCustomers}
             >
               <Download />
               Exporter
@@ -170,11 +175,29 @@ export function CustomerOverview({
         </div>
       </CardHeader>
       <CardContent>
-        <CustomersTable
-          customers={sortedAndFilteredCustomers}
-          onSort={handleSort}
-          sortConfig={sortConfig}
-        />
+        {hasResults ? (
+          <CustomersTable
+            customers={sortedAndFilteredCustomers}
+            onSort={handleSort}
+            sortConfig={sortConfig}
+          />
+        ) : (
+          <div className="text-center py-16 border-2 border-dashed rounded-lg flex flex-col items-center justify-center gap-4">
+            <Users className="h-12 w-12 text-muted-foreground" />
+            <div className="text-center">
+              <h3 className="text-xl font-semibold">
+                {hasCustomers
+                  ? 'Aucun client trouvé'
+                  : 'Aucun client pour le moment'}
+              </h3>
+              <p className="text-muted-foreground mt-2">
+                {hasCustomers
+                  ? 'Essayez un autre terme de recherche.'
+                  : 'Cliquez sur le bouton "Ajouter un client" en haut de la page pour commencer.'}
+              </p>
+            </div>
+          </div>
+        )}
       </CardContent>
     </Card>
   );

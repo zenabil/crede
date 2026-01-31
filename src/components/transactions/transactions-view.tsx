@@ -7,7 +7,7 @@ import { TransactionsTable } from './transactions-table';
 import { AddTransactionDialog } from './add-transaction-dialog';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Search, PlusCircle, MinusCircle } from 'lucide-react';
+import { Search, PlusCircle, MinusCircle, FileText } from 'lucide-react';
 
 export function TransactionsView({
   transactions,
@@ -29,6 +29,9 @@ export function TransactionsView({
     );
   }, [transactions, searchTerm]);
 
+  const hasTransactions = transactions.length > 0;
+  const hasResults = filteredTransactions.length > 0;
+
   return (
     <Card>
       <CardHeader className="no-print">
@@ -43,6 +46,7 @@ export function TransactionsView({
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-10 w-full"
+                disabled={!hasTransactions}
               />
             </div>
             <AddTransactionDialog
@@ -73,7 +77,25 @@ export function TransactionsView({
         </div>
       </CardHeader>
       <CardContent>
-        <TransactionsTable transactions={filteredTransactions} />
+        {hasResults ? (
+          <TransactionsTable transactions={filteredTransactions} />
+        ) : (
+          <div className="text-center py-16 border-2 border-dashed rounded-lg flex flex-col items-center justify-center gap-4">
+            <FileText className="h-12 w-12 text-muted-foreground" />
+            <div className="text-center">
+              <h3 className="text-xl font-semibold">
+                {hasTransactions
+                  ? 'Aucune transaction trouvée'
+                  : 'Aucune transaction pour le moment'}
+              </h3>
+              <p className="text-muted-foreground mt-2">
+                {hasTransactions
+                  ? 'Essayez un autre terme de recherche.'
+                  : 'Ajoutez une dette ou un paiement pour commencer.'}
+              </p>
+            </div>
+          </div>
+        )}
       </CardContent>
     </Card>
   );

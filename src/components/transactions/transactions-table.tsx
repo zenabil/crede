@@ -33,60 +33,52 @@ export function TransactionsTable({
           </TableRow>
         </TableHeader>
         <TableBody>
-          {transactions.length > 0 ? (
-            transactions.map((transaction) => (
-              <TableRow key={transaction.id}>
-                <TableCell className="font-medium">
-                  {transaction.description}
-                </TableCell>
-                <TableCell>
-                  <Badge
-                    variant={
-                      transaction.type === 'debt' ? 'destructive' : 'success'
-                    }
-                    className="capitalize"
-                  >
-                    {transaction.type === 'debt' ? (
-                      <ArrowUpRight className="mr-1 h-3 w-3" />
-                    ) : (
-                      <ArrowDownLeft className="mr-1 h-3 w-3" />
-                    )}
-                    {transaction.type === 'debt' ? 'Dette' : 'Paiement'}
-                  </Badge>
-                </TableCell>
-                <TableCell className="text-muted-foreground">
-                  {format(new Date(transaction.date), 'dd MMM yyyy', {
-                    locale: fr,
-                  })}
-                </TableCell>
-                <TableCell
-                  className={`text-right font-mono font-medium ${
-                    transaction.type === 'debt'
-                      ? 'text-destructive'
-                      : 'text-accent'
-                  }`}
+          {transactions.map((transaction) => (
+            <TableRow key={transaction.id}>
+              <TableCell className="font-medium">
+                {transaction.description}
+              </TableCell>
+              <TableCell>
+                <Badge
+                  variant={
+                    transaction.type === 'debt' ? 'destructive' : 'success'
+                  }
+                  className="capitalize"
                 >
-                  {transaction.type === 'debt' ? '+' : '-'}
-                  {formatCurrency(transaction.amount)}
-                </TableCell>
-                <TableCell className="text-right no-print">
-                  <div className="flex items-center justify-end gap-0.5">
-                    <EditTransactionDialog transaction={transaction} />
-                    <DeleteTransactionDialog
-                      transactionId={transaction.id}
-                      transactionDescription={transaction.description}
-                    />
-                  </div>
-                </TableCell>
-              </TableRow>
-            ))
-          ) : (
-            <TableRow>
-              <TableCell colSpan={5} className="h-24 text-center">
-                Aucune transaction pour le moment.
+                  {transaction.type === 'debt' ? (
+                    <ArrowUpRight className="mr-1 h-3 w-3" />
+                  ) : (
+                    <ArrowDownLeft className="mr-1 h-3 w-3" />
+                  )}
+                  {transaction.type === 'debt' ? 'Dette' : 'Paiement'}
+                </Badge>
+              </TableCell>
+              <TableCell className="text-muted-foreground">
+                {format(new Date(transaction.date), 'dd MMM yyyy', {
+                  locale: fr,
+                })}
+              </TableCell>
+              <TableCell
+                className={`text-right font-mono font-medium ${
+                  transaction.type === 'debt'
+                    ? 'text-destructive'
+                    : 'text-accent'
+                }`}
+              >
+                {transaction.type === 'debt' ? '+' : '-'}
+                {formatCurrency(transaction.amount)}
+              </TableCell>
+              <TableCell className="text-right no-print">
+                <div className="flex items-center justify-end gap-0.5">
+                  <EditTransactionDialog transaction={transaction} />
+                  <DeleteTransactionDialog
+                    transactionId={transaction.id}
+                    transactionDescription={transaction.description}
+                  />
+                </div>
               </TableCell>
             </TableRow>
-          )}
+          ))}
         </TableBody>
       </Table>
     </div>

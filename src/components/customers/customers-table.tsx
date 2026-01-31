@@ -103,93 +103,85 @@ export function CustomersTable({
           </TableRow>
         </TableHeader>
         <TableBody>
-          {customers.length > 0 ? (
-            customers.map((customer) => {
-              const isSettlementDay =
-                customer.settlementDay &&
-                todayName &&
-                customer.settlementDay.toLowerCase().includes(todayName);
+          {customers.map((customer) => {
+            const isSettlementDay =
+              customer.settlementDay &&
+              todayName &&
+              customer.settlementDay.toLowerCase().includes(todayName);
 
-              return (
-                <TableRow key={customer.id}>
-                  <TableCell className="font-medium">{customer.name}</TableCell>
-                  <TableCell className="hidden sm:table-cell text-muted-foreground">
-                    <div
-                      className={cn(
-                        'flex items-center gap-2',
-                        isSettlementDay &&
-                          'font-semibold text-amber-600 dark:text-amber-400'
-                      )}
-                    >
-                      {isSettlementDay && <CalendarCheck2 className="h-4 w-4" />}
-                      <span>{customer.settlementDay}</span>
-                    </div>
-                  </TableCell>
-                  <TableCell className="hidden lg:table-cell text-muted-foreground font-mono">
-                    {formatCurrency(customer.totalDebts || 0)}
-                  </TableCell>
-                  <TableCell className="hidden lg:table-cell text-muted-foreground font-mono">
-                    {formatCurrency(customer.totalPayments || 0)}
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <Badge
-                      variant={getBalanceVariant(customer.balance)}
-                      className="font-mono"
-                    >
-                      {formatCurrency(customer.balance)}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex items-center justify-end gap-0.5">
+            return (
+              <TableRow key={customer.id}>
+                <TableCell className="font-medium">{customer.name}</TableCell>
+                <TableCell className="hidden sm:table-cell text-muted-foreground">
+                  <div
+                    className={cn(
+                      'flex items-center gap-2',
+                      isSettlementDay &&
+                        'font-semibold text-amber-600 dark:text-amber-400'
+                    )}
+                  >
+                    {isSettlementDay && <CalendarCheck2 className="h-4 w-4" />}
+                    <span>{customer.settlementDay}</span>
+                  </div>
+                </TableCell>
+                <TableCell className="hidden lg:table-cell text-muted-foreground font-mono">
+                  {formatCurrency(customer.totalDebts || 0)}
+                </TableCell>
+                <TableCell className="hidden lg:table-cell text-muted-foreground font-mono">
+                  {formatCurrency(customer.totalPayments || 0)}
+                </TableCell>
+                <TableCell className="text-right">
+                  <Badge
+                    variant={getBalanceVariant(customer.balance)}
+                    className="font-mono"
+                  >
+                    {formatCurrency(customer.balance)}
+                  </Badge>
+                </TableCell>
+                <TableCell className="text-right">
+                  <div className="flex items-center justify-end gap-0.5">
+                    <AddTransactionDialog
+                      type="debt"
+                      customerId={customer.id}
+                      trigger={
+                        <Button variant="ghost" size="icon">
+                          <PlusCircle />
+                          <span className="sr-only">Ajouter une dette</span>
+                        </Button>
+                      }
+                    />
+                    {customer.balance > 0 && (
                       <AddTransactionDialog
-                        type="debt"
+                        type="payment"
                         customerId={customer.id}
+                        defaultAmount={customer.balance}
+                        defaultDescription="Règlement du solde"
                         trigger={
                           <Button variant="ghost" size="icon">
-                            <PlusCircle />
-                            <span className="sr-only">Ajouter une dette</span>
+                            <MinusCircle className="text-accent" />
+                            <span className="sr-only">
+                              Ajouter un paiement
+                            </span>
                           </Button>
                         }
                       />
-                      {customer.balance > 0 && (
-                        <AddTransactionDialog
-                          type="payment"
-                          customerId={customer.id}
-                          defaultAmount={customer.balance}
-                          defaultDescription="Règlement du solde"
-                          trigger={
-                            <Button variant="ghost" size="icon">
-                              <MinusCircle className="text-accent" />
-                              <span className="sr-only">
-                                Ajouter un paiement
-                              </span>
-                            </Button>
-                          }
-                        />
-                      )}
-                      <EditCustomerDialog customer={customer} />
-                      <DeleteCustomerDialog
-                        customerId={customer.id}
-                        customerName={customer.name}
-                      />
-                      <Button variant="ghost" size="icon" asChild>
-                        <Link href={`/customers/${customer.id}`}>
-                          <span className="sr-only">Voir les détails</span>
-                          <ArrowRight />
-                        </Link>
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              );
-            })
-          ) : (
-            <TableRow>
-              <TableCell colSpan={6} className="text-center h-24">
-                Aucun client trouvé.
-              </TableCell>
-            </TableRow>
-          )}
+                    )}
+                    <EditCustomerDialog customer={customer} />
+                    <DeleteCustomerDialog
+                      customerId={customer.id}
+                      customerName={customer.name}
+                    />
+                    <Button variant="ghost" size="icon" asChild>
+                      <Link href={`/customers/${customer.id}`}>
+                        <span className="sr-only">Voir les détails</span>
+                        <ArrowRight />
+                      </Link>
+                    </Button>
+                  </div>
+                </TableCell>
+              </TableRow>
+            );
+          })}
         </TableBody>
       </Table>
     </div>
