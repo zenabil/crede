@@ -4,13 +4,13 @@
   "description": "Une application pour gérer les crédits clients et les commandes.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#f9fafb",
-  "theme_color": "#3b82f6",
+  "background_color": "#ffffff",
+  "theme_color": "#020817",
   "icons": [
     {
       "src": "/icon.svg",
-      "type": "image/svg+xml",
-      "sizes": "any"
+      "sizes": "any",
+      "type": "image/svg+xml"
     }
   ]
 }
