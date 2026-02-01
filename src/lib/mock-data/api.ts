@@ -529,7 +529,6 @@ export const runDailyOrderReconciliation = async (): Promise<boolean> => {
   console.log('Performing daily order reconciliation...');
 
   let changesMade = false;
-  // Get all orders that are associated with a customer
   const customerOrders = (mockDataStore.breadOrders || []).filter(
     (o) => o.customerId
   );
@@ -543,8 +542,22 @@ export const runDailyOrderReconciliation = async (): Promise<boolean> => {
       (t) => t.orderId === order.id && t.type === 'payment'
     );
 
-    // --- 1. Ensure debt transaction exists for every customer order ---
-    if (!debtTransaction) {
+    // --- 1. Ensure debt transaction exists and is correct ---
+    if (debtTransaction) {
+      if (debtTransaction.amount !== order.totalAmount) {
+        console.log(`Reconciliation: Mismatched debt amount for order ${order.id}. Correcting.`);
+        try {
+          await updateTransaction(debtTransaction.id, {
+            amount: order.totalAmount,
+            description: debtTransaction.description,
+            date: debtTransaction.date,
+          });
+          changesMade = true;
+        } catch (err) {
+          console.error(`Reconciliation Error: Failed to correct debt amount for order ${order.id}`, err);
+        }
+      }
+    } else {
       console.log(`Reconciliation: Missing debt transaction for order ${order.id}. Creating it.`);
       try {
         await addTransaction({
@@ -561,10 +574,23 @@ export const runDailyOrderReconciliation = async (): Promise<boolean> => {
       }
     }
 
-    // --- 2. Handle payment status ---
+    // --- 2. Handle payment status and correctness ---
     if (order.isPaid) {
-      // If paid, ensure payment transaction exists
-      if (!paymentTransaction) {
+      if (paymentTransaction) {
+        if (paymentTransaction.amount !== order.totalAmount) {
+          console.log(`Reconciliation: Mismatched payment amount for order ${order.id}. Correcting.`);
+          try {
+            await updateTransaction(paymentTransaction.id, {
+              amount: order.totalAmount,
+              description: paymentTransaction.description,
+              date: paymentTransaction.date,
+            });
+            changesMade = true;
+          } catch (err) {
+            console.error(`Reconciliation Error: Failed to correct payment amount for order ${order.id}`, err);
+          }
+        }
+      } else {
          console.log(`Reconciliation: Missing payment transaction for PAID order ${order.id}. Creating it.`);
          try {
             await addTransaction({
@@ -572,7 +598,7 @@ export const runDailyOrderReconciliation = async (): Promise<boolean> => {
               type: 'payment',
               amount: order.totalAmount,
               description: `Paiement commande: ${order.name}`,
-              date: new Date().toISOString(), // Use today's date for the payment
+              date: new Date().toISOString(),
               orderId: order.id,
             });
             changesMade = true;
@@ -581,7 +607,6 @@ export const runDailyOrderReconciliation = async (): Promise<boolean> => {
          }
       }
     } else {
-      // If NOT paid, ensure payment transaction does NOT exist
       if (paymentTransaction) {
         console.log(`Reconciliation: Found unexpected payment transaction for UNPAID order ${order.id}. Deleting it.`);
         try {
