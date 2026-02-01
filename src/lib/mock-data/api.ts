@@ -511,9 +511,8 @@ export const resetAllData = async (): Promise<{ success: boolean }> => {
 };
 
 export const runDailyOrderReconciliation = async (): Promise<boolean> => {
-  // This function runs once a day to ensure that any unpaid order
-  // with a customer has a corresponding debt transaction.
-  // This acts as a safety net for data integrity.
+  // This function runs once a day to ensure data integrity between orders and transactions.
+  // This acts as a safety net.
 
   if (typeof window === 'undefined') {
     return false;
@@ -530,20 +529,24 @@ export const runDailyOrderReconciliation = async (): Promise<boolean> => {
   console.log('Performing daily order reconciliation...');
 
   let changesMade = false;
-  const unpaidCustomerOrders = mockDataStore.breadOrders.filter(
-    (o) => o.customerId && !o.isPaid
+  // Get all orders that are associated with a customer
+  const customerOrders = (mockDataStore.breadOrders || []).filter(
+    (o) => o.customerId
   );
   const allTransactions = mockDataStore.transactions;
 
-  for (const order of unpaidCustomerOrders) {
-    const debtTransactionExists = allTransactions.some(
+  for (const order of customerOrders) {
+    const debtTransaction = allTransactions.find(
       (t) => t.orderId === order.id && t.type === 'debt'
     );
+    const paymentTransaction = allTransactions.find(
+      (t) => t.orderId === order.id && t.type === 'payment'
+    );
 
-    if (!debtTransactionExists) {
-      console.log(`Reconciliation: Missing debt transaction for order ${order.id}. Creating it now.`);
+    // --- 1. Ensure debt transaction exists for every customer order ---
+    if (!debtTransaction) {
+      console.log(`Reconciliation: Missing debt transaction for order ${order.id}. Creating it.`);
       try {
-        // We call addTransaction directly, which will modify mockDataStore and customer balance
         await addTransaction({
           customerId: order.customerId!,
           type: 'debt',
@@ -555,6 +558,38 @@ export const runDailyOrderReconciliation = async (): Promise<boolean> => {
         changesMade = true;
       } catch (err) {
         console.error(`Reconciliation Error: Failed to create missing debt transaction for order ${order.id}`, err);
+      }
+    }
+
+    // --- 2. Handle payment status ---
+    if (order.isPaid) {
+      // If paid, ensure payment transaction exists
+      if (!paymentTransaction) {
+         console.log(`Reconciliation: Missing payment transaction for PAID order ${order.id}. Creating it.`);
+         try {
+            await addTransaction({
+              customerId: order.customerId!,
+              type: 'payment',
+              amount: order.totalAmount,
+              description: `Paiement commande: ${order.name}`,
+              date: new Date().toISOString(), // Use today's date for the payment
+              orderId: order.id,
+            });
+            changesMade = true;
+         } catch (err) {
+            console.error(`Reconciliation Error: Failed to create missing payment transaction for order ${order.id}`, err);
+         }
+      }
+    } else {
+      // If NOT paid, ensure payment transaction does NOT exist
+      if (paymentTransaction) {
+        console.log(`Reconciliation: Found unexpected payment transaction for UNPAID order ${order.id}. Deleting it.`);
+        try {
+          await deleteTransaction(paymentTransaction.id);
+          changesMade = true;
+        } catch (err) {
+          console.error(`Reconciliation Error: Failed to delete incorrect payment transaction for order ${order.id}`, err);
+        }
       }
     }
   }
