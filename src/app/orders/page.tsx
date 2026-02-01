@@ -57,10 +57,15 @@ export default function OrdersPage() {
     runDailyOrderReconciliation().then((changesMade) => {
       if (changesMade) {
         console.log('Reconciliation created new data, refreshing view.');
+        toast({
+          title: 'Synchronisation Automatique',
+          description:
+            'Les soldes des clients ont été mis à jour pour refléter les commandes non synchronisées.',
+        });
         handleDataChanged();
       }
     });
-  }, [handleDataChanged]);
+  }, [handleDataChanged, toast]);
 
   useEffect(() => {
     window.addEventListener('datachanged', handleDataChanged);
