@@ -1,9 +1,9 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { useUser } from '@/firebase';
+import { useUser, initializeFirebase } from '@/firebase/auth/api-public';
 import { Button } from '@/components/ui/button';
-import { signInWithGoogle, signOut, getGoogleAccessToken } from '@/firebase/auth/api';
+import { signInWithGoogle, signOut, getGoogleAccessToken } from '@/firebase/auth/api-public';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
   LogIn,
@@ -33,6 +33,9 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { mockDataStore, saveData } from '@/lib/mock-data';
+
+// Initialize firebase for auth only in this component
+initializeFirebase();
 
 export function GoogleDriveSettings() {
   const { user, loading: userLoading } = useUser();
@@ -141,7 +144,6 @@ export function GoogleDriveSettings() {
       mockDataStore.breadUnitPrice = restoredData.breadUnitPrice;
 
       saveData();
-      window.dispatchEvent(new Event('datachanged'));
 
       toast({
         title: 'Restauration réussie',

@@ -2,9 +2,7 @@
 
 import { useRef, useState } from 'react';
 import { z } from 'zod';
-import { useFirebase, useUser, useCollection, useDoc } from '@/firebase';
-import { useMemoFirebase } from '@/firebase/firestore/use-memo-firebase';
-import { collection, query, orderBy, doc } from 'firebase/firestore';
+import { useMockData } from '@/hooks/use-mock-data';
 
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -17,7 +15,7 @@ import {
 } from '@/components/ui/select';
 import { SubmitButton } from '@/components/forms/submit-button';
 import { useFormSubmission } from '@/hooks/use-form-submission';
-import { addBreadOrder } from '@/lib/firebase/api';
+import { addBreadOrder } from '@/lib/mock-data/api';
 import type { Customer, AppSettings } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
 
@@ -35,20 +33,7 @@ export function AddOrderForm({ onSuccess }: { onSuccess?: () => void }) {
   const formRef = useRef<HTMLFormElement>(null);
   const [selectedCustomerId, setSelectedCustomerId] = useState<string | null>(null);
   
-  const { user } = useUser();
-  const { firestore } = useFirebase();
-
-  const customersQuery = useMemoFirebase(() => {
-    if (!firestore || !user) return null;
-    return query(collection(firestore, 'users', user.uid, 'customers'), orderBy('name'));
-  }, [firestore, user]);
-  const { data: customers } = useCollection<Customer>(customersQuery);
-
-  const settingsRef = useMemoFirebase(() => {
-    if (!firestore || !user) return null;
-    return doc(firestore, 'users', user.uid, 'settings', 'config');
-  }, [firestore, user]);
-  const { data: settings, loading: settingsLoading } = useDoc<AppSettings>(settingsRef);
+  const { customers, settings, loading: settingsLoading } = useMockData();
   const unitPrice = settings?.breadUnitPrice;
 
   const { isPending, errors, handleSubmit } = useFormSubmission({
@@ -63,15 +48,12 @@ export function AddOrderForm({ onSuccess }: { onSuccess?: () => void }) {
       if (unitPrice === undefined || unitPrice === null) {
         throw new Error('Le prix unitaire du pain non chargé.');
       }
-      if (!user) {
-        throw new Error('Utilisateur non authentifié.');
-      }
       const totalAmount = data.quantity * unitPrice;
       const selectedCustomer = customers?.find(
         (c) => c.id === selectedCustomerId
       );
 
-      await addBreadOrder(user.uid, {
+      await addBreadOrder({
         ...data,
         unitPrice: unitPrice,
         totalAmount,

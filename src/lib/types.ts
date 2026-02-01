@@ -2,10 +2,10 @@ export interface Customer {
   id: string;
   name: string;
   phone: string;
-  createdAt: string; // This will be a server timestamp string on write, but string on read
+  createdAt: string; 
   balance: number;
   settlementDay?: string;
-  // These are calculated client-side and not stored in Firestore
+  // These are calculated client-side and not stored in the database
   totalDebts?: number;
   totalPayments?: number;
 }
@@ -17,7 +17,7 @@ export interface Transaction {
   customerId: string;
   type: TransactionType;
   amount: number;
-  date: string; // ISO Date string on client, server timestamp on write
+  date: string; // ISO Date string
   description: string;
   orderId?: string;
 }
@@ -30,7 +30,7 @@ export interface BreadOrder {
   totalAmount: number;
   isPaid: boolean;
   isDelivered: boolean;
-  createdAt: string; // ISO Date string on client, server timestamp on write
+  createdAt: string; // ISO Date string
   isPinned: boolean;
   customerId: string | null;
   customerName: string | null;

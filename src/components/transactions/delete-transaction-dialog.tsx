@@ -15,8 +15,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Trash2, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { deleteTransaction } from '@/lib/firebase/api';
-import { useUser } from '@/firebase';
+import { deleteTransaction } from '@/lib/mock-data/api';
 
 export function DeleteTransactionDialog({
   transactionId,
@@ -28,16 +27,11 @@ export function DeleteTransactionDialog({
   const [open, setOpen] = useState(false);
   const [isPending, setIsPending] = useState(false);
   const { toast } = useToast();
-  const { user } = useUser();
 
   const handleDelete = async () => {
-    if (!user) {
-      toast({ title: 'Erreur', description: 'Vous devez être connecté.', variant: 'destructive' });
-      return;
-    }
     setIsPending(true);
     try {
-      await deleteTransaction(user.uid, transactionId);
+      await deleteTransaction(transactionId);
       toast({
         title: 'Succès !',
         description: `La transaction a été supprimée.`,

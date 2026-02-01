@@ -1,0 +1,303 @@
+'use client';
+import { mockDataStore, saveData, resetToSeedData as resetSeed } from './index';
+import type { Transaction, Customer, TransactionType, BreadOrder } from '@/lib/types';
+import { startOfDay } from 'date-fns';
+
+let nextId = () => Date.now().toString() + Math.random().toString(36).substring(2, 9);
+
+// --- Customer Functions ---
+interface AddCustomerData {
+  name: string;
+  phone: string;
+  settlementDay?: string;
+}
+
+export const addCustomer = (data: AddCustomerData) => {
+  const newCustomer: Customer = {
+    ...data,
+    id: nextId(),
+    balance: 0,
+    createdAt: new Date().toISOString(),
+  };
+  mockDataStore.customers.push(newCustomer);
+  saveData();
+};
+
+export const updateCustomer = (customerId: string, data: Partial<AddCustomerData>) => {
+  const customer = mockDataStore.customers.find(c => c.id === customerId);
+  if (customer) {
+    Object.assign(customer, data);
+    saveData();
+  }
+};
+
+export const deleteCustomer = (customerId: string) => {
+  mockDataStore.customers = mockDataStore.customers.filter(c => c.id !== customerId);
+  // Also delete associated transactions to keep data clean
+  mockDataStore.transactions = mockDataStore.transactions.filter(t => t.customerId !== customerId);
+  saveData();
+};
+
+
+// --- Transaction Functions ---
+interface AddTransactionData {
+  customerId: string;
+  type: TransactionType;
+  amount: number;
+  description: string;
+  date: string; // ISO string
+  orderId?: string;
+}
+
+export const addTransaction = (data: AddTransactionData) => {
+  const customer = mockDataStore.customers.find(c => c.id === data.customerId);
+  if (!customer) {
+    throw new Error("Client non trouvé.");
+  }
+  
+  const amountChange = data.type === 'debt' ? data.amount : -data.amount;
+  customer.balance += amountChange;
+
+  const newTransaction: Transaction = {
+    ...data,
+    id: nextId(),
+  };
+
+  mockDataStore.transactions.push(newTransaction);
+  saveData();
+};
+
+interface UpdateTransactionData {
+  amount: number;
+  description: string;
+  date: string; // ISO string
+}
+
+export const updateTransaction = (transactionId: string, data: UpdateTransactionData) => {
+  const transaction = mockDataStore.transactions.find(t => t.id === transactionId);
+  if (!transaction) return;
+
+  const customer = mockDataStore.customers.find(c => c.id === transaction.customerId);
+  if (customer) {
+    // Revert old amount
+    const oldAmountEffect = transaction.type === 'debt' ? -transaction.amount : transaction.amount;
+    customer.balance += oldAmountEffect;
+
+    // Apply new amount
+    const newAmountEffect = transaction.type === 'debt' ? data.amount : -data.amount;
+    customer.balance += newAmountEffect;
+  }
+  
+  Object.assign(transaction, data);
+  saveData();
+};
+
+export const deleteTransaction = (transactionId: string) => {
+  const transactionIndex = mockDataStore.transactions.findIndex(t => t.id === transactionId);
+  if (transactionIndex === -1) return;
+
+  const transaction = mockDataStore.transactions[transactionIndex];
+  const customer = mockDataStore.customers.find(c => c.id === transaction.customerId);
+
+  if (customer) {
+    const amountToRevert = transaction.type === 'debt' ? -transaction.amount : transaction.amount;
+    customer.balance += amountToRevert;
+  }
+  
+  mockDataStore.transactions.splice(transactionIndex, 1);
+  saveData();
+};
+
+// --- Bread Order Functions ---
+interface AddBreadOrderData {
+  name: string;
+  quantity: number;
+  unitPrice: number;
+  totalAmount: number;
+  customerId: string | null;
+  customerName: string | null;
+}
+
+export const addBreadOrder = async (data: AddBreadOrderData) => {
+    const newOrder: BreadOrder = {
+        ...data,
+        id: nextId(),
+        isPaid: false,
+        isDelivered: false,
+        isPinned: false,
+        createdAt: new Date().toISOString(),
+    };
+    mockDataStore.breadOrders.push(newOrder);
+
+    if (data.customerId) {
+        addTransaction({
+            customerId: data.customerId,
+            type: 'debt',
+            amount: data.totalAmount,
+            description: `Commande: ${data.name}`,
+            date: new Date().toISOString(),
+            orderId: newOrder.id,
+        });
+    } else {
+        saveData();
+    }
+};
+
+export const updateBreadOrder = async (orderId: string, data: Partial<Omit<BreadOrder, 'id'>>) => {
+  const order = mockDataStore.breadOrders.find(o => o.id === orderId);
+  if (order) {
+    const originalCustomerId = order.customerId;
+
+    Object.assign(order, data);
+
+    // If customer is removed from order, we need to delete the associated transaction
+    if (originalCustomerId && !order.customerId) {
+        const txIndex = mockDataStore.transactions.findIndex(t => t.orderId === orderId);
+        if (txIndex > -1) {
+            deleteTransaction(mockDataStore.transactions[txIndex].id);
+            // saveData() is called inside deleteTransaction
+            return; 
+        }
+    }
+    
+    // If customer is added or changed, or amount changed. Find and update transaction.
+    const tx = mockDataStore.transactions.find(t => t.orderId === orderId);
+    if (tx) {
+        if (tx.customerId !== order.customerId || tx.amount !== order.totalAmount) {
+            updateTransaction(tx.id, {
+                amount: order.totalAmount,
+                description: tx.description,
+                date: tx.date,
+            });
+        }
+    } else if (order.customerId) {
+        // If no transaction existed but now there is a customer
+        addTransaction({
+            customerId: order.customerId,
+            type: 'debt',
+            amount: order.totalAmount,
+            description: `Commande: ${order.name}`,
+            date: order.createdAt,
+            orderId: order.id,
+        });
+    }
+
+    saveData();
+  }
+};
+
+
+export const deleteBreadOrder = async (orderId: string) => {
+    const orderIndex = mockDataStore.breadOrders.findIndex(o => o.id === orderId);
+    if (orderIndex === -1) return;
+
+    const order = mockDataStore.breadOrders[orderIndex];
+
+    // Also delete associated transaction.
+    const txIndex = mockDataStore.transactions.findIndex(t => t.orderId === orderId);
+    if (txIndex > -1) {
+        deleteTransaction(mockDataStore.transactions[txIndex].id);
+        // deleteTransaction calls saveData
+    }
+
+    mockDataStore.breadOrders.splice(orderIndex, 1);
+    saveData();
+};
+
+export const resetBreadOrders = async () => {
+    mockDataStore.breadOrders = mockDataStore.breadOrders.filter(o => o.isPinned);
+    saveData();
+};
+
+// --- Settings Functions ---
+export const updateBreadUnitPrice = (price: number) => {
+    mockDataStore.breadUnitPrice = price;
+    saveData();
+};
+
+export const setInitialBreadUnitPrice = () => {
+    // This is handled by loadData now, this function is for API compatibility
+};
+
+// --- Data Management ---
+export const exportData = () => {
+    const dataStr = JSON.stringify(mockDataStore, null, 2);
+    const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+    
+    const exportFileDefaultName = 'gestion-credit-backup.json';
+    
+    const linkElement = document.createElement('a');
+    linkElement.setAttribute('href', dataUri);
+    linkElement.setAttribute('download', exportFileDefaultName);
+    linkElement.click();
+};
+
+export const resetAllData = () => {
+    resetSeed();
+};
+
+// Daily sync logic
+export const syncDailyOrders = async () => {
+  const today = startOfDay(new Date()).toISOString().split('T')[0];
+  const lastSyncDate = localStorage.getItem('lastOrderSyncDate');
+
+  if (lastSyncDate === today) {
+    return { didSync: false, message: 'Sync déjà effectué aujourd\'hui.' };
+  }
+
+  let changesMade = false;
+  
+  mockDataStore.breadOrders.forEach(order => {
+    if (!order.customerId) return;
+    
+    const existingTx = mockDataStore.transactions.find(tx => tx.orderId === order.id);
+    
+    // Case 1: Unpaid order should have a debt transaction
+    if (!order.isPaid) {
+      if (!existingTx) {
+        addTransaction({
+          customerId: order.customerId,
+          type: 'debt',
+          amount: order.totalAmount,
+          description: `Commande (auto-sync): ${order.name}`,
+          date: order.createdAt,
+          orderId: order.id,
+        });
+        changesMade = true;
+      } else if (existingTx.type === 'payment') {
+        // Correct wrong transaction type
+        deleteTransaction(existingTx.id);
+        addTransaction({
+          customerId: order.customerId,
+          type: 'debt',
+          amount: order.totalAmount,
+          description: `Commande (auto-sync): ${order.name}`,
+          date: order.createdAt,
+          orderId: order.id,
+        });
+        changesMade = true;
+      } else if (existingTx.amount !== order.totalAmount) {
+         // Correct wrong amount
+        updateTransaction(existingTx.id, {
+            amount: order.totalAmount,
+            description: existingTx.description,
+            date: existingTx.date
+        });
+        changesMade = true;
+      }
+    }
+    
+    // Case 2: Paid order should not have a debt transaction
+    if (order.isPaid && existingTx && existingTx.type === 'debt') {
+      deleteTransaction(existingTx.id);
+      changesMade = true;
+    }
+  });
+
+  localStorage.setItem('lastOrderSyncDate', today);
+  
+  if (changesMade) {
+     return { didSync: true, message: 'Synchronisation terminée. Les soldes ont été mis à jour.' };
+  }
+  return { didSync: false, message: 'Aucune modification nécessaire.' };
+};

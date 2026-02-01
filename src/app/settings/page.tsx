@@ -9,30 +9,22 @@ import {
 } from '@/components/ui/card';
 import { BreadPriceSetting } from '@/components/settings/bread-price-setting';
 import { GoogleDriveSettings } from '@/components/settings/google-drive-settings';
+import { JsonImportDialog } from '@/components/settings/json-import-dialog';
+import { ResetAppDataDialog } from '@/components/settings/reset-app-data-dialog';
 import { Button } from '@/components/ui/button';
-import { signInWithGoogle } from '@/firebase/auth/api';
-import { useUser } from '@/firebase';
+import { Download } from 'lucide-react';
+import { exportData } from '@/lib/mock-data/api';
 import SettingsLoading from './loading';
+import { useMockData } from '@/hooks/use-mock-data';
+
 
 export default function SettingsPage() {
-  const { user, loading } = useUser();
+   const { loading } = useMockData();
 
   if (loading) {
     return <SettingsLoading />;
   }
-
-  if (!user) {
-    return (
-      <div className="flex flex-col items-center justify-center h-full text-center py-16">
-        <h2 className="text-2xl font-bold mb-4">Page des Paramètres</h2>
-        <p className="text-muted-foreground mb-8">
-          Veuillez vous connecter pour gérer les paramètres de votre application.
-        </p>
-        <Button onClick={signInWithGoogle}>Se connecter avec Google</Button>
-      </div>
-    );
-  }
-
+  
   return (
     <div className="space-y-8">
       <header>
@@ -52,16 +44,32 @@ export default function SettingsPage() {
         </CardHeader>
         <CardContent className="space-y-4">
           <BreadPriceSetting />
-
+          
+          <div className="flex flex-col sm:flex-row items-center justify-between p-4 border rounded-lg">
+            <div className="mb-4 sm:mb-0">
+                <h3 className="font-semibold">Importation et Exportation</h3>
+                <p className="text-sm text-muted-foreground">
+                Sauvegardez toutes les données de l'application dans un fichier ou restaurez-les.
+                </p>
+            </div>
+            <div className="flex items-center gap-2">
+                <JsonImportDialog />
+                <Button variant="outline" onClick={exportData}>
+                    <Download /> Exporter (.json)
+                </Button>
+            </div>
+          </div>
+          
           <GoogleDriveSettings />
           
-          <div className="p-4 border rounded-lg bg-muted/50">
-             <h3 className="font-semibold text-lg mb-4">
-              Importation et Exportation
-            </h3>
-             <p className="text-sm text-muted-foreground">
-               Les fonctionnalités d'importation, d'exportation et de réinitialisation des données seront bientôt réactivées.
-             </p>
+          <div className="flex flex-col sm:flex-row items-center justify-between p-4 border rounded-lg bg-destructive/10 border-destructive/20">
+             <div className="mb-4 sm:mb-0">
+                <h3 className="font-semibold text-destructive">Zone de Danger</h3>
+                <p className="text-sm text-destructive/80">
+                La réinitialisation supprimera toutes vos données de manière permanente.
+                </p>
+            </div>
+            <ResetAppDataDialog />
           </div>
 
         </CardContent>

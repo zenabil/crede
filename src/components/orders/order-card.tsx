@@ -6,7 +6,7 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { MoreVertical, RefreshCw, Star, User } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { updateBreadOrder } from '@/lib/firebase/api';
+import { updateBreadOrder } from '@/lib/mock-data/api';
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
 import { EditOrderDialog } from './edit-order-dialog';
@@ -21,7 +21,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { useUser } from '@/firebase';
 
 export function OrderCard({
   order,
@@ -34,16 +33,14 @@ export function OrderCard({
 }) {
   const { toast } = useToast();
   const [isUpdating, setIsUpdating] = useState<boolean>(false);
-  const { user } = useUser();
 
   const handleStatusChange = async (
     field: 'isPaid' | 'isDelivered',
     value: boolean
   ) => {
-    if (!user) return;
     setIsUpdating(true);
     try {
-      await updateBreadOrder(user.uid, order.id, { [field]: value });
+      await updateBreadOrder(order.id, { [field]: value });
       toast({
         title: 'Succès',
         description: 'Le statut de la commande a été mis à jour.',
@@ -60,10 +57,9 @@ export function OrderCard({
   };
 
   const handlePinToggle = async () => {
-    if (!user) return;
     setIsUpdating(true);
     try {
-      await updateBreadOrder(user.uid, order.id, { isPinned: !order.isPinned });
+      await updateBreadOrder(order.id, { isPinned: !order.isPinned });
       toast({
         title: 'Succès',
         description: `La commande a été ${

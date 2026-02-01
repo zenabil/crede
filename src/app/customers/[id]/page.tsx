@@ -2,9 +2,7 @@
 
 import { useMemo } from 'react';
 import { useParams, notFound, useRouter } from 'next/navigation';
-import { useFirebase, useUser, useDoc, useCollection } from '@/firebase';
-import { useMemoFirebase } from '@/firebase/firestore/use-memo-firebase';
-import { doc, collection, query, where, orderBy } from 'firebase/firestore';
+import { useMockData } from '@/hooks/use-mock-data';
 import type { Customer, Transaction } from '@/lib/types';
 import Link from 'next/link';
 
@@ -20,38 +18,29 @@ export default function CustomerDetailPage() {
   const router = useRouter();
   const id = params.id as string;
   
-  const { user, loading: userLoading } = useUser();
-  const { firestore } = useFirebase();
+  const { customers, transactions, loading } = useMockData();
 
-  const customerRef = useMemoFirebase(() => {
-    if (!firestore || !user || !id) return null;
-    return doc(firestore, 'users', user.uid, 'customers', id);
-  }, [firestore, user, id]);
+  const customer = useMemo(() => {
+    return customers.find(c => c.id === id);
+  }, [customers, id]);
 
-  const transactionsQuery = useMemoFirebase(() => {
-    if (!firestore || !user || !id) return null;
-    return query(
-      collection(firestore, 'users', user.uid, 'transactions'),
-      where('customerId', '==', id),
-      orderBy('date', 'desc')
-    );
-  }, [firestore, user, id]);
+  const customerTransactions = useMemo(() => {
+    return transactions
+      .filter(t => t.customerId === id)
+      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  }, [transactions, id]);
 
-  const { data: customer, loading: customerLoading } = useDoc<Customer>(customerRef);
-  const { data: transactions, loading: transactionsLoading } = useCollection<Transaction>(transactionsQuery);
 
   const handleDeleteSuccess = () => {
     router.push('/');
   };
 
-  const loading = userLoading || customerLoading || transactionsLoading;
-
   if (loading) {
     return <CustomerDetailLoading />;
   }
 
-  // After loading, if there's no user or customer, it's a 404
-  if (!user || !customer) {
+  // After loading, if there's no customer, it's a 404
+  if (!customer) {
     notFound();
   }
 
@@ -66,19 +55,19 @@ export default function CustomerDetailPage() {
         </Button>
         <CustomerHeader
           customer={customer}
-          transactions={transactions || []}
+          transactions={customerTransactions || []}
           onDeleteSuccess={handleDeleteSuccess}
         />
       </div>
 
       <BalanceHistoryChart
         customer={customer}
-        transactions={transactions || []}
+        transactions={customerTransactions || []}
         className="no-print"
       />
 
       <TransactionsView
-        transactions={transactions || []}
+        transactions={customerTransactions || []}
         customerId={customer.id}
         customerBalance={customer.balance}
       />

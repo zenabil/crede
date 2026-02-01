@@ -1,9 +1,7 @@
 'use client';
 
 import { useMemo } from 'react';
-import { collection, query, orderBy, where } from 'firebase/firestore';
-import { useFirebase, useUser, useCollection } from '@/firebase';
-import { useMemoFirebase } from '@/firebase/firestore/use-memo-firebase';
+import { useMockData } from '@/hooks/use-mock-data';
 import type { Customer, Transaction } from '@/lib/types';
 import { AddCustomerDialog } from '@/components/customers/add-customer-dialog';
 import { formatCurrency } from '@/lib/utils';
@@ -12,35 +10,9 @@ import { CustomerOverview } from '@/components/customers/customer-overview';
 import { StatCard } from '@/components/dashboard/stat-card';
 import Loading from './loading';
 import { RecentTransactions } from '@/components/dashboard/recent-transactions';
-import { Button } from '@/components/ui/button';
-import { signInWithGoogle } from '@/firebase/auth/api';
 
 export default function DashboardPage() {
-  const { user, loading: userLoading } = useUser();
-  const { firestore } = useFirebase();
-
-  // Memoize the Firestore query for customers
-  const customersQuery = useMemoFirebase(() => {
-    if (!firestore || !user) return null;
-    return query(
-      collection(firestore, 'users', user.uid, 'customers'),
-      orderBy('createdAt', 'desc')
-    );
-  }, [firestore, user]);
-
-  // Memoize the Firestore query for transactions
-  const transactionsQuery = useMemoFirebase(() => {
-    if (!firestore || !user) return null;
-    return query(
-      collection(firestore, 'users', user.uid, 'transactions'),
-      orderBy('date', 'desc')
-    );
-  }, [firestore, user]);
-
-  const { data: customers, loading: customersLoading } =
-    useCollection<Customer>(customersQuery);
-  const { data: rawTransactions, loading: transactionsLoading } =
-    useCollection<Transaction>(transactionsQuery);
+  const { customers, transactions: rawTransactions, loading } = useMockData();
 
   const customersWithTotals = useMemo(() => {
     if (!customers || !rawTransactions) return [];
@@ -84,22 +56,9 @@ export default function DashboardPage() {
   }, [customers]);
 
   const totalCustomers = customers?.length || 0;
-  const loading = userLoading || customersLoading || transactionsLoading;
 
   if (loading) {
     return <Loading />;
-  }
-
-  if (!user) {
-    return (
-      <div className="flex flex-col items-center justify-center h-full text-center py-16">
-        <h2 className="text-2xl font-bold mb-4">Bienvenue !</h2>
-        <p className="text-muted-foreground mb-8">
-          Veuillez vous connecter pour gérer vos clients et vos crédits.
-        </p>
-        <Button onClick={signInWithGoogle}>Se connecter avec Google</Button>
-      </div>
-    );
   }
 
   return (

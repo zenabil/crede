@@ -1,10 +1,8 @@
 'use client';
 
-import { useMemo, useState } from 'react';
-import { useFirebase, useUser, useCollection } from '@/firebase';
-import { useMemoFirebase } from '@/firebase/firestore/use-memo-firebase';
-import { collection, query, orderBy } from 'firebase/firestore';
-import type { BreadOrder, AppSettings } from '@/lib/types';
+import { useMemo, useState, useEffect } from 'react';
+import { useMockData } from '@/hooks/use-mock-data';
+import type { BreadOrder } from '@/lib/types';
 import { AddOrderDialog } from '@/components/orders/add-order-dialog';
 import { OrderCard } from '@/components/orders/order-card';
 import OrdersLoading from './loading';
@@ -35,30 +33,29 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { BulkDeleteOrdersDialog } from '@/components/orders/bulk-delete-orders-dialog';
-import { updateBreadOrder } from '@/lib/firebase/api';
-import { signInWithGoogle } from '@/firebase/auth/api';
+import { updateBreadOrder, syncDailyOrders } from '@/lib/mock-data/api';
 
 type StatusFilter = 'all' | 'paid' | 'unpaid' | 'delivered' | 'undelivered';
 
 export default function OrdersPage() {
-  const { user, loading: userLoading } = useUser();
-  const { firestore } = useFirebase();
+  const { breadOrders: orders, loading } = useMockData();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
   const [sortOption, setSortOption] = useState('status'); // Default sort by status
   const [selectedOrders, setSelectedOrders] = useState<string[]>([]);
   const { toast } = useToast();
 
-  const ordersQuery = useMemoFirebase(() => {
-    if (!user || !firestore) return null;
-    return query(
-      collection(firestore, 'users', user.uid, 'breadOrders'),
-      orderBy('createdAt', 'desc')
-    );
-  }, [user, firestore]);
+  useEffect(() => {
+    syncDailyOrders().then(result => {
+        if(result.didSync) {
+            toast({
+                title: 'Synchronisation Automatique',
+                description: result.message,
+            });
+        }
+    });
+  }, [toast]);
 
-  const { data: orders, loading: ordersLoading } =
-    useCollection<BreadOrder>(ordersQuery);
 
   const processedOrders = useMemo(() => {
     if (!orders) return [];
@@ -187,10 +184,10 @@ export default function OrdersPage() {
     successMessage: string,
     errorMessage: string
   ) => {
-    if (selectedOrders.length === 0 || !user) return;
+    if (selectedOrders.length === 0) return;
     try {
       await Promise.all(
-        selectedOrders.map((id) => updateBreadOrder(user.uid, id, updateField))
+        selectedOrders.map((id) => updateBreadOrder(id, updateField))
       );
       toast({
         title: 'Succès !',
@@ -229,22 +226,8 @@ export default function OrdersPage() {
   const isPartiallySelected =
     selectedOrders.length > 0 && selectedOrders.length < processedOrders.length;
 
-  const loading = userLoading || ordersLoading;
-
   if (loading) {
     return <OrdersLoading />;
-  }
-
-  if (!user) {
-     return (
-      <div className="flex flex-col items-center justify-center h-full text-center py-16">
-        <h2 className="text-2xl font-bold mb-4">Page des Commandes</h2>
-        <p className="text-muted-foreground mb-8">
-          Veuillez vous connecter pour gérer vos commandes de pain.
-        </p>
-        <Button onClick={signInWithGoogle}>Se connecter avec Google</Button>
-      </div>
-    );
   }
 
   return (
