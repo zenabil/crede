@@ -16,6 +16,7 @@ import { ResetAppDataDialog } from '@/components/settings/reset-app-data-dialog'
 import { BreadPriceSetting } from '@/components/settings/bread-price-setting';
 import { ResetOrdersDialog } from '@/components/orders/reset-orders-dialog';
 import { JsonImportDialog } from '@/components/settings/json-import-dialog';
+import { GoogleDriveSettings } from '@/components/settings/google-drive-settings';
 
 export default function SettingsPage() {
   const { toast } = useToast();
@@ -74,6 +75,8 @@ export default function SettingsPage() {
         </CardHeader>
         <CardContent className="space-y-4">
           <BreadPriceSetting />
+
+          <GoogleDriveSettings />
 
           <div className="p-4 border rounded-lg">
             <h3 className="font-semibold text-lg mb-4">
