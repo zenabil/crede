@@ -3,9 +3,10 @@
 import { useState, useEffect } from 'react';
 
 export function Clock() {
-  const [time, setTime] = useState(new Date());
+  const [time, setTime] = useState<Date>();
 
   useEffect(() => {
+    setTime(new Date());
     const timerId = setInterval(() => {
       setTime(new Date());
     }, 1000);
@@ -25,16 +26,20 @@ export function Clock() {
 
   return (
     <div className="hidden md:flex items-baseline gap-2 text-sm font-medium">
-      <span className="text-muted-foreground">
-        {time.toLocaleDateString('fr-FR', { 
-            weekday: 'long', 
-            day: 'numeric',
-            month: 'long', 
-        })}
-      </span>
-      <span className="font-semibold text-foreground text-base tabular-nums">
-        {formatTime(time)}
-      </span>
+      {time && (
+        <>
+          <span className="text-muted-foreground">
+            {time.toLocaleDateString('fr-FR', {
+              weekday: 'long',
+              day: 'numeric',
+              month: 'long',
+            })}
+          </span>
+          <span className="font-semibold text-foreground text-base tabular-nums">
+            {formatTime(time)}
+          </span>
+        </>
+      )}
     </div>
   );
 }
