@@ -6,7 +6,7 @@ const withPWA = withPWAInit({
   register: true,
   scope: '/',
   sw: 'sw.js',
-  disable: false,
+  disable: false, // Ensure PWA is enabled in development
 });
 
 const nextConfig: NextConfig = {

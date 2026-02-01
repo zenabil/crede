@@ -1,6 +1,1 @@
-<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
-<rect width="512" height="512" rx="96" fill="#2563eb"/>
-<path d="M256 128V256H384" stroke="white" stroke-width="32" stroke-linecap="round" stroke-linejoin="round"/>
-<path d="M256 128C186.35 128 128 186.35 128 256C128 325.65 186.35 384 256 384C325.65 384 384 325.65 384 256C384 186.35 325.65 128 256 128Z" stroke="white" stroke-width="32" stroke-linecap="round" stroke-linejoin="round"/>
-<text x="256" y="270" font-family="Arial, sans-serif" font-size="120" fill="white" text-anchor="middle" dy=".3em">DA</text>
-</svg>
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-wallet-cards"><path d="M12 12v.01"/><path d="M15 15v.01"/><path d="M9 15v.01"/><path d="M6 9v.01"/><path d="m17.5 9.5.25.25"/><path d="m14.5 12.5.25.25"/><path d="M12 6v.01"/><path d="M9 9v.01"/><path d="M6 12v.01"/><rect width="20" height="14" x="2" y="5" rx="2"/><path d="M2 10h20"/></svg>
