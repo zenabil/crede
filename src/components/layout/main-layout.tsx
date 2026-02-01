@@ -40,19 +40,26 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
             Gestion de Crédit
           </span>
         </Link>
-        <nav className="hidden md:flex items-center gap-4 text-sm font-medium">
-          {navLinks.map((link) => (
-            <Link
-              key={link.href}
-              href={link.href}
-              className={cn(
-                'text-muted-foreground transition-colors hover:text-foreground',
-                pathname === link.href ? 'text-foreground' : ''
-              )}
-            >
-              {link.label}
-            </Link>
-          ))}
+        <nav className="hidden md:flex items-center gap-2 text-sm font-medium">
+          {navLinks.map((link) => {
+            const Icon = link.icon;
+            return (
+              <Link
+                key={link.href}
+                href={link.href}
+                title={link.label}
+                className={cn(
+                  'flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:text-foreground',
+                  pathname === link.href
+                    ? 'bg-accent text-accent-foreground'
+                    : ''
+                )}
+              >
+                <Icon className="h-5 w-5" />
+                <span className="sr-only">{link.label}</span>
+              </Link>
+            );
+          })}
         </nav>
         <div className="ml-auto flex items-center gap-4">
           <Clock />
