@@ -7,13 +7,7 @@ import { ThemeProvider } from '@/components/layout/theme-provider';
 export const metadata: Metadata = {
   title: 'Gestion de Crédit',
   description: 'Une application pour gérer les crédits clients et les commandes.',
-  manifest: '/manifest.json',
   applicationName: 'Gestion de Crédit',
-  appleWebApp: {
-    capable: true,
-    statusBarStyle: 'default',
-    title: 'Crédit',
-  },
   formatDetection: {
     telephone: false,
   },
