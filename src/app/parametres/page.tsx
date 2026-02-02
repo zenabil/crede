@@ -24,6 +24,7 @@ import { useFormSubmission } from '@/hooks/use-form-submission';
 import { useTheme } from 'next-themes';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { cn } from '@/lib/utils';
+import { ImportDataDialog } from '@/components/settings/import-data-dialog';
 
 
 const companyInfoSchema = z.object({
@@ -338,6 +339,7 @@ export default function SettingsPage() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="flex flex-col sm:flex-row gap-4">
+                    <ImportDataDialog />
                     <Button onClick={handleExportData} variant="outline">
                         <Download className="mr-2 h-4 w-4"/>
                         Exporter les données
@@ -346,7 +348,7 @@ export default function SettingsPage() {
                 </CardContent>
                  <CardFooter>
                     <p className="text-xs text-muted-foreground">
-                      L'exportation crée une sauvegarde complète de vos données (clients, produits, transactions, etc.) dans un fichier JSON. La réinitialisation effacera toutes les données actuelles et les remplacera par les données de démonstration initiales.
+                      L'importation écrasera toutes les données actuelles. L'exportation crée une sauvegarde complète de vos données. La réinitialisation effacera toutes les données et les remplacera par les données de démonstration.
                     </p>
                 </CardFooter>
               </Card>
