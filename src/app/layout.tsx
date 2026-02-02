@@ -5,14 +5,14 @@ import { MainLayout } from '@/components/layout/main-layout';
 import { ThemeProvider } from '@/components/layout/theme-provider';
 
 export const metadata: Metadata = {
-  title: 'Gestion de Crédit',
+  title: 'Frucio',
   description: 'Une application pour gérer les crédits clients et les commandes.',
-  applicationName: 'Gestion de Crédit',
+  applicationName: 'Frucio',
   manifest: '/manifest.json',
   appleWebApp: {
     capable: true,
     statusBarStyle: 'default',
-    title: 'Gestion de Crédit',
+    title: 'Frucio',
   },
   formatDetection: {
     telephone: false,

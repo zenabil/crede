@@ -5,7 +5,6 @@ import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { ThemeToggle } from './theme-toggle';
-import { Clock } from './clock';
 import {
   LayoutDashboard,
   Users,
@@ -54,11 +53,14 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
             href={link.href}
             className={cn(
               'flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary',
-              pathname === link.href ? 'bg-muted text-primary' : ''
+              pathname === link.href ? 'bg-primary text-primary-foreground' : ''
             )}
           >
             <Icon className="h-4 w-4" />
             {link.label}
+             {link.label === 'Alertes' && (
+              <span className="ml-auto flex h-5 w-5 items-center justify-center rounded-full bg-destructive text-xs font-semibold text-destructive-foreground">1</span>
+            )}
           </Link>
         );
       })}
@@ -68,7 +70,7 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="grid min-h-screen w-full md:grid-cols-[280px_1fr]">
-      <div className="hidden border-r bg-muted/40 md:block no-print">
+      <div className="hidden border-r bg-card md:block no-print">
         <div className="flex h-full max-h-screen flex-col gap-2">
           <div className="flex h-14 items-center border-b px-4 lg:h-[60px] lg:px-6">
             <Link href="/" className="flex items-center gap-2 font-semibold">
@@ -79,7 +81,7 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
                 height={32}
                 className="rounded-lg"
               />
-              <span className="text-xl">Gestion de Crédit</span>
+              <span className="text-xl">Frucio</span>
             </Link>
           </div>
           <div className="flex-1 py-4">
@@ -88,24 +90,21 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
         </div>
       </div>
       <div className="flex flex-col">
-        <header className="flex h-14 items-center gap-4 border-b bg-background px-4 lg:h-[60px] lg:px-6 no-print">
+        <header className="flex h-14 items-center gap-4 border-b bg-card px-4 lg:h-[60px] lg:px-6 no-print md:hidden">
           <Sheet>
             <SheetTrigger asChild>
               <Button
                 variant="outline"
                 size="icon"
-                className="shrink-0 md:hidden"
+                className="shrink-0"
               >
                 <Menu className="h-5 w-5" />
                 <span className="sr-only">Toggle navigation menu</span>
               </Button>
             </SheetTrigger>
-            <SheetContent side="left" className="flex flex-col">
-               <nav className="grid gap-2 text-lg font-medium mt-8">
-                  <Link
-                    href="#"
-                    className="flex items-center gap-2 text-lg font-semibold mb-4"
-                  >
+            <SheetContent side="left" className="flex flex-col p-0">
+               <div className="flex h-14 items-center border-b px-4 lg:h-[60px] lg:px-6">
+                  <Link href="/" className="flex items-center gap-2 font-semibold">
                     <Image
                       src="/icon.svg"
                       alt="App Logo"
@@ -113,37 +112,18 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
                       height={32}
                       className="rounded-lg"
                     />
-                    <span className="text-xl">Gestion de Crédit</span>
+                    <span className="text-xl">Frucio</span>
                   </Link>
-                  {navLinks.map((link) => {
-                    const Icon = link.icon;
-                    return (
-                      <Link
-                        key={link.href}
-                        href={link.href}
-                        className={cn(
-                          'flex items-center gap-4 rounded-xl px-3 py-2 text-muted-foreground hover:text-foreground',
-                          pathname === link.href ? 'bg-muted text-foreground' : ''
-                        )}
-                      >
-                        <Icon className="h-5 w-5" />
-                        {link.label}
-                      </Link>
-                    );
-                  })}
-                </nav>
+                </div>
+                <div className="flex-1 py-4 overflow-y-auto">
+                  <NavContent />
+                </div>
             </SheetContent>
           </Sheet>
-          
-          <div className="w-full flex-1">
-           {/* Can add search or breadcrumbs here later */}
-          </div>
-          <Clock />
-          <div className="pl-4">
-            <ThemeToggle />
-          </div>
+          <div className="w-full flex-1" />
+          <ThemeToggle />
         </header>
-        <main className="flex-1 p-4 sm:p-6 md:p-8">
+        <main className="flex-1 p-4 sm:p-6 md:p-8 bg-background">
           <div className="mx-auto w-full max-w-none">{children}</div>
         </main>
       </div>

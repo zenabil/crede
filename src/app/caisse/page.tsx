@@ -9,8 +9,6 @@ import {
   Minus,
   Trash2,
   PlusCircle,
-  LayoutGrid,
-  List,
   X,
   User,
   UserPlus,
@@ -40,15 +38,6 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { PaymentDialog } from '@/components/caisse/payment-dialog';
 import { DiscountDialog } from '@/components/caisse/discount-dialog';
 import { useToast } from '@/hooks/use-toast';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
-import { Label } from '@/components/ui/label';
 import { AddCustomerDialog } from '@/components/customers/add-customer-dialog';
 import { CustomerCombobox } from '@/components/caisse/customer-combobox';
 
@@ -88,7 +77,6 @@ export default function CaissePage() {
   const [isStateLoaded, setIsStateLoaded] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('Toutes');
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [barcode, setBarcode] = useState('');
 
   const searchInputRef = useRef<HTMLInputElement>(null);
@@ -392,84 +380,46 @@ export default function CaissePage() {
                   {categories.map(cat => <SelectItem key={cat} value={cat}>{cat}</SelectItem>)}
                 </SelectContent>
               </Select>
-               <div className="flex items-center gap-1">
-                    <Button variant={viewMode === 'grid' ? 'default' : 'outline'} size="icon" onClick={() => setViewMode('grid')}><LayoutGrid className="h-4 w-4" /></Button>
-                    <Button variant={viewMode === 'list' ? 'default' : 'outline'} size="icon" onClick={() => setViewMode('list')}><List className="h-4 w-4" /></Button>
-                </div>
             </div>
           </CardHeader>
         </Card>
         <div className="flex-grow overflow-auto p-1 mt-4">
-            {viewMode === 'grid' ? (
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-                    {filteredProducts.map(product => {
-                        const { url, hint } = getProductImage(product);
-                        const isOutOfStock = product.stock <= 0;
-                        const isLowStock = !isOutOfStock && product.stock <= product.minStock;
-                        return (
-                            <Card key={product.id} className={cn("overflow-hidden shadow-md hover:shadow-lg transition-shadow", isOutOfStock && "bg-muted/50", isLowStock && "border-amber-500")}>
-                                <div className="relative">
-                                    <Image
-                                        src={url}
-                                        alt={product.name}
-                                        width={400}
-                                        height={400}
-                                        className={cn("object-cover w-full h-32", isOutOfStock && "grayscale")}
-                                        data-ai-hint={hint}
-                                    />
-                                    {isOutOfStock ? (
-                                      <Badge variant="destructive" className="absolute top-2 left-2">ÉPUISÉ</Badge>
-                                    ) : (
-                                      <Badge variant="secondary" className="absolute top-2 right-2">{formatCurrency(product.sellingPrice)}</Badge>
-                                    )}
-                                    {isLowStock && (
-                                        <Badge variant="outline" className="absolute top-2 left-2 bg-background/80 border-amber-500 text-amber-600">Stock Faible</Badge>
-                                    )}
-                                </div>
-                                <CardContent className="p-3">
-                                    <h3 className="font-semibold truncate text-sm">{product.name}</h3>
-                                    <p className="text-xs text-muted-foreground">{product.category}</p>
-                                    <Button className="w-full mt-2" size="sm" onClick={() => addToCart(product)} disabled={isOutOfStock}>
-                                        {isOutOfStock ? 'Stock 0' : <><PlusCircle className="mr-2 h-4 w-4" /> Ajouter</>}
-                                    </Button>
-                                </CardContent>
-                            </Card>
-                        )
-                    })}
-                </div>
-            ) : (
-                <div className="border rounded-lg">
-                    <Table>
-                        <TableHeader>
-                            <TableRow>
-                                <TableHead>Produit</TableHead>
-                                <TableHead className="hidden sm:table-cell">Catégorie</TableHead>
-                                <TableHead className="hidden md:table-cell">Stock</TableHead>
-                                <TableHead className="text-right">Prix</TableHead>
-                                <TableHead className="text-right">Action</TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {filteredProducts.map(product => {
-                                const isOutOfStock = product.stock <= 0;
-                                const isLowStock = !isOutOfStock && product.stock <= product.minStock;
-                                return (
-                                <TableRow key={product.id} className={cn(isOutOfStock && "text-muted-foreground bg-muted/50", isLowStock && "bg-amber-50/50 dark:bg-amber-900/10")}>
-                                    <TableCell className="font-medium">{product.name}</TableCell>
-                                    <TableCell className="hidden sm:table-cell"><Badge variant="secondary">{product.category}</Badge></TableCell>
-                                    <TableCell className={cn("hidden md:table-cell", isOutOfStock && "font-bold", isLowStock && "text-amber-600 dark:text-amber-400 font-bold")}>{product.stock}</TableCell>
-                                    <TableCell className="text-right font-mono">{formatCurrency(product.sellingPrice)}</TableCell>
-                                    <TableCell className="text-right">
-                                        <Button size="sm" onClick={() => addToCart(product)} disabled={isOutOfStock}>
-                                            {isOutOfStock ? 'Épuisé' : <><PlusCircle className="mr-2 h-4 w-4" /> Ajouter</>}
-                                        </Button>
-                                    </TableCell>
-                                </TableRow>
-                            )})}
-                        </TableBody>
-                    </Table>
-                </div>
-            )}
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+                {filteredProducts.map(product => {
+                    const { url, hint } = getProductImage(product);
+                    const isOutOfStock = product.stock <= 0;
+                    const isLowStock = !isOutOfStock && product.stock <= product.minStock;
+                    return (
+                        <Card key={product.id} className={cn("overflow-hidden border bg-card", isOutOfStock && "bg-muted/50", isLowStock && "border-amber-500")}>
+                            <div className="relative">
+                                <Image
+                                    src={url}
+                                    alt={product.name}
+                                    width={400}
+                                    height={400}
+                                    className={cn("object-cover w-full h-32", isOutOfStock && "grayscale")}
+                                    data-ai-hint={hint}
+                                />
+                                {isOutOfStock ? (
+                                  <Badge variant="destructive" className="absolute top-2 left-2">ÉPUISÉ</Badge>
+                                ) : (
+                                  <Badge variant="secondary" className="absolute top-2 right-2">{formatCurrency(product.sellingPrice)}</Badge>
+                                )}
+                                {isLowStock && (
+                                    <Badge variant="outline" className="absolute top-2 left-2 bg-background/80 border-amber-500 text-amber-600">Stock Faible</Badge>
+                                )}
+                            </div>
+                            <CardContent className="p-3">
+                                <h3 className="font-semibold truncate text-sm">{product.name}</h3>
+                                <p className="text-xs text-muted-foreground">{product.category}</p>
+                                <Button className="w-full mt-2" size="sm" onClick={() => addToCart(product)} disabled={isOutOfStock}>
+                                    {isOutOfStock ? 'Stock 0' : <><PlusCircle className="mr-2 h-4 w-4" /> Ajouter</>}
+                                </Button>
+                            </CardContent>
+                        </Card>
+                    )
+                })}
+            </div>
         </div>
       </div>
 
@@ -592,9 +542,11 @@ export default function CaissePage() {
                 </div>
             </div>
             <Separator />
-            <div className="flex justify-between items-center text-lg font-bold">
-                <span>Total Général</span>
-                <span>{formatCurrency(total)}</span>
+            <div className="bg-primary/10 p-4 rounded-md">
+                <div className="flex justify-between items-center text-lg font-bold text-primary">
+                    <span>Total Général</span>
+                    <span>{formatCurrency(total)}</span>
+                </div>
             </div>
             <PaymentDialog
                 cartItems={activeCart}
