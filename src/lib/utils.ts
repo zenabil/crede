@@ -1,17 +1,42 @@
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
+import { mockDataStore } from '@/lib/mock-data';
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
 export function formatCurrency(amount: number) {
-  return new Intl.NumberFormat('fr-DZ', {
-    style: 'currency',
-    currency: 'DZD',
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 2,
-  }).format(amount);
+  // Guard against running on the server or before data is loaded.
+  if (typeof window === 'undefined' || !mockDataStore.settings.companyInfo) {
+     return new Intl.NumberFormat('fr-DZ', {
+      style: 'currency',
+      currency: 'DZD',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 2,
+    }).format(amount);
+  }
+
+  const currency = mockDataStore.settings.companyInfo.currency || 'DZD';
+
+  // Use a try-catch block because an invalid currency code will throw an error.
+  try {
+    // This works for ISO currency codes like "USD", "EUR", "DZD".
+    return new Intl.NumberFormat('fr-DZ', {
+      style: 'currency',
+      currency: currency,
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 2,
+    }).format(amount);
+  } catch (error) {
+    // This is a fallback for when the user enters a symbol like "$" or "€"
+    // directly, which is not a valid ISO code.
+    const formattedAmount = new Intl.NumberFormat('fr-DZ', {
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 2,
+    }).format(amount);
+    return `${formattedAmount} ${currency}`;
+  }
 }
 
 /**
