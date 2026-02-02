@@ -39,7 +39,7 @@ export function CustomerOverview({
   className?: string;
 }) {
   const [searchTerm, setSearchTerm] = useState('');
-  const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
+  const [viewMode, setViewMode] = useState<'list' | 'grid'>('grid');
   const [sortConfig, setSortConfig] = useState<SortConfig>({
     key: 'createdAt',
     direction: 'descending',
@@ -123,25 +123,25 @@ export function CustomerOverview({
           title="Total des clients"
           value={customers.length}
           description="Tous les clients enregistrés"
-          Icon={Users}
+          icon={Users}
         />
         <StatCard
           title="Solde total impayé"
           value={formatCurrency(totalBalance)}
           description="Somme de tous les soldes clients"
-          Icon={Wallet}
+          icon={Wallet}
         />
         <StatCard
           title="Clients endettés"
           value={`+${customersInDebt}`}
           description="Clients qui doivent de l'argent"
-          Icon={TrendingUp}
+          icon={TrendingUp}
         />
         <StatCard
           title="Clients avec crédit"
           value={customersWithCredit}
           description="Clients avec un solde négatif"
-          Icon={TrendingDown}
+          icon={TrendingDown}
         />
       </div>
 

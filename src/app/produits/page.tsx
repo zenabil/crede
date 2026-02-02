@@ -52,7 +52,7 @@ interface SortConfig {
 export default function ProduitsPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [sortConfig, setSortConfig] = useState<SortConfig | null>(null);
-  const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
+  const [viewMode, setViewMode] = useState<'list' | 'grid'>('grid');
   const { products, loading } = useMockData();
 
   const { lowStockCount, outOfStockCount, totalValue } = useMemo(() => {
@@ -153,7 +153,7 @@ export default function ProduitsPage() {
           </h1>
            <p className="text-muted-foreground">
             Affichez, recherchez et gérez tous vos produits.
-          </p>
+           </p>
         </div>
       </header>
 
@@ -162,25 +162,25 @@ export default function ProduitsPage() {
           title="Valeur de l'inventaire"
           value={formatCurrency(totalValue)}
           description="Basé sur le prix d'achat"
-          Icon={Archive}
+          icon={Archive}
         />
         <StatCard
           title="Produits"
           value={products.length}
           description="Total des produits uniques"
-          Icon={Package}
+          icon={Package}
         />
         <StatCard
           title="Stock faible"
           value={lowStockCount}
           description="Produits en dessous du seuil minimum"
-          Icon={PackageWarning}
+          icon={PackageWarning}
         />
         <StatCard
           title="En rupture de stock"
           value={outOfStockCount}
           description="Produits avec un stock de 0"
-          Icon={PackageX}
+          icon={PackageX}
         />
       </div>
 

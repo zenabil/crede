@@ -49,25 +49,25 @@ export default function DashboardPage() {
           title="Total des clients"
           value={totalCustomers}
           description="Tous les clients enregistrés"
-          Icon={Users}
+          icon={Users}
         />
         <StatCard
           title="Solde total impayé"
           value={formatCurrency(totalBalance)}
           description="Somme de tous les soldes clients"
-          Icon={Wallet}
+          icon={Wallet}
         />
         <StatCard
           title="Clients endettés"
           value={`+${customersInDebt}`}
           description="Clients qui doivent de l'argent"
-          Icon={TrendingUp}
+          icon={TrendingUp}
         />
         <StatCard
           title="Clients avec crédit"
           value={customersWithCredit}
           description="Clients avec un solde négatif"
-          Icon={TrendingDown}
+          icon={TrendingDown}
         />
       </div>
 

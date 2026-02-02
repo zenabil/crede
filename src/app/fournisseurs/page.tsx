@@ -62,7 +62,7 @@ interface SortConfig {
 export default function FournisseursPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [sortConfig, setSortConfig] = useState<SortConfig | null>(null);
-  const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
+  const [viewMode, setViewMode] = useState<'list' | 'grid'>('grid');
   const { suppliers, supplierTransactions, loading } = useMockData();
 
   const { totalBalance, suppliersWithDebt, suppliersWithCredit } = useMemo(() => {
@@ -178,25 +178,25 @@ export default function FournisseursPage() {
           title="Total des fournisseurs"
           value={suppliers.length}
           description="Tous les fournisseurs enregistrés"
-          Icon={Truck}
+          icon={Truck}
         />
         <StatCard
           title="Solde total dû"
           value={formatCurrency(totalBalance)}
           description="Somme des soldes des fournisseurs"
-          Icon={Wallet}
+          icon={Wallet}
         />
         <StatCard
           title="Fournisseurs à payer"
           value={`+${suppliersWithDebt}`}
           description="Fournisseurs à qui vous devez de l'argent"
-          Icon={TrendingUp}
+          icon={TrendingUp}
         />
         <StatCard
           title="Fournisseurs avec crédit"
           value={suppliersWithCredit}
           description="Fournisseurs qui vous doivent de l'argent"
-          Icon={TrendingDown}
+          icon={TrendingDown}
         />
       </div>
 
