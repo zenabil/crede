@@ -392,6 +392,7 @@ export default function CaissePage() {
           </CardHeader>
         </Card>
         <div className="flex-grow overflow-auto p-1 mt-4">
+           {filteredProducts.length > 0 ? (
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
                 {filteredProducts.map(product => {
                     const { url, hint } = getProductImage(product);
@@ -445,6 +446,13 @@ export default function CaissePage() {
                     )
                 })}
             </div>
+           ) : (
+             <div className="flex flex-col items-center justify-center h-full text-muted-foreground border-2 border-dashed rounded-lg">
+                <Search className="h-16 w-16" />
+                <p className="mt-4 text-lg font-semibold">Aucun produit trouvé</p>
+                <p className="mt-1 text-sm">Essayez de modifier votre recherche ou vos filtres.</p>
+            </div>
+           )}
         </div>
       </div>
 
