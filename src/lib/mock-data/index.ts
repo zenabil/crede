@@ -10,6 +10,7 @@ import {
   SEED_PRODUCTS,
   SEED_SUPPLIER_TRANSACTIONS,
   SEED_COMPANY_INFO,
+  SEED_EXPENSE_CATEGORIES,
 } from './seed';
 import type {
   Customer,
@@ -45,6 +46,7 @@ export let mockDataStore: MockData = {
   settings: {
     breadUnitPrice: 10,
     companyInfo: SEED_COMPANY_INFO,
+    expenseCategories: SEED_EXPENSE_CATEGORIES,
   },
 };
 
@@ -79,6 +81,9 @@ export function loadData() {
           companyInfo: SEED_COMPANY_INFO
         };
         delete parsedData.breadUnitPrice;
+      }
+      if (!parsedData.settings.expenseCategories) {
+        parsedData.settings.expenseCategories = SEED_EXPENSE_CATEGORIES;
       }
 
       // Simple migration for old data structures
@@ -179,6 +184,7 @@ export function resetToSeedData() {
     settings: {
         breadUnitPrice: SEED_BREAD_UNIT_PRICE,
         companyInfo: SEED_COMPANY_INFO,
+        expenseCategories: SEED_EXPENSE_CATEGORIES,
     },
   };
   saveData();

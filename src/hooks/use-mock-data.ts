@@ -47,7 +47,8 @@ export function useMockData(): MockDataState {
     supplierTransactions: [],
     settings: {
       breadUnitPrice: 10,
-      companyInfo: initialCompanyInfo
+      companyInfo: initialCompanyInfo,
+      expenseCategories: [],
     },
     loading: true,
   });

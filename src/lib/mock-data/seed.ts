@@ -44,6 +44,17 @@ export const SEED_EXPENSES: Omit<Expense, 'id'>[] = [
   { description: 'Salaire employé', category: 'Salaires', amount: 40000, date: formatISO(subDays(new Date(), 0)) },
 ];
 
+export const SEED_EXPENSE_CATEGORIES: string[] = [
+  'Matières Premières',
+  'Charges',
+  'Emballage',
+  'Salaires',
+  'Transport',
+  'Maintenance',
+  'Marketing',
+  'Autre',
+];
+
 export const SEED_SUPPLIERS: Omit<Supplier, 'id' | 'totalPurchases' | 'totalPayments'>[] = [
   { name: 'Moulin Sidi Ali', contact: 'contact@sidiali.dz', phone: '021-55-66-77', balance: 0, category: 'Matières Premières', visitDay: 'Lundi' },
   { name: 'Emballage & Co.', contact: 'commercial@emballage.co', phone: '023-88-99-00', balance: 0, category: 'Emballage', visitDay: 'Mercredi' },

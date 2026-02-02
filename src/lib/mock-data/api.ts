@@ -447,6 +447,12 @@ export const updateCompanyInfo = async (data: Partial<CompanyInfo>) => {
     saveData();
 };
 
+export const updateExpenseCategories = async (categories: string[]) => {
+    mockDataStore.settings.expenseCategories = categories;
+    saveData();
+};
+
+
 export const setInitialBreadUnitPrice = () => {
     // This is handled by loadData now, this function is for API compatibility
 };

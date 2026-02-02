@@ -12,6 +12,7 @@ export interface CompanyInfo {
 export interface AppSettings {
   breadUnitPrice: number;
   companyInfo: CompanyInfo;
+  expenseCategories: string[];
 }
 
 export interface Customer {

@@ -8,6 +8,7 @@ import { SubmitButton } from '@/components/forms/submit-button';
 import { useFormSubmission } from '@/hooks/use-form-submission';
 import { addExpense } from '@/lib/mock-data/api';
 import { format } from 'date-fns';
+import { useMockData } from '@/hooks/use-mock-data';
 
 const expenseSchema = z.object({
   description: z
@@ -27,6 +28,7 @@ const expenseSchema = z.object({
 export function AddExpenseForm({ onSuccess }: { onSuccess?: () => void }) {
   const formRef = useRef<HTMLFormElement>(null);
   const today = format(new Date(), 'yyyy-MM-dd');
+  const { settings, loading: settingsLoading } = useMockData();
 
   const { isPending, errors, handleSubmit } = useFormSubmission({
     formRef,
@@ -57,7 +59,12 @@ export function AddExpenseForm({ onSuccess }: { onSuccess?: () => void }) {
       </div>
       <div className="space-y-2">
         <Label htmlFor="category">Catégorie</Label>
-        <Input id="category" name="category" placeholder="Ex: Matières Premières" />
+        <Input id="category" name="category" placeholder="Ex: Matières Premières" list="expense-categories" />
+         {!settingsLoading && (
+            <datalist id="expense-categories">
+                {settings.expenseCategories.map(cat => <option key={cat} value={cat} />)}
+            </datalist>
+        )}
         {errors?.category && (
           <p className="text-sm font-medium text-destructive">
             {errors.category._errors[0]}

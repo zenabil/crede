@@ -20,6 +20,7 @@ import {
   exportCustomersToCsv,
   exportProductsToCsv,
   exportSuppliersToCsv,
+  updateExpenseCategories,
 } from '@/lib/mock-data/api';
 import { useToast } from '@/hooks/use-toast';
 import SettingsLoading from './loading';
@@ -65,11 +66,13 @@ const appearanceSchema = z.object({
     .max(5, 'Le symbole ne peut pas dépasser 5 caractères.'),
 });
 
-const breadSettingsSchema = z.object({
+const modulesSchema = z.object({
   breadUnitPrice: z.coerce
     .number()
     .min(0, 'Le prix doit être un nombre positif.'),
+  categories: z.string().transform((str) => str.split('\n').map(s => s.trim()).filter(Boolean))
 });
+
 
 // Color themes based on the image
 const colorThemes = [
@@ -93,7 +96,7 @@ export default function SettingsPage() {
 
   const companyFormRef = useRef<HTMLFormElement>(null);
   const appearanceFormRef = useRef<HTMLFormElement>(null);
-  const breadFormRef = useRef<HTMLFormElement>(null);
+  const modulesFormRef = useRef<HTMLFormElement>(null);
 
   const {
     isPending: isCompanyPending,
@@ -127,19 +130,22 @@ export default function SettingsPage() {
     },
   });
 
-  const {
-    isPending: isBreadSettingsPending,
-    errors: breadSettingsErrors,
-    handleSubmit: handleBreadSettingsSubmit,
+ const {
+    isPending: isModulesPending,
+    errors: modulesErrors,
+    handleSubmit: handleModulesSubmit,
   } = useFormSubmission({
-    formRef: breadFormRef,
-    schema: breadSettingsSchema,
+    formRef: modulesFormRef,
+    schema: modulesSchema,
     config: {
-      successMessage: 'Prix du pain mis à jour.',
-      errorMessage: 'Impossible de mettre à jour le prix.',
+      successMessage: 'Paramètres des modules mis à jour.',
+      errorMessage: 'Impossible de mettre à jour les paramètres.',
     },
     onSubmit: async (data) => {
-      await updateBreadUnitPrice(data.breadUnitPrice);
+      await Promise.all([
+        updateBreadUnitPrice(data.breadUnitPrice),
+        updateExpenseCategories(data.categories)
+      ]);
     },
   });
 
@@ -472,50 +478,71 @@ export default function SettingsPage() {
         </TabsContent>
 
         <TabsContent value="modules">
-          <Card>
-            <form onSubmit={handleBreadSettingsSubmit} ref={breadFormRef}>
-              <CardHeader>
-                <CardTitle>Paramètres des modules</CardTitle>
-                <CardDescription>
-                  Gérez les paramètres spécifiques aux fonctionnalités comme les
-                  commandes de pain.
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <div className="space-y-2 max-w-sm">
-                  <Label htmlFor="breadUnitPrice">
-                    Prix unitaire du pain (pour les commandes)
-                  </Label>
-                  <Input
-                    id="breadUnitPrice"
-                    name="breadUnitPrice"
-                    type="number"
-                    step="0.01"
-                    defaultValue={settings.breadUnitPrice}
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    Ce prix est utilisé pour calculer le total des nouvelles
-                    commandes de pain.
-                  </p>
-                  {breadSettingsErrors?.breadUnitPrice && (
-                    <p className="text-sm font-medium text-destructive">
-                      {breadSettingsErrors.breadUnitPrice._errors[0]}
+           <form onSubmit={handleModulesSubmit} ref={modulesFormRef}>
+              <Card>
+                <CardHeader>
+                  <CardTitle>Paramètres des modules</CardTitle>
+                  <CardDescription>
+                    Gérez les paramètres spécifiques aux fonctionnalités.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-8">
+                  {/* Bread Unit Price */}
+                  <div className="space-y-2 max-w-sm">
+                    <Label htmlFor="breadUnitPrice">
+                      Prix unitaire du pain (pour les commandes)
+                    </Label>
+                    <Input
+                      id="breadUnitPrice"
+                      name="breadUnitPrice"
+                      type="number"
+                      step="0.01"
+                      defaultValue={settings.breadUnitPrice}
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Ce prix est utilisé pour calculer le total des nouvelles
+                      commandes de pain.
                     </p>
-                  )}
-                </div>
-              </CardContent>
-              <CardFooter>
-                <Button type="submit" disabled={isBreadSettingsPending}>
-                  {isBreadSettingsPending ? (
-                    <Loader2 className="animate-spin mr-2 h-4 w-4" />
-                  ) : (
-                    <Save />
-                  )}
-                  Enregistrer le prix
-                </Button>
-              </CardFooter>
+                    {modulesErrors?.breadUnitPrice && (
+                      <p className="text-sm font-medium text-destructive">
+                        {modulesErrors.breadUnitPrice._errors[0]}
+                      </p>
+                    )}
+                  </div>
+
+                  <Separator />
+
+                  {/* Expense Categories */}
+                  <div className="space-y-2">
+                      <Label htmlFor="expenseCategories">Catégories de dépenses</Label>
+                      <Textarea
+                          id="expenseCategories"
+                          name="categories"
+                          defaultValue={settings.expenseCategories.join('\n')}
+                          rows={8}
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        Liste des catégories suggérées lors de l'ajout d'une dépense. Une par ligne.
+                      </p>
+                      {modulesErrors?.categories && (
+                      <p className="text-sm font-medium text-destructive">
+                        {modulesErrors.categories._errors[0]}
+                      </p>
+                    )}
+                  </div>
+                </CardContent>
+                <CardFooter>
+                  <Button type="submit" disabled={isModulesPending}>
+                    {isModulesPending ? (
+                      <Loader2 className="animate-spin mr-2 h-4 w-4" />
+                    ) : (
+                      <Save />
+                    )}
+                    Enregistrer les paramètres
+                  </Button>
+                </CardFooter>
+              </Card>
             </form>
-          </Card>
         </TabsContent>
 
         <TabsContent value="data">

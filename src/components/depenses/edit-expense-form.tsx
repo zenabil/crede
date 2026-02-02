@@ -9,6 +9,7 @@ import { useFormSubmission } from '@/hooks/use-form-submission';
 import { updateExpense } from '@/lib/mock-data/api';
 import type { Expense } from '@/lib/types';
 import { format } from 'date-fns';
+import { useMockData } from '@/hooks/use-mock-data';
 
 const expenseSchema = z.object({
   description: z
@@ -34,6 +35,7 @@ export function EditExpenseForm({
 }) {
   const formRef = useRef<HTMLFormElement>(null);
   const defaultDate = format(new Date(expense.date), 'yyyy-MM-dd');
+  const { settings, loading: settingsLoading } = useMockData();
 
   const { isPending, errors, handleSubmit } = useFormSubmission({
     formRef,
@@ -65,7 +67,12 @@ export function EditExpenseForm({
       </div>
       <div className="space-y-2">
         <Label htmlFor="category">Catégorie</Label>
-        <Input id="category" name="category" defaultValue={expense.category} />
+        <Input id="category" name="category" defaultValue={expense.category} list="expense-categories" />
+        {!settingsLoading && (
+            <datalist id="expense-categories">
+                {settings.expenseCategories.map(cat => <option key={cat} value={cat} />)}
+            </datalist>
+        )}
         {errors?.category && (
           <p className="text-sm font-medium text-destructive">
             {errors.category._errors[0]}
