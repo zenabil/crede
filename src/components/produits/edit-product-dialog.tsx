@@ -5,19 +5,22 @@ import { Button } from '@/components/ui/button';
 import { Pencil } from 'lucide-react';
 
 export function EditProductDialog({
-  product
+  product,
+  trigger
 }: {
   product: Product;
+  trigger?: React.ReactNode;
 }) {
+  const defaultTrigger = (
+     <Button variant="ghost" size="icon" className="h-8 w-8">
+        <Pencil className="h-4 w-4" />
+     </Button>
+  );
   return (
     <FormDialog
       title="Modifier le produit"
       description="Mettez à jour les informations du produit ci-dessous."
-      trigger={
-        <Button variant="ghost" size="icon" className="h-8 w-8">
-          <Pencil className="h-4 w-4" />
-        </Button>
-      }
+      trigger={trigger || defaultTrigger}
       form={<EditProductForm product={product} />}
     />
   );
