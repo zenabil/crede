@@ -23,29 +23,42 @@ import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { useMockData } from '@/hooks/use-mock-data';
 import { useMemo } from 'react';
+import { addDays, isAfter } from 'date-fns';
 
 export function MainLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const { products, customers, transactions, loading } = useMockData();
+  const { products, customers, transactions, loading, settings } = useMockData();
 
   const alertCount = useMemo(() => {
-    if (loading || !products || !customers || !transactions) return 0;
-    const lowStock = products.filter((p) => p.stock <= p.minStock).length;
+    if (loading || !products || !customers || !transactions || !settings?.companyInfo) return 0;
+    
+    const lowStockCount = products.filter((p) => p.stock <= p.minStock).length;
     
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    const overdue = customers.filter(c => {
-        if (c.balance <= 0) return false;
-        const customerDebts = transactions
-          .filter((t) => t.customerId === c.id && t.type === 'debt')
-          .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-        const lastDebt = customerDebts[0];
-        const dueDate = lastDebt ? new Date(lastDebt.date) : null;
-        return dueDate ? dueDate < today : false;
-    }).length;
 
-    return lowStock + overdue;
-  }, [products, customers, transactions, loading]);
+    const paymentTermsDays = settings.companyInfo.paymentTermsDays;
+
+    const overdueCount = customers
+      .filter((customer) => {
+        if (customer.balance <= 0) return false;
+
+        const customerDebts = transactions
+          .filter((t) => t.customerId === customer.id && t.type === 'debt')
+          .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+        
+        const lastDebt = customerDebts[0];
+        if (!lastDebt) return false;
+
+        const debtDate = new Date(lastDebt.date);
+        const dueDate = addDays(debtDate, paymentTermsDays);
+        
+        return isAfter(today, dueDate);
+      })
+      .length;
+
+    return lowStockCount + overdueCount;
+  }, [products, customers, transactions, loading, settings]);
 
 
   const navLinks = [
