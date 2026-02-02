@@ -13,7 +13,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useMockData } from '@/hooks/use-mock-data';
-import { updateCompanyInfo, exportData } from '@/lib/mock-data/api';
+import { updateCompanyInfo, exportData, updateBreadUnitPrice } from '@/lib/mock-data/api';
 import { useToast } from '@/hooks/use-toast';
 import SettingsLoading from './loading';
 import { Download, Save, Loader2, Check } from 'lucide-react';
@@ -40,6 +40,11 @@ const appearanceSchema = z.object({
   currency: z.string().min(1, "La devise est requise.").max(5, "Le symbole ne peut pas dépasser 5 caractères."),
 });
 
+const breadSettingsSchema = z.object({
+  breadUnitPrice: z.coerce.number().min(0, 'Le prix doit être un nombre positif.'),
+});
+
+
 // Color themes based on the image
 const colorThemes = [
   { name: 'teal', hsl: '173 80% 40%', color: '#14b8a6' },
@@ -62,6 +67,7 @@ export default function SettingsPage() {
 
   const companyFormRef = useRef<HTMLFormElement>(null);
   const appearanceFormRef = useRef<HTMLFormElement>(null);
+  const breadFormRef = useRef<HTMLFormElement>(null);
 
   const { isPending: isCompanyPending, errors: companyErrors, handleSubmit: handleCompanySubmit } = useFormSubmission({
     formRef: companyFormRef,
@@ -84,6 +90,18 @@ export default function SettingsPage() {
     },
     onSubmit: async (data) => {
       await updateCompanyInfo({ currency: data.currency });
+    },
+  });
+
+   const { isPending: isBreadSettingsPending, errors: breadSettingsErrors, handleSubmit: handleBreadSettingsSubmit } = useFormSubmission({
+    formRef: breadFormRef,
+    schema: breadSettingsSchema,
+    config: {
+      successMessage: 'Prix du pain mis à jour.',
+      errorMessage: 'Impossible de mettre à jour le prix.',
+    },
+    onSubmit: async (data) => {
+      await updateBreadUnitPrice(data.breadUnitPrice);
     },
   });
   
@@ -156,9 +174,10 @@ export default function SettingsPage() {
       </header>
       
       <Tabs defaultValue="company" className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="company">Informations sur l'entreprise</TabsTrigger>
           <TabsTrigger value="appearance">Apparence</TabsTrigger>
+          <TabsTrigger value="modules">Modules</TabsTrigger>
           <TabsTrigger value="data">Gestion des données</TabsTrigger>
         </TabsList>
         
@@ -281,6 +300,33 @@ export default function SettingsPage() {
 
                 </CardContent>
             </Card>
+        </TabsContent>
+        
+        <TabsContent value="modules">
+          <Card>
+            <form onSubmit={handleBreadSettingsSubmit} ref={breadFormRef}>
+              <CardHeader>
+                <CardTitle>Paramètres des modules</CardTitle>
+                <CardDescription>
+                  Gérez les paramètres spécifiques aux fonctionnalités comme les commandes de pain.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="space-y-2 max-w-sm">
+                    <Label htmlFor="breadUnitPrice">Prix unitaire du pain (pour les commandes)</Label>
+                    <Input id="breadUnitPrice" name="breadUnitPrice" type="number" step="0.01" defaultValue={settings.breadUnitPrice} />
+                    <p className="text-xs text-muted-foreground">Ce prix est utilisé pour calculer le total des nouvelles commandes de pain.</p>
+                    {breadSettingsErrors?.breadUnitPrice && <p className="text-sm font-medium text-destructive">{breadSettingsErrors.breadUnitPrice._errors[0]}</p>}
+                </div>
+              </CardContent>
+              <CardFooter>
+                  <Button type="submit" disabled={isBreadSettingsPending}>
+                     {isBreadSettingsPending ? <Loader2 className="animate-spin mr-2 h-4 w-4" /> : <Save />}
+                     Enregistrer le prix
+                  </Button>
+              </CardFooter>
+            </form>
+          </Card>
         </TabsContent>
 
         <TabsContent value="data">

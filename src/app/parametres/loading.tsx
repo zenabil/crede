@@ -11,9 +11,10 @@ export default function SettingsLoading() {
 
       <div>
         <div className="flex mb-1 h-10">
-            <Skeleton className="w-1/3 rounded-md border-b-0 rounded-b-none" />
-            <Skeleton className="w-1/3 rounded-md border-b-0 rounded-b-none bg-background" />
-            <Skeleton className="w-1/3 rounded-md border-b-0 rounded-b-none bg-background" />
+            <Skeleton className="w-1/4 rounded-md border-b-0 rounded-b-none" />
+            <Skeleton className="w-1/4 rounded-md border-b-0 rounded-b-none bg-background" />
+            <Skeleton className="w-1/4 rounded-md border-b-0 rounded-b-none bg-background" />
+            <Skeleton className="w-1/4 rounded-md border-b-0 rounded-b-none bg-background" />
         </div>
         <Card className="mt-0">
             <CardHeader>
