@@ -8,7 +8,6 @@ import {
   Plus,
   Minus,
   Trash2,
-  X,
   PlusCircle,
   LayoutGrid,
   List,
@@ -26,54 +25,54 @@ import {
   Card,
   CardContent,
   CardHeader,
-  CardTitle,
 } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { formatCurrency } from '@/lib/utils';
 import imageData from '@/lib/placeholder-images.json';
 import { Separator } from '@/components/ui/separator';
+import { useMockData } from '@/hooks/use-mock-data';
+import type { Product } from '@/lib/types';
+import { Skeleton } from '@/components/ui/skeleton';
+import { PaymentDialog } from '@/components/caisse/payment-dialog';
 
-// Mock Data
-const products = [
-  { id: '1', name: 'Café Espresso', category: 'Boissons', price: 2.50, imageId: 'cafe-espresso' },
-  { id: '2', name: 'Croissant au Beurre', category: 'Pâtisseries', price: 1.80, imageId: 'croissant-beurre' },
-  { id: '3', name: 'Eau Minérale', category: 'Boissons', price: 1.20, imageId: 'eau-minerale' },
-  { id: '4', name: "Jus d'Orange Frais", category: 'Boissons', price: 3.00, imageId: 'jus-orange' },
-  { id: '5', name: 'Pain au Chocolat', category: 'Pâtisseries', price: 1.90, imageId: 'pain-chocolat' },
-  { id: '6', name: 'Salade César', category: 'Salades', price: 7.20, imageId: 'salade-cesar' },
-  { id: '7', name: 'Sandwich Poulet Crudités', category: 'Sandwichs', price: 5.50, imageId: 'sandwich-poulet' },
-  { id: '8', name: 'Tarte au Citron', category: 'Pâtisseries', price: 3.50, imageId: 'tarte-citron' },
-  { id: '9', name: 'Thé à la Menthe', category: 'Boissons', price: 2.20, imageId: 'the-menthe' },
-  { id: '10', name: 'Muffin Myrtille', category: 'Pâtisseries', price: 2.75, imageId: 'muffin-myrtille' },
-  { id: '11', name: 'Coca-Cola', category: 'Boissons', price: 1.50, imageId: 'coca-cola' },
-  { id: '12', name: 'Wrap Végétarien', category: 'Sandwichs', price: 6.00, imageId: 'wrap-vegetarien' },
-];
 
 const productImages = imageData.caisse;
-
-const categories = ['Toutes', 'Boissons', 'Pâtisseries', 'Sandwichs', 'Salades'];
-
-interface Product {
-  id: string;
-  name: string;
-  category: string;
-  price: number;
-  imageId: string;
-}
 
 interface CartItem {
   product: Product;
   quantity: number;
 }
 
+// Helper to generate a slug from a product name
+const slugify = (text: string) => {
+    return text
+        .toString()
+        .toLowerCase()
+        .replace(/\s+/g, '-')           // Replace spaces with -
+        .replace(/'/g, '')              // Remove apostrophes
+        .replace(/[^\w\-]+/g, '')       // Remove all non-word chars
+        .replace(/\-\-+/g, '-')         // Replace multiple - with single -
+        .replace(/^-+/, '')             // Trim - from start of text
+        .replace(/-+$/, '');            // Trim - from end of text
+};
+
+
 export default function CaissePage() {
+  const { products, loading } = useMockData();
+
   const [activeTab, setActiveTab] = useState('vente-1');
   const [carts, setCarts] = useState<Record<string, CartItem[]>>({ 'vente-1': [] });
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('Toutes');
   
   const activeCart = carts[activeTab] || [];
+
+  const categories = useMemo(() => {
+    if (!products) return [];
+    const allCategories = products.map(p => p.category);
+    return ['Toutes', ...Array.from(new Set(allCategories))];
+  }, [products]);
 
   const addToCart = (product: Product) => {
     setCarts(prevCarts => {
@@ -110,32 +109,91 @@ export default function CaissePage() {
   };
   
   const addNewTab = () => {
-    const newTabId = `vente-${Object.keys(carts).length + 1}`;
+    const nextId = Object.keys(carts).length + 1;
+    // Basic check to prevent infinite tabs
+    if(nextId > 10) return;
+    const newTabId = `vente-${nextId}`;
     setCarts(prev => ({...prev, [newTabId]: []}));
     setActiveTab(newTabId);
   }
+  
+  const handlePaymentSuccess = () => {
+      // Clear the current cart
+      setCarts(prevCarts => {
+          const newCarts = {...prevCarts};
+          newCarts[activeTab] = [];
+          return newCarts;
+      });
+  }
 
   const subtotal = useMemo(() => {
-    return activeCart.reduce((sum, item) => sum + item.product.price * item.quantity, 0);
+    return activeCart.reduce((sum, item) => sum + item.product.sellingPrice * item.quantity, 0);
   }, [activeCart]);
 
   const filteredProducts = useMemo(() => {
+    if (!products) return [];
     return products.filter(product => {
       const matchesCategory = selectedCategory === 'Toutes' || product.category === selectedCategory;
       const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase());
       return matchesCategory && matchesSearch;
     });
-  }, [searchTerm, selectedCategory]);
+  }, [products, searchTerm, selectedCategory]);
   
   const getProductImage = (product: Product) => {
-      const img = productImages.find(i => i.id === product.imageId);
+      const imageId = slugify(product.name);
+      const img = productImages.find(i => i.id === imageId);
       if (img) {
           return {
               url: `https://picsum.photos/seed/${img.seed}/${img.width}/${img.height}`,
               hint: img.hint
           }
       }
-      return { url: 'https://picsum.photos/seed/placeholder/400/400', hint: 'placeholder' };
+      return { url: `https://picsum.photos/seed/${product.id}/400/400`, hint: 'product' };
+  }
+  
+  if (loading) {
+      return (
+        <div className="flex flex-col md:flex-row gap-4 h-[calc(100vh-8rem)]">
+          <div className="flex-grow flex flex-col">
+              <Card>
+                  <CardHeader>
+                      <Skeleton className="h-10 w-full" />
+                  </CardHeader>
+              </Card>
+              <div className="flex-grow overflow-auto p-1 mt-4">
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+                      {[...Array(10)].map((_, i) => (
+                           <Card key={i} className="overflow-hidden">
+                              <Skeleton className="w-full h-32" />
+                              <CardContent className="p-3 space-y-2">
+                                  <Skeleton className="h-5 w-3/4" />
+                                  <Skeleton className="h-4 w-1/2" />
+                                  <Skeleton className="h-9 w-full mt-2" />
+                              </CardContent>
+                          </Card>
+                      ))}
+                  </div>
+              </div>
+          </div>
+           <div className="w-full md:w-[380px] lg:w-[420px] flex-shrink-0">
+               <Card className="flex flex-col h-full">
+                  <CardHeader>
+                      <Skeleton className="h-10 w-3/4" />
+                  </CardHeader>
+                  <div className="flex-grow p-4 flex items-center justify-center">
+                     <Skeleton className="h-32 w-32 rounded-full" />
+                  </div>
+                  <div className="p-4 border-t mt-auto space-y-4">
+                      <Skeleton className="h-5 w-full" />
+                      <Skeleton className="h-5 w-full" />
+                      <Separator />
+                      <Skeleton className="h-7 w-full" />
+                      <Skeleton className="h-11 w-full" />
+                  </div>
+               </Card>
+           </div>
+        </div>
+      )
   }
 
   return (
@@ -183,7 +241,7 @@ export default function CaissePage() {
                                     className="object-cover w-full h-32"
                                     data-ai-hint={hint}
                                 />
-                                <Badge variant="secondary" className="absolute top-2 right-2">{formatCurrency(product.price)}</Badge>
+                                <Badge variant="secondary" className="absolute top-2 right-2">{formatCurrency(product.sellingPrice)}</Badge>
                             </div>
                             <CardContent className="p-3">
                                 <h3 className="font-semibold truncate text-sm">{product.name}</h3>
@@ -227,14 +285,14 @@ export default function CaissePage() {
                             <Image src={getProductImage(item.product).url} alt={item.product.name} width={48} height={48} className="rounded-md" data-ai-hint={getProductImage(item.product).hint} />
                             <div className="flex-grow">
                                 <p className="font-medium text-sm truncate">{item.product.name}</p>
-                                <p className="text-xs text-muted-foreground">{formatCurrency(item.product.price)}</p>
+                                <p className="text-xs text-muted-foreground">{formatCurrency(item.product.sellingPrice)}</p>
                             </div>
                             <div className="flex items-center gap-2">
                                 <Button size="icon" variant="outline" className="h-7 w-7" onClick={() => updateQuantity(item.product.id, item.quantity - 1)}><Minus className="h-3 w-3" /></Button>
                                 <span className="text-sm font-medium w-4 text-center">{item.quantity}</span>
                                 <Button size="icon" variant="outline" className="h-7 w-7" onClick={() => updateQuantity(item.product.id, item.quantity + 1)}><Plus className="h-3 w-3" /></Button>
                             </div>
-                            <p className="font-semibold text-sm w-16 text-right">{formatCurrency(item.product.price * item.quantity)}</p>
+                            <p className="font-semibold text-sm w-16 text-right">{formatCurrency(item.product.sellingPrice * item.quantity)}</p>
                             <Button size="icon" variant="ghost" className="h-7 w-7 text-destructive" onClick={() => updateQuantity(item.product.id, 0)}><Trash2 className="h-4 w-4"/></Button>
                         </div>
                     ))}
@@ -257,7 +315,12 @@ export default function CaissePage() {
                 <span>Total Général</span>
                 <span>{formatCurrency(subtotal)}</span>
             </div>
-            <Button className="w-full" size="lg">Paiement</Button>
+            <PaymentDialog
+                cartItems={activeCart}
+                total={subtotal}
+                onSuccess={handlePaymentSuccess}
+                trigger={<Button className="w-full" size="lg" disabled={activeCart.length === 0}>Paiement</Button>}
+            />
           </div>
         </Card>
       </div>

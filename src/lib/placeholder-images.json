@@ -8,7 +8,7 @@
       "hint": "coffee cup"
     },
     {
-      "id": "croissant-beurre",
+      "id": "croissant-au-beurre",
       "seed": "102",
       "width": 400,
       "height": 400,
@@ -22,14 +22,14 @@
       "hint": "water bottle"
     },
     {
-      "id": "jus-orange",
+      "id": "jus-dorange-frais",
       "seed": "104",
       "width": 400,
       "height": 400,
       "hint": "orange juice"
     },
     {
-      "id": "pain-chocolat",
+      "id": "pain-au-chocolat",
       "seed": "105",
       "width": 400,
       "height": 400,
@@ -43,21 +43,21 @@
       "hint": "caesar salad"
     },
     {
-      "id": "sandwich-poulet",
+      "id": "sandwich-poulet-crudites",
       "seed": "107",
       "width": 400,
       "height": 400,
       "hint": "chicken sandwich"
     },
     {
-      "id": "tarte-citron",
+      "id": "tarte-au-citron",
       "seed": "108",
       "width": 400,
       "height": 400,
       "hint": "lemon tart"
     },
     {
-      "id": "the-menthe",
+      "id": "the-a-la-menthe",
       "seed": "109",
       "width": 400,
       "height": 400,
@@ -69,20 +69,6 @@
       "width": 400,
       "height": 400,
       "hint": "blueberry muffin"
-    },
-    {
-      "id": "coca-cola",
-      "seed": "111",
-      "width": 400,
-      "height": 400,
-      "hint": "soda can"
-    },
-    {
-      "id": "wrap-vegetarien",
-      "seed": "112",
-      "width": 400,
-      "height": 400,
-      "hint": "veggie wrap"
     }
   ]
 }

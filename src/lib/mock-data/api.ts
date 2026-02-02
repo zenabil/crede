@@ -210,6 +210,36 @@ export const resetBreadOrders = async () => {
     saveData();
 };
 
+// --- Caisse Functions ---
+export const processSale = async (cartItems: { product: Product, quantity: number }[]) => {
+  if (!cartItems || cartItems.length === 0) {
+    throw new Error("Le panier est vide.");
+  }
+
+  // First, check if all products have enough stock
+  for (const item of cartItems) {
+    const productInStore = mockDataStore.products.find(p => p.id === item.product.id);
+    if (!productInStore) {
+      throw new Error(`Produit non trouvé: ${item.product.name}.`);
+    }
+    if (productInStore.stock < item.quantity) {
+      throw new Error(`Stock insuffisant pour ${productInStore.name}. Requis: ${item.quantity}, Disponible: ${productInStore.stock}.`);
+    }
+  }
+
+  // If all checks pass, update the stock
+  for (const item of cartItems) {
+    const productInStore = mockDataStore.products.find(p => p.id === item.product.id);
+    // productInStore is guaranteed to exist here from the check above
+    if (productInStore) {
+        productInStore.stock -= item.quantity;
+    }
+  }
+
+  saveData();
+};
+
+
 // --- Expense Functions ---
 interface AddExpenseData {
     description: string;
