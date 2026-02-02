@@ -14,6 +14,7 @@ const customerSchema = z.object({
   name: z
     .string()
     .min(2, { message: 'Le nom doit comporter au moins 2 caractères.' }),
+  email: z.string().email({ message: 'Veuillez saisir une adresse e-mail valide.' }).or(z.literal('')).optional(),
   phone: z.string().min(10, {
     message: 'Le numéro de téléphone doit comporter au moins 10 caractères.',
   }),
@@ -38,7 +39,7 @@ export function EditCustomerForm({
       errorMessage: "Une erreur est survenue lors de la mise à jour du client.",
     },
     onSubmit: async (data) => {
-      await updateCustomer(customer.id, data);
+      await updateCustomer(customer.id, { ...data, email: data.email || 'N/A' });
     },
   });
 
@@ -55,6 +56,15 @@ export function EditCustomerForm({
         {errors?.name && (
           <p className="text-sm font-medium text-destructive">
             {errors.name._errors[0]}
+          </p>
+        )}
+      </div>
+      <div className="space-y-2">
+        <Label htmlFor="email">Email</Label>
+        <Input id="email" name="email" placeholder="jean.dupont@example.com" type="email" defaultValue={customer.email} />
+        {errors?.email && (
+          <p className="text-sm font-medium text-destructive">
+            {errors.email._errors[0]}
           </p>
         )}
       </div>

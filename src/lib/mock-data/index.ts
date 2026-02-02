@@ -40,7 +40,13 @@ export function loadData() {
     try {
         const savedData = localStorage.getItem(LOCAL_STORAGE_KEY);
         if (savedData) {
-            mockDataStore = JSON.parse(savedData);
+            const parsedData = JSON.parse(savedData);
+            // Simple migration to add email field if it doesn't exist
+            if (parsedData.customers && parsedData.customers.length > 0 && !('email' in parsedData.customers[0])) {
+                parsedData.customers = parsedData.customers.map((c: any) => ({ ...c, email: 'N/A' }));
+            }
+            mockDataStore = parsedData;
+
         } else {
             // Seed initial data if localStorage is empty
             resetToSeedData();

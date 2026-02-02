@@ -8,6 +8,7 @@ let nextId = () => Date.now().toString() + Math.random().toString(36).substring(
 // --- Customer Functions ---
 interface AddCustomerData {
   name: string;
+  email: string;
   phone: string;
   settlementDay?: string;
 }
@@ -239,7 +240,7 @@ export const exportCustomersToCsv = () => {
     if (mockDataStore.customers.length === 0) {
         return;
     }
-    const headers = ['id', 'name', 'phone', 'createdAt', 'balance', 'settlementDay'];
+    const headers = ['id', 'name', 'email', 'phone', 'createdAt', 'balance', 'settlementDay'];
     const csvRows = [
         headers.join(',')
     ];

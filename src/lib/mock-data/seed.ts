@@ -2,11 +2,11 @@ import type { Customer, Transaction, BreadOrder } from '@/lib/types';
 import { subDays, formatISO } from 'date-fns';
 
 export const SEED_CUSTOMERS: Omit<Customer, 'id' | 'totalDebts' | 'totalPayments'>[] = [
-  { name: 'Boulangerie Al-Amal', phone: '0555-123456', createdAt: formatISO(subDays(new Date(), 45)), balance: 1250, settlementDay: 'Dimanche' },
-  { name: 'Pâtisserie Le Délice', phone: '0555-654321', createdAt: formatISO(subDays(new Date(), 90)), balance: 0, settlementDay: 'le 1er du mois' },
-  { name: 'Café du Coin', phone: '0555-987654', createdAt: formatISO(subDays(new Date(), 15)), balance: 4500, settlementDay: 'Lundi' },
-  { name: 'Supérette Rahma', phone: '0555-456789', createdAt: formatISO(subDays(new Date(), 60)), balance: -500, settlementDay: 'Jeudi' },
-  { name: 'Client de passage', phone: 'N/A', createdAt: formatISO(subDays(new Date(), 5)), balance: 0 },
+  { name: 'Boulangerie Al-Amal', email: 'contact@al-amal.dz', phone: '0555-123456', createdAt: formatISO(subDays(new Date(), 45)), balance: 1250, settlementDay: 'Dimanche' },
+  { name: 'Pâtisserie Le Délice', email: 'patisserie.delice@example.com', phone: '0555-654321', createdAt: formatISO(subDays(new Date(), 90)), balance: 0, settlementDay: 'le 1er du mois' },
+  { name: 'Café du Coin', email: 'cafe.coin@gmail.com', phone: '0555-987654', createdAt: formatISO(subDays(new Date(), 15)), balance: 4500, settlementDay: 'Lundi' },
+  { name: 'Supérette Rahma', email: 'rahma.superette@yahoo.com', phone: '0555-456789', createdAt: formatISO(subDays(new Date(), 60)), balance: -500, settlementDay: 'Jeudi' },
+  { name: 'Client de passage', email: 'N/A', phone: 'N/A', createdAt: formatISO(subDays(new Date(), 5)), balance: 0 },
 ];
 
 export const SEED_TRANSACTIONS: Omit<Transaction, 'id' | 'customerId'>[] = [

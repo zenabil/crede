@@ -64,6 +64,24 @@ export function CustomersTable({
             <TableHead className="hidden sm:table-cell">
               <Button
                 variant="ghost"
+                onClick={() => onSort('email')}
+                className="px-2 py-1"
+              >
+                Email {getSortIcon('email')}
+              </Button>
+            </TableHead>
+            <TableHead className="hidden md:table-cell">
+              <Button
+                variant="ghost"
+                onClick={() => onSort('phone')}
+                className="px-2 py-1"
+              >
+                Téléphone {getSortIcon('phone')}
+              </Button>
+            </TableHead>
+            <TableHead className="hidden lg:table-cell">
+              <Button
+                variant="ghost"
                 onClick={() => onSort('settlementDay')}
                 className="px-2 py-1"
               >
@@ -77,15 +95,6 @@ export function CustomersTable({
                 className="px-2 py-1"
               >
                 Total des Dettes {getSortIcon('totalDebts')}
-              </Button>
-            </TableHead>
-            <TableHead className="hidden lg:table-cell">
-              <Button
-                variant="ghost"
-                onClick={() => onSort('totalPayments')}
-                className="px-2 py-1"
-              >
-                Total des Paiements {getSortIcon('totalPayments')}
               </Button>
             </TableHead>
             <TableHead className="text-right">
@@ -112,7 +121,9 @@ export function CustomersTable({
             return (
               <TableRow key={customer.id}>
                 <TableCell className="font-medium">{customer.name}</TableCell>
-                <TableCell className="hidden sm:table-cell text-muted-foreground">
+                <TableCell className="hidden sm:table-cell text-muted-foreground">{customer.email}</TableCell>
+                <TableCell className="hidden md:table-cell text-muted-foreground">{customer.phone}</TableCell>
+                <TableCell className="hidden lg:table-cell text-muted-foreground">
                   <div
                     className={cn(
                       'flex items-center gap-2',
@@ -126,9 +137,6 @@ export function CustomersTable({
                 </TableCell>
                 <TableCell className="hidden lg:table-cell text-muted-foreground font-mono">
                   {formatCurrency(customer.totalDebts || 0)}
-                </TableCell>
-                <TableCell className="hidden lg:table-cell text-muted-foreground font-mono">
-                  {formatCurrency(customer.totalPayments || 0)}
                 </TableCell>
                 <TableCell className="text-right">
                   <Badge
@@ -172,7 +180,7 @@ export function CustomersTable({
                       customerName={customer.name}
                     />
                     <Button variant="ghost" size="icon" asChild>
-                      <Link href={`/customers/${customer.id}`}>
+                      <Link href={`/clients/${customer.id}`}>
                         <span className="sr-only">Voir les détails</span>
                         <ArrowRight />
                       </Link>

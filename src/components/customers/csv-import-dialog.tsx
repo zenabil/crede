@@ -33,9 +33,10 @@ import { mockDataStore, saveData } from '@/lib/mock-data';
 import type { Customer } from '@/lib/types';
 import { Upload, Check, ChevronsRight } from 'lucide-react';
 
-const CUSTOMER_MODEL_FIELDS: (keyof Omit<Customer, 'totalDebts'>)[] = [
+const CUSTOMER_MODEL_FIELDS: (keyof Omit<Customer, 'totalDebts' | 'totalPayments'>)[] = [
   'id',
   'name',
+  'email',
   'phone',
   'createdAt',
   'balance',
@@ -162,6 +163,9 @@ export function CsvImportDialog({ trigger }: { trigger?: React.ReactNode }) {
         }
         if (!customer.name) {
           customer.name = '';
+        }
+        if (!customer.email) {
+          customer.email = '';
         }
         if (!customer.settlementDay) {
           customer.settlementDay = '';
