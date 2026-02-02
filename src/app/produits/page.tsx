@@ -12,6 +12,10 @@ import {
   Download,
   List,
   LayoutGrid,
+  Package,
+  Archive,
+  PackageWarning,
+  PackageX,
 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -34,6 +38,7 @@ import { DeleteProductDialog } from '@/components/produits/delete-product-dialog
 import { ProductCsvImportDialog } from '@/components/produits/csv-import-dialog';
 import { exportProductsToCsv } from '@/lib/mock-data/api';
 import { ProduitsGrid } from '@/components/produits/produits-grid';
+import { StatCard } from '@/components/dashboard/stat-card';
 
 
 type SortKey = keyof Product | 'margin';
@@ -49,6 +54,20 @@ export default function ProduitsPage() {
   const [sortConfig, setSortConfig] = useState<SortConfig | null>(null);
   const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
   const { products, loading } = useMockData();
+
+  const { lowStockCount, outOfStockCount, totalValue } = useMemo(() => {
+    if (!products) return { lowStockCount: 0, outOfStockCount: 0, totalValue: 0 };
+
+    return products.reduce((acc, p) => {
+        if (p.stock <= 0) {
+            acc.outOfStockCount++;
+        } else if (p.stock <= p.minStock) {
+            acc.lowStockCount++;
+        }
+        acc.totalValue += p.purchasePrice * p.stock;
+        return acc;
+    }, { lowStockCount: 0, outOfStockCount: 0, totalValue: 0 });
+  }, [products]);
 
   const sortedAndFilteredProducts = useMemo(() => {
     if (!products) return [];
@@ -137,6 +156,33 @@ export default function ProduitsPage() {
           </p>
         </div>
       </header>
+
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <StatCard
+          title="Valeur de l'inventaire"
+          value={formatCurrency(totalValue)}
+          description="Basé sur le prix d'achat"
+          Icon={Archive}
+        />
+        <StatCard
+          title="Produits"
+          value={products.length}
+          description="Total des produits uniques"
+          Icon={Package}
+        />
+        <StatCard
+          title="Stock faible"
+          value={lowStockCount}
+          description="Produits en dessous du seuil minimum"
+          Icon={PackageWarning}
+        />
+        <StatCard
+          title="En rupture de stock"
+          value={outOfStockCount}
+          description="Produits avec un stock de 0"
+          Icon={PackageX}
+        />
+      </div>
 
       <Card>
         <CardHeader>

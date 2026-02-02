@@ -24,6 +24,7 @@ import { Button } from '@/components/ui/button';
 import {
   Card,
   CardContent,
+  CardFooter,
   CardHeader,
 } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -392,37 +393,50 @@ export default function CaissePage() {
                     const isOutOfStock = product.stock <= 0;
                     const isLowStock = !isOutOfStock && product.stock <= product.minStock;
                     return (
-                       <div key={product.id} 
-                            onClick={() => !isOutOfStock && addToCart(product)}
-                            className={cn(
-                                "relative rounded-lg overflow-hidden border bg-card shadow-sm transition-transform duration-200 ease-in-out hover:scale-[1.03] hover:shadow-lg",
-                                isOutOfStock ? "cursor-not-allowed" : "cursor-pointer"
-                            )}
-                        >
-                            <Image
-                                src={url}
-                                alt={product.name}
-                                width={400}
-                                height={400}
-                                className={cn("object-cover w-full h-32", isOutOfStock && "grayscale")}
-                                data-ai-hint={hint}
-                            />
-                            <div className="p-3">
-                                <h3 className="font-semibold truncate text-sm">{product.name}</h3>
-                                <p className="text-xs text-muted-foreground">{product.category}</p>
-                                <div className="flex justify-between items-center mt-2">
-                                    <span className="font-bold text-base">{formatCurrency(product.sellingPrice)}</span>
-                                    {isOutOfStock ? (
-                                        <Badge variant="destructive" className="text-xs">Épuisé</Badge>
-                                    ) : isLowStock ? (
-                                        <Badge variant="outline" className="border-amber-500 text-amber-600 text-xs">Stock Faible</Badge>
-                                    ) : (
-                                        <Badge variant="secondary" className="text-xs">Stock: {product.stock}</Badge>
-                                    )}
-                                </div>
+                       <Card
+                        key={product.id}
+                        onClick={() => !isOutOfStock && addToCart(product)}
+                        className={cn(
+                          "overflow-hidden flex flex-col transition-all duration-200 ease-in-out hover:shadow-lg",
+                          isOutOfStock
+                            ? "cursor-not-allowed bg-muted/50"
+                            : "cursor-pointer hover:ring-2 hover:ring-primary"
+                        )}
+                      >
+                        <CardHeader className="p-0 relative">
+                          <Image
+                            src={url}
+                            alt={product.name}
+                            width={400}
+                            height={400}
+                            className={cn("object-cover w-full h-32", isOutOfStock && "grayscale")}
+                            data-ai-hint={hint}
+                          />
+                          {isOutOfStock && (
+                            <div className="absolute inset-0 bg-white/60 dark:bg-black/60 flex items-center justify-center">
+                              <Badge variant="destructive" className="px-3 py-1 text-sm">
+                                Épuisé
+                              </Badge>
                             </div>
-                            {isOutOfStock && <div className="absolute inset-0 bg-white/70 dark:bg-black/70 flex items-center justify-center"></div>}
-                        </div>
+                          )}
+                        </CardHeader>
+                        <CardContent className="p-3 flex-grow">
+                          <h3 className="font-semibold truncate text-sm">{product.name}</h3>
+                          <p className="text-xs text-muted-foreground">{product.category}</p>
+                        </CardContent>
+                        <CardFooter className="p-3 pt-0 flex justify-between items-center bg-muted/50">
+                          <span className="font-bold text-base">
+                            {formatCurrency(product.sellingPrice)}
+                          </span>
+                          {!isOutOfStock && (
+                            isLowStock ? (
+                                <Badge variant="outline" className="border-amber-500 text-amber-600 text-xs">Faible</Badge>
+                            ) : (
+                                <Badge variant="secondary" className="text-xs">Stock: {product.stock}</Badge>
+                            )
+                          )}
+                        </CardFooter>
+                      </Card>
                     )
                 })}
             </div>
