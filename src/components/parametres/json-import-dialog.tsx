@@ -15,7 +15,7 @@ import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { mockDataStore, saveData } from '@/lib/mock-data';
 import { Upload, Loader2 } from 'lucide-react';
-import type { Customer, Transaction, BreadOrder } from '@/lib/types';
+import type { Customer, Transaction, BreadOrder, Expense, Supplier } from '@/lib/types';
 
 export function JsonImportDialog() {
   const [open, setOpen] = useState(false);
@@ -54,6 +54,8 @@ export function JsonImportDialog() {
         !Array.isArray(data.customers) ||
         !Array.isArray(data.transactions) ||
         !Array.isArray(data.breadOrders) ||
+        !Array.isArray(data.expenses) ||
+        !Array.isArray(data.suppliers) ||
         typeof data.breadUnitPrice !== 'number'
       ) {
         throw new Error('Le fichier JSON est malformé ou invalide.');
@@ -63,6 +65,8 @@ export function JsonImportDialog() {
       mockDataStore.customers = data.customers as Customer[];
       mockDataStore.transactions = data.transactions as Transaction[];
       mockDataStore.breadOrders = data.breadOrders as BreadOrder[];
+      mockDataStore.expenses = data.expenses as Expense[];
+      mockDataStore.suppliers = data.suppliers as Supplier[];
       mockDataStore.breadUnitPrice = data.breadUnitPrice as number;
 
       saveData();

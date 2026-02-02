@@ -3,7 +3,7 @@ export interface Customer {
   name: string;
   email: string;
   phone: string;
-  createdAt: string; 
+  createdAt: string;
   balance: number;
   settlementDay?: string;
   // These are calculated client-side and not stored in the database
@@ -14,7 +14,7 @@ export interface Customer {
 export type TransactionType = 'debt' | 'payment';
 
 export interface Transaction {
-  id:string;
+  id: string;
   customerId: string;
   type: TransactionType;
   amount: number;
@@ -37,6 +37,23 @@ export interface BreadOrder {
   customerName: string | null;
 }
 
+export interface Expense {
+  id: string;
+  description: string;
+  category: string;
+  amount: number;
+  date: string; // ISO string
+}
+
+export interface Supplier {
+  id: string;
+  name: string;
+  contact: string;
+  phone: string;
+  balance: number;
+  category: string;
+}
+
 export interface AppSettings {
-    breadUnitPrice: number;
+  breadUnitPrice: number;
 }

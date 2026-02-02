@@ -1,11 +1,11 @@
 'use client';
 
 import { useState, useMemo } from 'react';
+import { useMockData } from '@/hooks/use-mock-data';
+import type { Supplier } from '@/lib/types';
+import FournisseursLoading from './loading'; // Assuming you create this
 import {
   Search,
-  Plus,
-  Pencil,
-  Trash2,
   ArrowUp,
   ArrowDown,
   ChevronsUpDown,
@@ -29,16 +29,10 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { formatCurrency } from '@/lib/utils';
 import { cn } from '@/lib/utils';
+import { AddSupplierDialog } from '@/components/fournisseurs/add-supplier-dialog';
+import { EditSupplierDialog } from '@/components/fournisseurs/edit-supplier-dialog';
+import { DeleteSupplierDialog } from '@/components/fournisseurs/delete-supplier-dialog';
 
-// Mock data for suppliers
-const mockSuppliers = [
-  { id: '1', name: 'Moulin Sidi Ali', contact: 'contact@sidiali.dz', phone: '021-55-66-77', balance: 15000, category: 'Matières Premières' },
-  { id: '2', name: 'Emballage & Co.', contact: 'commercial@emballage.co', phone: '023-88-99-00', balance: -2000, category: 'Emballage' },
-  { id: '3', name: 'Le Jardin Secret', contact: 'jardin.secret@email.com', phone: '0550-10-20-30', balance: 0, category: 'Fruits & Légumes' },
-  { id: '4', name: 'Maintenance Express', contact: 'support@maintex.dz', phone: '021-44-33-22', balance: 7500, category: 'Services' },
-];
-
-type Supplier = typeof mockSuppliers[0];
 type SortKey = keyof Supplier;
 type SortDirection = 'ascending' | 'descending';
 
@@ -50,9 +44,11 @@ interface SortConfig {
 export default function FournisseursPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [sortConfig, setSortConfig] = useState<SortConfig | null>(null);
+  const { suppliers, loading } = useMockData();
 
   const sortedAndFilteredSuppliers = useMemo(() => {
-    let filtered = mockSuppliers.filter(supplier =>
+    if (!suppliers) return [];
+    let filtered = suppliers.filter(supplier =>
       supplier.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       supplier.category.toLowerCase().includes(searchTerm.toLowerCase()) ||
       supplier.contact.toLowerCase().includes(searchTerm.toLowerCase())
@@ -74,7 +70,7 @@ export default function FournisseursPage() {
     }
 
     return filtered;
-  }, [searchTerm, sortConfig]);
+  }, [searchTerm, sortConfig, suppliers]);
 
   const requestSort = (key: SortKey) => {
     let direction: SortDirection = 'ascending';
@@ -93,6 +89,10 @@ export default function FournisseursPage() {
     }
     return <ArrowDown className="ml-2 h-4 w-4" />;
   };
+  
+  if (loading) {
+      return <FournisseursLoading />;
+  }
 
   return (
     <div className="space-y-6">
@@ -114,9 +114,7 @@ export default function FournisseursPage() {
                 <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                 <Input placeholder="Rechercher des fournisseurs..." className="pl-8 w-full" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
             </div>
-            <Button className="w-full sm:w-auto">
-                <Plus className="mr-2 h-4 w-4" /> Ajouter un fournisseur
-            </Button>
+            <AddSupplierDialog />
            </div>
         </CardHeader>
         <CardContent>
@@ -157,12 +155,8 @@ export default function FournisseursPage() {
                               </TableCell>
                               <TableCell className="text-right">
                                   <div className="flex items-center justify-end gap-0.5">
-                                      <Button variant="ghost" size="icon" className="h-8 w-8">
-                                          <Pencil className="h-4 w-4" />
-                                      </Button>
-                                      <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive">
-                                          <Trash2 className="h-4 w-4" />
-                                      </Button>
+                                      <EditSupplierDialog supplier={supplier} />
+                                      <DeleteSupplierDialog supplierId={supplier.id} supplierName={supplier.name} />
                                   </div>
                               </TableCell>
                           </TableRow>

@@ -1,4 +1,4 @@
-import type { Customer, Transaction, BreadOrder } from '@/lib/types';
+import type { Customer, Transaction, BreadOrder, Expense, Supplier } from '@/lib/types';
 import { subDays, formatISO } from 'date-fns';
 
 export const SEED_CUSTOMERS: Omit<Customer, 'id' | 'totalDebts' | 'totalPayments'>[] = [
@@ -25,5 +25,20 @@ export const SEED_BREAD_ORDERS: Omit<BreadOrder, 'id'>[] = [
     { name: "Café du Coin", quantity: 75, unitPrice: 10, totalAmount: 750, isPaid: false, isDelivered: true, createdAt: formatISO(new Date()), isPinned: false, customerId: '3', customerName: 'Café du Coin' },
     { name: "Vente directe", quantity: 20, unitPrice: 10, totalAmount: 200, isPaid: true, isDelivered: true, createdAt: formatISO(subDays(new Date(), 1)), isPinned: false, customerId: null, customerName: null },
 ];
+
+export const SEED_EXPENSES: Omit<Expense, 'id'>[] = [
+  { description: 'Achat de farine', category: 'Matières Premières', amount: 25000, date: formatISO(new Date()) },
+  { description: 'Facture électricité', category: 'Charges', amount: 12000, date: formatISO(subDays(new Date(), 2)) },
+  { description: 'Sacs à pain', category: 'Emballage', amount: 5000, date: formatISO(subDays(new Date(), 5)) },
+  { description: 'Salaire employé', category: 'Salaires', amount: 40000, date: formatISO(subDays(new Date(), 0)) },
+];
+
+export const SEED_SUPPLIERS: Omit<Supplier, 'id'>[] = [
+  { id: '1', name: 'Moulin Sidi Ali', contact: 'contact@sidiali.dz', phone: '021-55-66-77', balance: 15000, category: 'Matières Premières' },
+  { id: '2', name: 'Emballage & Co.', contact: 'commercial@emballage.co', phone: '023-88-99-00', balance: -2000, category: 'Emballage' },
+  { id: '3', name: 'Le Jardin Secret', contact: 'jardin.secret@email.com', phone: '0550-10-20-30', balance: 0, category: 'Fruits & Légumes' },
+  { id: '4', name: 'Maintenance Express', contact: 'support@maintex.dz', phone: '021-44-33-22', balance: 7500, category: 'Services' },
+];
+
 
 export const SEED_BREAD_UNIT_PRICE = 10;

@@ -1,34 +1,47 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { mockDataStore, loadData } from '@/lib/mock-data';
-import type { Customer, Transaction, BreadOrder, AppSettings } from '@/lib/types';
+import type {
+  Customer,
+  Transaction,
+  BreadOrder,
+  AppSettings,
+  Expense,
+  Supplier,
+} from '@/lib/types';
 
 interface MockDataState {
-    customers: Customer[];
-    transactions: Transaction[];
-    breadOrders: BreadOrder[];
-    settings: AppSettings;
-    loading: boolean;
+  customers: Customer[];
+  transactions: Transaction[];
+  breadOrders: BreadOrder[];
+  expenses: Expense[];
+  suppliers: Supplier[];
+  settings: AppSettings;
+  loading: boolean;
 }
 
 export function useMockData(): MockDataState {
   const [data, setData] = useState<MockDataState>({
-      customers: [],
-      transactions: [],
-      breadOrders: [],
-      settings: { breadUnitPrice: 10 },
-      loading: true,
+    customers: [],
+    transactions: [],
+    breadOrders: [],
+    expenses: [],
+    suppliers: [],
+    settings: { breadUnitPrice: 10 },
+    loading: true,
   });
 
   useEffect(() => {
     const handleDataChange = () => {
       // Create a new object to trigger re-render
       setData({
-          customers: [...mockDataStore.customers],
-          transactions: [...mockDataStore.transactions],
-          breadOrders: [...mockDataStore.breadOrders],
-          settings: { breadUnitPrice: mockDataStore.breadUnitPrice },
-          loading: false,
+        customers: [...mockDataStore.customers],
+        transactions: [...mockDataStore.transactions],
+        breadOrders: [...mockDataStore.breadOrders],
+        expenses: [...mockDataStore.expenses],
+        suppliers: [...mockDataStore.suppliers],
+        settings: { breadUnitPrice: mockDataStore.breadUnitPrice },
+        loading: false,
       });
     };
 

@@ -1,6 +1,6 @@
 'use client';
 import { mockDataStore, saveData, resetToSeedData as resetSeed } from './index';
-import type { Transaction, Customer, TransactionType, BreadOrder } from '@/lib/types';
+import type { Transaction, Customer, TransactionType, BreadOrder, Expense, Supplier } from '@/lib/types';
 import { startOfDay } from 'date-fns';
 
 let nextId = () => Date.now().toString() + Math.random().toString(36).substring(2, 9);
@@ -209,6 +209,68 @@ export const resetBreadOrders = async () => {
     mockDataStore.breadOrders = mockDataStore.breadOrders.filter(o => o.isPinned);
     saveData();
 };
+
+// --- Expense Functions ---
+interface AddExpenseData {
+    description: string;
+    category: string;
+    amount: number;
+    date: string;
+}
+
+export const addExpense = async (data: AddExpenseData) => {
+    const newExpense: Expense = {
+        ...data,
+        id: nextId(),
+    };
+    mockDataStore.expenses.push(newExpense);
+    saveData();
+};
+
+export const updateExpense = async (expenseId: string, data: Partial<AddExpenseData>) => {
+    const expense = mockDataStore.expenses.find(e => e.id === expenseId);
+    if (expense) {
+        Object.assign(expense, data);
+        saveData();
+    }
+};
+
+export const deleteExpense = async (expenseId: string) => {
+    mockDataStore.expenses = mockDataStore.expenses.filter(e => e.id !== expenseId);
+    saveData();
+};
+
+// --- Supplier Functions ---
+interface AddSupplierData {
+    name: string;
+    contact: string;
+    phone: string;
+    category: string;
+    balance: number;
+}
+
+export const addSupplier = async (data: AddSupplierData) => {
+    const newSupplier: Supplier = {
+        ...data,
+        id: nextId(),
+    };
+    mockDataStore.suppliers.push(newSupplier);
+    saveData();
+};
+
+export const updateSupplier = async (supplierId: string, data: Partial<AddSupplierData>) => {
+    const supplier = mockDataStore.suppliers.find(s => s.id === supplierId);
+    if (supplier) {
+        Object.assign(supplier, data);
+        saveData();
+    }
+};
+
+export const deleteSupplier = async (supplierId: string) => {
+    mockDataStore.suppliers = mockDataStore.suppliers.filter(s => s.id !== supplierId);
+    saveData();
+};
+
 
 // --- Settings Functions ---
 export const updateBreadUnitPrice = (price: number) => {

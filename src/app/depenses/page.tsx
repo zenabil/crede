@@ -3,15 +3,9 @@
 import { useState, useMemo } from 'react';
 import {
   Search,
-  Plus,
-  Pencil,
-  Trash2,
   TrendingDown,
-  Calendar,
-  Tag,
 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
 import {
   Card,
   CardContent,
@@ -30,28 +24,31 @@ import { Badge } from '@/components/ui/badge';
 import { formatCurrency } from '@/lib/utils';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
-
-const mockExpenses = [
-  { id: '1', description: 'Achat de farine', category: 'Matières Premières', amount: 25000, date: new Date() },
-  { id: '2', description: 'Facture électricité', category: 'Charges', amount: 12000, date: new Date('2024-05-28') },
-  { id: '3', description: 'Sacs à pain', category: 'Emballage', amount: 5000, date: new Date('2024-05-25') },
-  { id: '4', description: 'Salaire employé', category: 'Salaires', amount: 40000, date: new Date('2024-05-31') },
-];
+import { useMockData } from '@/hooks/use-mock-data';
+import DepensesLoading from './loading'; // Assuming you create this
+import { AddExpenseDialog } from '@/components/depenses/add-expense-dialog';
+import { EditExpenseDialog } from '@/components/depenses/edit-expense-dialog';
+import { DeleteExpenseDialog } from '@/components/depenses/delete-expense-dialog';
 
 export default function DepensesPage() {
   const [searchTerm, setSearchTerm] = useState('');
+  const { expenses, loading } = useMockData();
 
   const filteredExpenses = useMemo(() => {
-    return mockExpenses.filter(expense =>
+    if (!expenses) return [];
+    return expenses.filter(expense =>
       expense.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
       expense.category.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-  }, [searchTerm]);
+    ).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  }, [searchTerm, expenses]);
 
   const totalExpenses = useMemo(() => {
     return filteredExpenses.reduce((total, expense) => total + expense.amount, 0);
   }, [filteredExpenses]);
-
+  
+  if (loading) {
+      return <DepensesLoading />;
+  }
 
   return (
     <div className="space-y-6">
@@ -73,9 +70,7 @@ export default function DepensesPage() {
                 <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                 <Input placeholder="Rechercher une dépense..." className="pl-8 w-full" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
             </div>
-            <Button className="w-full sm:w-auto">
-                <Plus className="mr-2 h-4 w-4" /> Ajouter une dépense
-            </Button>
+            <AddExpenseDialog />
            </div>
         </CardHeader>
         <CardContent>
@@ -98,19 +93,15 @@ export default function DepensesPage() {
                             <Badge variant="secondary">{expense.category}</Badge>
                           </TableCell>
                           <TableCell className="hidden md:table-cell text-muted-foreground">
-                            {format(expense.date, 'dd MMMM yyyy', { locale: fr })}
+                            {format(new Date(expense.date), 'dd MMMM yyyy', { locale: fr })}
                           </TableCell>
                           <TableCell className="text-right font-mono font-semibold text-destructive">
                             {formatCurrency(expense.amount)}
                           </TableCell>
                           <TableCell className="text-right">
                               <div className="flex items-center justify-end gap-0.5">
-                                  <Button variant="ghost" size="icon" className="h-8 w-8">
-                                      <Pencil className="h-4 w-4" />
-                                  </Button>
-                                  <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive">
-                                      <Trash2 className="h-4 w-4" />
-                                  </Button>
+                                  <EditExpenseDialog expense={expense} />
+                                  <DeleteExpenseDialog expenseId={expense.id} expenseDescription={expense.description} />
                               </div>
                           </TableCell>
                         </TableRow>
