@@ -17,6 +17,7 @@ import {
   Truck,
   TrendingDown,
   Bell,
+  FileText,
 } from 'lucide-react';
 
 export function MainLayout({ children }: { children: React.ReactNode }) {
@@ -34,6 +35,7 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
       icon: ClipboardList,
     },
     { href: '/depenses', label: 'Dépenses', icon: TrendingDown },
+    { href: '/rapports', label: 'Rapports', icon: FileText },
     { href: '/history', label: 'Historique', icon: History },
     { href: '/alerts', label: 'Alertes', icon: Bell },
     { href: '/parametres', label: 'Paramètres', icon: Settings },
