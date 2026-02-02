@@ -43,16 +43,28 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
       .filter((customer) => {
         if (customer.balance <= 0) return false;
 
-        const customerDebts = transactions
-          .filter((t) => t.customerId === customer.id && t.type === 'debt')
+        const customerTransactions = transactions
+          .filter((t) => t.customerId === customer.id)
           .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-        
-        const lastDebt = customerDebts[0];
-        if (!lastDebt) return false;
 
-        const debtDate = new Date(lastDebt.date);
-        const dueDate = addDays(debtDate, paymentTermsDays);
-        
+        let balanceLookback = customer.balance;
+        let oldestUnpaidDebtDate: Date | null = null;
+
+        for (const t of customerTransactions) {
+          if (t.type === 'debt') {
+            oldestUnpaidDebtDate = new Date(t.date);
+            balanceLookback -= t.amount;
+          } else { // payment
+            balanceLookback += t.amount;
+          }
+          if (balanceLookback <= 0) {
+            break;
+          }
+        }
+
+        if (!oldestUnpaidDebtDate) return false;
+
+        const dueDate = addDays(oldestUnpaidDebtDate, paymentTermsDays);
         return isAfter(today, dueDate);
       })
       .length;
