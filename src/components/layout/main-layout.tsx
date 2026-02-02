@@ -12,6 +12,11 @@ import {
   ClipboardList,
   Settings,
   History,
+  Landmark,
+  Package,
+  Truck,
+  TrendingDown,
+  Bell,
 } from 'lucide-react';
 
 export function MainLayout({ children }: { children: React.ReactNode }) {
@@ -19,10 +24,19 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
 
   const navLinks = [
     { href: '/', label: 'Tableau de bord', icon: LayoutDashboard },
-    { href: '/customers', label: 'Clients', icon: Users },
-    { href: '/orders', label: 'Commandes', icon: ClipboardList },
+    { href: '/caisse', label: 'Caisse', icon: Landmark },
+    { href: '/produits', label: 'Produits', icon: Package },
+    { href: '/clients', label: 'Clients', icon: Users },
+    { href: '/fournisseurs', label: 'Fournisseurs', icon: Truck },
+    {
+      href: '/commandes-boulangerie',
+      label: 'Commandes',
+      icon: ClipboardList,
+    },
+    { href: '/depenses', label: 'Dépenses', icon: TrendingDown },
     { href: '/history', label: 'Historique', icon: History },
-    { href: '/settings', label: 'Paramètres', icon: Settings },
+    { href: '/alerts', label: 'Alertes', icon: Bell },
+    { href: '/parametres', label: 'Paramètres', icon: Settings },
   ];
 
   return (
@@ -45,7 +59,7 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
         </div>
 
         {/* Centered Navigation */}
-        <nav className="flex items-center justify-center gap-2 text-sm font-medium">
+        <nav className="flex items-center justify-center gap-1 text-sm font-medium">
           {navLinks.map((link) => {
             const Icon = link.icon;
             return (
