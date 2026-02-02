@@ -27,10 +27,10 @@ import { addDays, isAfter } from 'date-fns';
 
 export function MainLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const { products, customers, transactions, loading, settings } = useMockData();
+  const { products, customers, transactions, loading, settings, breadOrders } = useMockData();
 
   const alertCount = useMemo(() => {
-    if (loading || !products || !customers || !transactions || !settings?.companyInfo) return 0;
+    if (loading || !products || !customers || !transactions || !settings?.companyInfo || !breadOrders) return 0;
     
     const lowStockCount = products.filter((p) => p.stock <= p.minStock).length;
     
@@ -56,9 +56,11 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
         return isAfter(today, dueDate);
       })
       .length;
+    
+    const unpaidBreadOrdersCount = breadOrders.filter(o => !o.isPaid).length;
 
-    return lowStockCount + overdueCount;
-  }, [products, customers, transactions, loading, settings]);
+    return lowStockCount + overdueCount + unpaidBreadOrdersCount;
+  }, [products, customers, transactions, loading, settings, breadOrders]);
 
 
   const navLinks = [

@@ -18,7 +18,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
-import { ShoppingCart, FileWarning } from 'lucide-react';
+import { ShoppingCart, FileWarning, ClipboardList } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
 import { useMockData } from '@/hooks/use-mock-data';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -26,7 +26,8 @@ import { format, addDays, isAfter } from 'date-fns';
 import { fr } from 'date-fns/locale';
 
 export default function AlertsPage() {
-  const { products, customers, transactions, settings, loading } = useMockData();
+  const { products, customers, transactions, settings, breadOrders, loading } =
+    useMockData();
 
   const lowStockProducts = useMemo(() => {
     if (!products) return [];
@@ -48,14 +49,16 @@ export default function AlertsPage() {
 
         const customerDebts = transactions
           .filter((t) => t.customerId === customer.id && t.type === 'debt')
-          .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-        
+          .sort(
+            (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+          );
+
         const lastDebt = customerDebts[0];
         if (!lastDebt) return null;
 
         const debtDate = new Date(lastDebt.date);
         const dueDate = addDays(debtDate, paymentTermsDays);
-        
+
         const isLate = isAfter(today, dueDate);
 
         // Only show customers who are late.
@@ -68,6 +71,11 @@ export default function AlertsPage() {
       })
       .filter((c): c is NonNullable<typeof c> => c !== null);
   }, [customers, transactions, settings]);
+
+  const unpaidBreadOrders = useMemo(() => {
+    if (!breadOrders) return [];
+    return breadOrders.filter((order) => !order.isPaid);
+  }, [breadOrders]);
 
   if (loading) {
     return (
@@ -93,9 +101,21 @@ export default function AlertsPage() {
             <Skeleton className="h-4 w-80" />
           </CardHeader>
           <CardContent>
-             <div className="space-y-2 pt-2">
-                <Skeleton className="h-12 w-full" />
-             </div>
+            <div className="space-y-2 pt-2">
+              <Skeleton className="h-12 w-full" />
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader>
+            <Skeleton className="h-7 w-56" />
+            <Skeleton className="h-4 w-80" />
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-2 pt-2">
+              <Skeleton className="h-12 w-full" />
+              <Skeleton className="h-12 w-full" />
+            </div>
           </CardContent>
         </Card>
       </div>
@@ -154,7 +174,7 @@ export default function AlertsPage() {
             </div>
           ) : (
             <div className="text-center py-10 text-muted-foreground border-2 border-dashed rounded-lg">
-                <p>Aucune alerte de stock faible pour le moment.</p>
+              <p>Aucune alerte de stock faible pour le moment.</p>
             </div>
           )}
         </CardContent>
@@ -164,51 +184,108 @@ export default function AlertsPage() {
         <CardHeader>
           <CardTitle>Alertes de Paiement</CardTitle>
           <CardDescription>
-            Clients avec des paiements en retard basés sur vos conditions de paiement.
+            Clients avec des paiements en retard basés sur vos conditions de
+            paiement.
           </CardDescription>
         </CardHeader>
         <CardContent>
-           {overdueCustomers.length > 0 ? (
+          {overdueCustomers.length > 0 ? (
             <div className="overflow-hidden rounded-lg border">
-                <Table>
-                    <TableHeader>
-                    <TableRow>
-                        <TableHead>Client</TableHead>
-                        <TableHead>Solde Dû</TableHead>
-                        <TableHead>Date d'échéance</TableHead>
-                        <TableHead className="text-right">Actions</TableHead>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Client</TableHead>
+                    <TableHead>Solde Dû</TableHead>
+                    <TableHead>Date d'échéance</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {overdueCustomers.map((customer) => (
+                    <TableRow key={customer.id} className="bg-destructive/10">
+                      <TableCell className="font-medium">
+                        {customer.name}
+                      </TableCell>
+                      <TableCell className="font-semibold text-destructive">
+                        {formatCurrency(customer.balance)}
+                      </TableCell>
+                      <TableCell>
+                        {format(customer.dueDate, 'dd MMM yyyy', {
+                          locale: fr,
+                        })}
+                        <span className="text-destructive text-xs ml-1">
+                          (En retard)
+                        </span>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <Button asChild variant="ghost" size="icon">
+                          <Link href={`/clients/${customer.id}`}>
+                            <FileWarning className="h-4 w-4" />
+                          </Link>
+                        </Button>
+                      </TableCell>
                     </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                    {overdueCustomers.map((customer) => (
-                        <TableRow key={customer.id} className="bg-destructive/10">
-                        <TableCell className="font-medium">
-                            {customer.name}
-                        </TableCell>
-                        <TableCell className="font-semibold text-destructive">
-                            {formatCurrency(customer.balance)}
-                        </TableCell>
-                        <TableCell>
-                            {format(customer.dueDate, 'dd MMM yyyy', { locale: fr })}
-                            <span className="text-destructive text-xs ml-1">(En retard)</span>
-                        </TableCell>
-                        <TableCell className="text-right">
-                            <Button asChild variant="ghost" size="icon">
-                              <Link href={`/clients/${customer.id}`}>
-                                <FileWarning className="h-4 w-4" />
-                              </Link>
-                            </Button>
-                        </TableCell>
-                        </TableRow>
-                    ))}
-                    </TableBody>
-                </Table>
+                  ))}
+                </TableBody>
+              </Table>
             </div>
-           ) : (
-             <div className="text-center py-10 text-muted-foreground border-2 border-dashed rounded-lg">
-                <p>Aucun client avec des paiements en retard.</p>
+          ) : (
+            <div className="text-center py-10 text-muted-foreground border-2 border-dashed rounded-lg">
+              <p>Aucun client avec des paiements en retard.</p>
             </div>
-           )}
+          )}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Commandes de pain non payées</CardTitle>
+          <CardDescription>
+            Liste des commandes de pain qui n'ont pas encore été réglées.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {unpaidBreadOrders.length > 0 ? (
+            <div className="overflow-hidden rounded-lg border">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Nom</TableHead>
+                    <TableHead>Client</TableHead>
+                    <TableHead>Quantité</TableHead>
+                    <TableHead>Montant</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {unpaidBreadOrders.map((order) => (
+                    <TableRow key={order.id}>
+                      <TableCell className="font-medium">
+                        {order.name}
+                      </TableCell>
+                      <TableCell>{order.customerName || 'N/A'}</TableCell>
+                      <TableCell>{order.quantity}</TableCell>
+                      <TableCell className="font-semibold text-destructive">
+                        {formatCurrency(order.totalAmount)}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <Button asChild variant="ghost" size="sm">
+                          <Link href="/commandes-boulangerie">
+                            <ClipboardList />
+                            Voir commandes
+                          </Link>
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          ) : (
+            <div className="text-center py-10 text-muted-foreground border-2 border-dashed rounded-lg">
+              <p>Aucune commande de pain non payée pour le moment.</p>
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>
