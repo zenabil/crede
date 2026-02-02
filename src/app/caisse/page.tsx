@@ -358,7 +358,7 @@ export default function CaissePage() {
       )
   }
 
-  const paymentButtonText = selectedCustomer ? "Ajouter au compte" : "Paiement";
+  const paymentButtonText = "Finaliser la vente";
 
   return (
     <div className="flex flex-col md:flex-row gap-4 h-[calc(100vh-8rem)]">

@@ -2,6 +2,7 @@
 import { mockDataStore, saveData, resetToSeedData as resetSeed } from './index';
 import type { Transaction, Customer, TransactionType, BreadOrder, Expense, Supplier, Product, SupplierTransaction, CompanyInfo } from '@/lib/types';
 import { startOfDay, format } from 'date-fns';
+import { formatCurrency } from '../utils';
 
 let nextId = () => Date.now().toString() + Math.random().toString(36).substring(2, 9);
 
@@ -221,7 +222,8 @@ export const resetBreadOrders = async () => {
 interface SaleDetails {
     total: number;
     customerId: string | null;
-    customerName: string | null; // For the transaction description
+    customerName: string | null;
+    amountPaid: number;
 }
 
 export const processSale = async (cartItems: { product: Product, quantity: number }[], saleDetails: SaleDetails) => {
@@ -243,14 +245,13 @@ export const processSale = async (cartItems: { product: Product, quantity: numbe
   // If all checks pass, update the stock
   for (const item of cartItems) {
     const productInStore = mockDataStore.products.find(p => p.id === item.product.id);
-    // productInStore is guaranteed to exist here from the check above
     if (productInStore) {
         productInStore.stock -= item.quantity;
     }
   }
 
-  // If a customer is associated, create a debt transaction
-  if (saleDetails.customerId && saleDetails.total > 0) {
+  // If a customer is associated, create transaction(s) to record the sale and payment
+  if (saleDetails.customerId) {
       const saleItems = cartItems.map(item => ({
           productId: item.product.id,
           quantity: item.quantity,
@@ -258,17 +259,33 @@ export const processSale = async (cartItems: { product: Product, quantity: numbe
           purchasePrice: item.product.purchasePrice,
       }));
 
-      addTransaction({
-          customerId: saleDetails.customerId,
-          type: 'debt',
-          amount: saleDetails.total,
-          description: "Achat à la caisse",
-          date: new Date().toISOString(),
-          saleItems: saleItems,
-      });
-      // addTransaction calls saveData(), so we don't need another call here.
+      // 1. Record the full sale as a debt transaction, so the items are recorded in history
+      if (saleDetails.total > 0) {
+          addTransaction({
+              customerId: saleDetails.customerId,
+              type: 'debt',
+              amount: saleDetails.total,
+              description: "Achat à la caisse",
+              date: new Date().toISOString(),
+              saleItems: saleItems,
+          });
+      }
+
+      // 2. If any payment was made, record it as a separate payment transaction
+      if (saleDetails.amountPaid > 0) {
+          addTransaction({
+              customerId: saleDetails.customerId,
+              type: 'payment',
+              amount: saleDetails.amountPaid,
+              description: "Paiement pour achat à la caisse",
+              date: new Date().toISOString(),
+              saleItems: null, // Payments don't have items
+          });
+      }
+      // Each call to addTransaction also calls saveData() and dispatches an event
   } else {
-    // If no customer, just save the stock updates.
+    // If no customer (cash sale), just save the stock updates.
+    // The sale itself is not recorded in the transaction history for simplicity.
     saveData();
   }
 };
