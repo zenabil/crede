@@ -50,6 +50,7 @@ import {
 } from '@/components/ui/table';
 import { Label } from '@/components/ui/label';
 import { AddCustomerDialog } from '@/components/customers/add-customer-dialog';
+import { CustomerCombobox } from '@/components/caisse/customer-combobox';
 
 const productImages = imageData.caisse;
 
@@ -474,24 +475,12 @@ export default function CaissePage() {
                         </div>
                     ) : (
                        <div className="flex items-center gap-2">
-                            <div className="flex-grow">
-                                <Select
-                                    value={activeCustomerId || ''}
-                                    onValueChange={(value) => updateActiveCartState({ customerId: value === 'none' ? null : value })}
-                                >
-                                    <SelectTrigger id="customer-select">
-                                        <SelectValue placeholder="Associer à un client..." />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="none">Aucun (Vente au comptant)</SelectItem>
-                                        {customers.map(customer => (
-                                            <SelectItem key={customer.id} value={customer.id}>
-                                                {customer.name}
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
-                            </div>
+                             <CustomerCombobox
+                                customers={customers}
+                                selectedCustomerId={activeCustomerId}
+                                onSelectCustomer={(id) => updateActiveCartState({ customerId: id })}
+                                className="flex-grow"
+                            />
                             <AddCustomerDialog trigger={
                                 <Button variant="outline" size="icon" className="flex-shrink-0">
                                     <UserPlus className="h-4 w-4" />
