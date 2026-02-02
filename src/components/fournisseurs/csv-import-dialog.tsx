@@ -40,6 +40,7 @@ const SUPPLIER_MODEL_FIELDS: (keyof Supplier)[] = [
   'phone',
   'balance',
   'category',
+  'visitDay',
 ];
 
 const MINIMUM_MAPPED_FIELDS: (keyof Supplier)[] = ['name'];
@@ -158,6 +159,7 @@ export function SupplierCsvImportDialog({ trigger }: { trigger?: React.ReactNode
             contact: supplier.contact || '',
             phone: supplier.phone || '',
             balance: supplier.balance ?? 0,
+            visitDay: supplier.visitDay || '',
         };
       }
     );

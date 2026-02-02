@@ -42,6 +42,7 @@ const PRODUCT_MODEL_FIELDS: (keyof Product)[] = [
   'sellingPrice',
   'stock',
   'minStock',
+  'supplierId',
 ];
 
 const MINIMUM_MAPPED_FIELDS: (keyof Product)[] = ['name', 'sellingPrice'];
