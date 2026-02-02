@@ -442,6 +442,41 @@ export const exportProductsToCsv = () => {
     document.body.removeChild(link);
 };
 
+export const exportSuppliersToCsv = () => {
+    if (mockDataStore.suppliers.length === 0) {
+        return;
+    }
+    const headers = ['id', 'name', 'category', 'contact', 'phone', 'balance'];
+    const csvRows = [
+        headers.join(',')
+    ];
+
+    for (const supplier of mockDataStore.suppliers) {
+        const values = headers.map(header => {
+            let val = (supplier as any)[header];
+            if (val === null || val === undefined) {
+                val = '';
+            }
+            const stringVal = String(val);
+            if (stringVal.includes(',') || stringVal.includes('"') || stringVal.includes('\n')) {
+                return `"${stringVal.replace(/"/g, '""')}"`;
+            }
+            return stringVal;
+        });
+        csvRows.push(values.join(','));
+    }
+
+    const blob = new Blob([csvRows.join('\n')], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.setAttribute('href', url);
+    link.setAttribute('download', 'suppliers-export.csv');
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+};
+
 export const resetAllData = () => {
     resetSeed();
 };

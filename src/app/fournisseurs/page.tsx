@@ -9,6 +9,8 @@ import {
   ArrowUp,
   ArrowDown,
   ChevronsUpDown,
+  Upload,
+  Download,
 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -32,6 +34,8 @@ import { cn } from '@/lib/utils';
 import { AddSupplierDialog } from '@/components/fournisseurs/add-supplier-dialog';
 import { EditSupplierDialog } from '@/components/fournisseurs/edit-supplier-dialog';
 import { DeleteSupplierDialog } from '@/components/fournisseurs/delete-supplier-dialog';
+import { SupplierCsvImportDialog } from '@/components/fournisseurs/csv-import-dialog';
+import { exportSuppliersToCsv } from '@/lib/mock-data/api';
 
 type SortKey = keyof Supplier;
 type SortDirection = 'ascending' | 'descending';
@@ -114,7 +118,19 @@ export default function FournisseursPage() {
                 <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                 <Input placeholder="Rechercher des fournisseurs..." className="pl-8 w-full" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
             </div>
-            <AddSupplierDialog />
+            <div className="flex items-center gap-2 flex-wrap justify-end">
+                <SupplierCsvImportDialog 
+                    trigger={
+                        <Button variant="outline">
+                        <Upload className="mr-2 h-4 w-4"/> Importer
+                        </Button>
+                    }
+                />
+                <Button variant="outline" onClick={exportSuppliersToCsv}>
+                    <Download className="mr-2 h-4 w-4"/> Exporter
+                </Button>
+                <AddSupplierDialog />
+            </div>
            </div>
         </CardHeader>
         <CardContent>
