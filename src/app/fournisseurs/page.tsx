@@ -19,6 +19,7 @@ import {
   TrendingDown,
   PlusCircle,
   MinusCircle,
+  ArrowRight,
 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -47,6 +48,7 @@ import { SupplierCsvImportDialog } from '@/components/fournisseurs/csv-import-di
 import { exportSuppliersToCsv } from '@/lib/mock-data/api';
 import { StatCard } from '@/components/dashboard/stat-card';
 import { FournisseursGrid } from '@/components/fournisseurs/fournisseurs-grid';
+import Link from 'next/link';
 
 
 type SortKey = keyof Supplier | 'totalPurchases' | 'totalPayments';
@@ -295,6 +297,11 @@ export default function FournisseursPage() {
                                           )}
                                           <EditSupplierDialog supplier={supplier} />
                                           <DeleteSupplierDialog supplierId={supplier.id} supplierName={supplier.name} />
+                                          <Button variant="ghost" size="icon" asChild>
+                                              <Link href={`/fournisseurs/${supplier.id}`}>
+                                                <ArrowRight />
+                                              </Link>
+                                            </Button>
                                       </div>
                                   </TableCell>
                               </TableRow>

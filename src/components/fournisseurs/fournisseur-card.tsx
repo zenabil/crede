@@ -29,6 +29,7 @@ import {
 import { EditSupplierDialog } from './edit-supplier-dialog';
 import { DeleteSupplierDialog } from './delete-supplier-dialog';
 import { AddSupplierTransactionDialog } from './add-supplier-transaction-dialog';
+import Link from 'next/link';
 
 export function FournisseurCard({ supplier }: { supplier: Supplier }) {
   const getInitials = (name: string) => {
@@ -71,6 +72,9 @@ export function FournisseurCard({ supplier }: { supplier: Supplier }) {
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
+             <DropdownMenuItem asChild>
+              <Link href={`/fournisseurs/${supplier.id}`}>Voir les détails</Link>
+            </DropdownMenuItem>
             <EditSupplierDialog
               supplier={supplier}
               trigger={
