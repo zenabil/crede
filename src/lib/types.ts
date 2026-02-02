@@ -13,6 +13,7 @@ export interface AppSettings {
   breadUnitPrice: number;
   companyInfo: CompanyInfo;
   expenseCategories: string[];
+  productPageViewMode: 'list' | 'grid';
 }
 
 export interface Customer {

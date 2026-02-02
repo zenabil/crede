@@ -47,6 +47,7 @@ export let mockDataStore: MockData = {
     breadUnitPrice: 10,
     companyInfo: SEED_COMPANY_INFO,
     expenseCategories: SEED_EXPENSE_CATEGORIES,
+    productPageViewMode: 'grid',
   },
 };
 
@@ -84,6 +85,9 @@ export function loadData() {
       }
       if (!parsedData.settings.expenseCategories) {
         parsedData.settings.expenseCategories = SEED_EXPENSE_CATEGORIES;
+      }
+       if (!parsedData.settings.productPageViewMode) {
+        parsedData.settings.productPageViewMode = 'grid';
       }
 
       // Simple migration for old data structures
@@ -185,6 +189,7 @@ export function resetToSeedData() {
         breadUnitPrice: SEED_BREAD_UNIT_PRICE,
         companyInfo: SEED_COMPANY_INFO,
         expenseCategories: SEED_EXPENSE_CATEGORIES,
+        productPageViewMode: 'grid',
     },
   };
   saveData();

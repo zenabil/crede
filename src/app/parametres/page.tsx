@@ -21,6 +21,7 @@ import {
   exportProductsToCsv,
   exportSuppliersToCsv,
   updateExpenseCategories,
+  updateProductPageViewMode,
 } from '@/lib/mock-data/api';
 import { useToast } from '@/hooks/use-toast';
 import SettingsLoading from './loading';
@@ -251,6 +252,19 @@ export default function SettingsPage() {
     }
   };
 
+  const handleViewModeChange = async (mode: 'list' | 'grid') => {
+    try {
+      await updateProductPageViewMode(mode);
+      toast({ title: 'Vue par défaut des produits mise à jour.' });
+    } catch (error) {
+      toast({
+        title: 'Erreur',
+        description: 'Impossible de mettre à jour la vue par défaut.',
+        variant: 'destructive',
+      });
+    }
+  };
+
   if (loading || !mounted) {
     return <SettingsLoading />;
   }
@@ -472,6 +486,29 @@ export default function SettingsPage() {
                     </Button>
                   ))}
                 </div>
+              </div>
+              
+              <Separator />
+
+              <div className="space-y-2">
+                <Label>Vue par défaut de la page Produits</Label>
+                <RadioGroup
+                  defaultValue={settings.productPageViewMode || 'grid'}
+                  onValueChange={(value: 'list' | 'grid') => handleViewModeChange(value)}
+                  className="flex items-center space-x-4"
+                >
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="grid" id="grid" />
+                    <Label htmlFor="grid">Grille</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="list" id="list" />
+                    <Label htmlFor="list">Liste</Label>
+                  </div>
+                </RadioGroup>
+                <p className="text-xs text-muted-foreground">
+                  Définissez l'affichage initial de la liste des produits.
+                </p>
               </div>
             </CardContent>
           </Card>

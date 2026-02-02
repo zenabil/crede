@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useMockData } from '@/hooks/use-mock-data';
 import type { Product } from '@/lib/types';
 import {
@@ -52,8 +52,14 @@ interface SortConfig {
 export default function ProduitsPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [sortConfig, setSortConfig] = useState<SortConfig | null>(null);
+  const { products, settings, loading } = useMockData();
   const [viewMode, setViewMode] = useState<'list' | 'grid'>('grid');
-  const { products, loading } = useMockData();
+
+  useEffect(() => {
+    if (!loading && settings.productPageViewMode) {
+      setViewMode(settings.productPageViewMode);
+    }
+  }, [loading, settings.productPageViewMode]);
 
   const { lowStockCount, outOfStockCount, totalValue } = useMemo(() => {
     if (!products) return { lowStockCount: 0, outOfStockCount: 0, totalValue: 0 };

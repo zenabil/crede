@@ -452,6 +452,10 @@ export const updateExpenseCategories = async (categories: string[]) => {
     saveData();
 };
 
+export const updateProductPageViewMode = async (mode: 'list' | 'grid') => {
+    mockDataStore.settings.productPageViewMode = mode;
+    saveData();
+};
 
 export const setInitialBreadUnitPrice = () => {
     // This is handled by loadData now, this function is for API compatibility
@@ -512,7 +516,7 @@ export const exportProductsToCsv = () => {
     if (mockDataStore.products.length === 0) {
         return;
     }
-    const headers = ['id', 'name', 'category', 'barcode', 'purchasePrice', 'sellingPrice', 'stock', 'minStock'];
+    const headers = ['id', 'name', 'category', 'barcode', 'purchasePrice', 'sellingPrice', 'stock', 'minStock', 'supplierId'];
     const csvRows = [
         headers.join(',')
     ];
