@@ -165,7 +165,7 @@ export default function AlertsPage() {
                     <TableHeader>
                     <TableRow>
                         <TableHead>Client</TableHead>
-                        <TableHead>Solde</TableHead>
+                        <TableHead>Solde Dû</TableHead>
                         <TableHead>Date d'échéance</TableHead>
                         <TableHead className="text-right">Actions</TableHead>
                     </TableRow>
@@ -182,7 +182,7 @@ export default function AlertsPage() {
                         <TableCell>
                             {customer.dueDate ? (
                                 <>
-                                {format(customer.dueDate, 'dd MMM, yyyy', { locale: fr })}
+                                {format(customer.dueDate, 'MMM dd, yyyy', { locale: fr })}
                                 {customer.isLate && <span className="text-destructive text-xs ml-1">(En retard)</span>}
                                 </>
                             ) : (
