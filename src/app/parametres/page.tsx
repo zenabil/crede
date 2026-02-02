@@ -16,12 +16,15 @@ import { useMockData } from '@/hooks/use-mock-data';
 import { updateCompanyInfo, exportData } from '@/lib/mock-data/api';
 import { useToast } from '@/hooks/use-toast';
 import SettingsLoading from './loading';
-import { Download, Save, Loader2 } from 'lucide-react';
+import { Download, Save, Loader2, Check } from 'lucide-react';
 import { ResetAllDataDialog } from '@/components/settings/reset-all-data-dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
 import { useFormSubmission } from '@/hooks/use-form-submission';
-import { ThemeToggle } from '@/components/layout/theme-toggle';
+import { useTheme } from 'next-themes';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { cn } from '@/lib/utils';
+
 
 const companyInfoSchema = z.object({
   name: z.string().min(1, "Le nom de l'entreprise est requis."),
@@ -33,13 +36,35 @@ const companyInfoSchema = z.object({
   paymentTermsDays: z.coerce.number().int().min(0, 'Le nombre de jours doit être positif.'),
 });
 
+const appearanceSchema = z.object({
+  currency: z.string().min(1, "La devise est requise.").max(5, "Le symbole ne peut pas dépasser 5 caractères."),
+});
+
+// Color themes based on the image
+const colorThemes = [
+  { name: 'teal', hsl: '173 80% 40%', color: '#14b8a6' },
+  { name: 'green', hsl: '142 71% 45%', color: '#22c55e' },
+  { name: 'blue', hsl: '221 83% 53%', color: '#3b82f6' },
+  { name: 'red', hsl: '0 72% 51%', color: '#ef4444' },
+  { name: 'orange', hsl: '25 95% 53%', color: '#f97316' },
+  { name: 'purple', hsl: '262 84% 59%', color: '#8b5cf6' },
+  { name: 'yellow', hsl: '48 96% 53%', color: '#facc15' },
+  { name: 'slate', hsl: '215 28% 17%', color: '#64748b' },
+];
+
 export default function SettingsPage() {
   const { settings, loading } = useMockData();
   const { toast } = useToast();
-  const formRef = useRef<HTMLFormElement>(null);
+  const { theme, setTheme } = useTheme();
+  
+  const [mounted, setMounted] = useState(false);
+  const [activeColor, setActiveColor] = useState('teal');
 
-  const { isPending, errors, handleSubmit } = useFormSubmission({
-    formRef,
+  const companyFormRef = useRef<HTMLFormElement>(null);
+  const appearanceFormRef = useRef<HTMLFormElement>(null);
+
+  const { isPending: isCompanyPending, errors: companyErrors, handleSubmit: handleCompanySubmit } = useFormSubmission({
+    formRef: companyFormRef,
     schema: companyInfoSchema,
     config: {
       successMessage: "Informations sur l'entreprise mises à jour.",
@@ -49,6 +74,55 @@ export default function SettingsPage() {
       await updateCompanyInfo(data);
     },
   });
+
+  const { isPending: isAppearancePending, errors: appearanceErrors, handleSubmit: handleAppearanceSubmit } = useFormSubmission({
+    formRef: appearanceFormRef,
+    schema: appearanceSchema,
+    config: {
+      successMessage: 'Devise mise à jour.',
+      errorMessage: 'Impossible de mettre à jour la devise.',
+    },
+    onSubmit: async (data) => {
+      await updateCompanyInfo({ currency: data.currency });
+    },
+  });
+  
+  useEffect(() => {
+    setMounted(true);
+    const storedColor = localStorage.getItem('frucio-theme-color') || 'teal';
+    applyColor(storedColor, false); // don't show toast on initial load
+  }, []);
+
+  const applyColor = (colorName: string, showToast = true) => {
+    const selectedTheme = colorThemes.find(t => t.name === colorName);
+    if (!selectedTheme) return;
+    
+    const root = document.documentElement;
+    root.style.setProperty('--primary', selectedTheme.hsl);
+    root.style.setProperty('--accent', selectedTheme.hsl); // Keep accent same as primary
+    root.style.setProperty('--ring', selectedTheme.hsl);
+    
+    // For dark mode, let's just lighten the color a bit as a simple heuristic
+    const [h, s, l] = selectedTheme.hsl.split(' ').map(v => parseFloat(v.replace('%', '')));
+    const darkPrimary = `${h} ${s}% ${Math.min(l + 10, 100)}%`;
+    
+    const darkStyles = document.querySelector('style[data-dark-theme-override]');
+    if (darkStyles) {
+      darkStyles.innerHTML = `.dark { --primary: ${darkPrimary}; --accent: ${darkPrimary}; --ring: ${darkPrimary}; }`;
+    } else {
+      const newStyle = document.createElement('style');
+      newStyle.setAttribute('data-dark-theme-override', 'true');
+      newStyle.innerHTML = `.dark { --primary: ${darkPrimary}; --accent: ${darkPrimary}; --ring: ${darkPrimary}; }`;
+      document.head.appendChild(newStyle);
+    }
+    
+    localStorage.setItem('frucio-theme-color', colorName);
+    setActiveColor(colorName);
+    if (showToast) {
+       toast({ title: 'Thème de couleur mis à jour.' });
+    }
+  }
+
 
   const handleExportData = () => {
     try {
@@ -66,7 +140,7 @@ export default function SettingsPage() {
     }
   };
 
-  if (loading) {
+  if (loading || !mounted) {
     return <SettingsLoading />;
   }
 
@@ -90,7 +164,7 @@ export default function SettingsPage() {
         
         <TabsContent value="company">
             <Card>
-                <form onSubmit={handleSubmit} ref={formRef}>
+                <form onSubmit={handleCompanySubmit} ref={companyFormRef}>
                     <CardHeader>
                         <CardTitle>Informations sur l'entreprise</CardTitle>
                         <CardDescription>
@@ -102,7 +176,7 @@ export default function SettingsPage() {
                             <div className="space-y-2">
                                 <Label htmlFor="name">Nom de l'entreprise</Label>
                                 <Input id="name" name="name" defaultValue={companyInfo.name} />
-                                {errors?.name && <p className="text-sm font-medium text-destructive">{errors.name._errors[0]}</p>}
+                                {companyErrors?.name && <p className="text-sm font-medium text-destructive">{companyErrors.name._errors[0]}</p>}
                             </div>
                             <div className="space-y-2">
                                 <Label htmlFor="phone">Téléphone</Label>
@@ -116,12 +190,12 @@ export default function SettingsPage() {
                         <div className="space-y-2">
                             <Label htmlFor="email">Email</Label>
                             <Input id="email" name="email" type="email" defaultValue={companyInfo.email} />
-                             {errors?.email && <p className="text-sm font-medium text-destructive">{errors.email._errors[0]}</p>}
+                             {companyErrors?.email && <p className="text-sm font-medium text-destructive">{companyErrors.email._errors[0]}</p>}
                         </div>
                         <div className="space-y-2">
                             <Label htmlFor="logoUrl">URL du Logo</Label>
                             <Input id="logoUrl" name="logoUrl" defaultValue={companyInfo.logoUrl} />
-                            {errors?.logoUrl && <p className="text-sm font-medium text-destructive">{errors.logoUrl._errors[0]}</p>}
+                            {companyErrors?.logoUrl && <p className="text-sm font-medium text-destructive">{companyErrors.logoUrl._errors[0]}</p>}
                         </div>
                          <div className="space-y-2">
                             <Label htmlFor="extraInfo">Informations Supplémentaires (N° Fiscal, etc.)</Label>
@@ -131,12 +205,12 @@ export default function SettingsPage() {
                             <Label htmlFor="paymentTermsDays">Conditions de paiement (jours)</Label>
                             <Input id="paymentTermsDays" name="paymentTermsDays" type="number" defaultValue={companyInfo.paymentTermsDays} />
                             <p className="text-xs text-muted-foreground">Le nombre de jours avant qu'une facture ne soit considérée comme due.</p>
-                            {errors?.paymentTermsDays && <p className="text-sm font-medium text-destructive">{errors.paymentTermsDays._errors[0]}</p>}
+                            {companyErrors?.paymentTermsDays && <p className="text-sm font-medium text-destructive">{companyErrors.paymentTermsDays._errors[0]}</p>}
                         </div>
                     </CardContent>
                     <CardFooter>
-                        <Button type="submit" disabled={isPending}>
-                           {isPending ? <Loader2 className="animate-spin mr-2 h-4 w-4" /> : <Save />}
+                        <Button type="submit" disabled={isCompanyPending}>
+                           {isCompanyPending ? <Loader2 className="animate-spin mr-2 h-4 w-4" /> : <Save />}
                            Enregistrer
                         </Button>
                     </CardFooter>
@@ -149,14 +223,62 @@ export default function SettingsPage() {
                 <CardHeader>
                     <CardTitle>Apparence</CardTitle>
                     <CardDescription>
-                        Personnalisez l'apparence de l'application.
+                        Les modifications de l'apparence sont enregistrées automatiquement, sauf la devise.
                     </CardDescription>
                 </CardHeader>
-                <CardContent className="space-y-4">
-                    <div className="flex items-center justify-between p-4 border rounded-lg">
-                        <Label>Changer de thème (Clair/Sombre)</Label>
-                        <ThemeToggle />
-                    </div>
+                <CardContent className="space-y-8">
+                     <form onSubmit={handleAppearanceSubmit} ref={appearanceFormRef} className="max-w-xs space-y-4">
+                        <div className="space-y-2">
+                            <Label htmlFor="currency">Devise</Label>
+                            <Input id="currency" name="currency" defaultValue={companyInfo.currency} />
+                            {appearanceErrors?.currency && <p className="text-sm font-medium text-destructive">{appearanceErrors.currency._errors[0]}</p>}
+                        </div>
+                         <Button type="submit" disabled={isAppearancePending}>
+                           {isAppearancePending ? <Loader2 className="animate-spin mr-2 h-4 w-4" /> : <Save />}
+                           Enregistrer la devise
+                        </Button>
+                     </form>
+
+                     <div className="space-y-2">
+                        <Label>Thème</Label>
+                        <RadioGroup defaultValue={theme} onValueChange={setTheme} className="flex items-center space-x-4">
+                            <div className="flex items-center space-x-2">
+                                <RadioGroupItem value="light" id="light" />
+                                <Label htmlFor="light">Light</Label>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                                <RadioGroupItem value="dark" id="dark" />
+                                <Label htmlFor="dark">Dark</Label>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                                <RadioGroupItem value="system" id="system" />
+                                <Label htmlFor="system">System</Label>
+                            </div>
+                        </RadioGroup>
+                     </div>
+
+                     <div className="space-y-2">
+                        <Label>Couleurs</Label>
+                        <div className="grid grid-cols-4 sm:grid-cols-8 gap-2">
+                            {colorThemes.map((ct) => (
+                                <Button
+                                    key={ct.name}
+                                    variant="outline"
+                                    size="icon"
+                                    className={cn(
+                                        "h-12 w-12 rounded-lg justify-center items-center flex",
+                                        activeColor === ct.name && "border-2 border-ring"
+                                    )}
+                                    style={{ backgroundColor: ct.color }}
+                                    onClick={() => applyColor(ct.name)}
+                                >
+                                    {activeColor === ct.name && <Check className="h-6 w-6 text-white" />}
+                                    <span className="sr-only">{ct.name}</span>
+                                </Button>
+                            ))}
+                        </div>
+                     </div>
+
                 </CardContent>
             </Card>
         </TabsContent>

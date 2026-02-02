@@ -6,6 +6,7 @@ export interface CompanyInfo {
   logoUrl: string;
   extraInfo: string;
   paymentTermsDays: number;
+  currency: string;
 }
 
 export interface AppSettings {

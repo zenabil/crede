@@ -32,7 +32,8 @@ const initialCompanyInfo: CompanyInfo = {
     email: '',
     logoUrl: '',
     extraInfo: '',
-    paymentTermsDays: 0
+    paymentTermsDays: 0,
+    currency: 'DZD',
 };
 
 export function useMockData(): MockDataState {

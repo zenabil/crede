@@ -9,6 +9,7 @@ export const SEED_COMPANY_INFO: CompanyInfo = {
     logoUrl: '',
     extraInfo: '',
     paymentTermsDays: 30,
+    currency: 'DZD',
 };
 
 export const SEED_CUSTOMERS: Omit<Customer, 'id' | 'totalDebts' | 'totalPayments'>[] = [
