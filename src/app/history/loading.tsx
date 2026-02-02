@@ -13,8 +13,9 @@ export default function HistoryLoading() {
         <CardHeader>
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <Skeleton className="h-7 w-48" />
-            <div className="flex w-full sm:w-auto items-center gap-2">
+            <div className="flex w-full flex-wrap sm:flex-nowrap items-center gap-2">
               <Skeleton className="h-10 w-full sm:max-w-xs" />
+              <Skeleton className="h-10 w-[260px]" />
               <Skeleton className="h-10 w-[200px]" />
               <Skeleton className="h-10 w-[180px]" />
             </div>

@@ -4,7 +4,13 @@ import { useMemo, useState } from 'react';
 import { useMockData } from '@/hooks/use-mock-data';
 import type { Customer, Transaction } from '@/lib/types';
 import HistoryLoading from './loading';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardFooter,
+} from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import {
   Select,
@@ -13,14 +19,31 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Search, FileText } from 'lucide-react';
+import { Search, FileText, Calendar as CalendarIcon } from 'lucide-react';
 import { TransactionsHistoryTable } from '@/components/history/transactions-history-table';
+import { DateRange } from 'react-day-picker';
+import {
+  subDays,
+  format,
+  isWithinInterval,
+  startOfDay,
+  endOfDay,
+} from 'date-fns';
+import { fr } from 'date-fns/locale';
+import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
+import { Button } from '@/components/ui/button';
+import { Calendar } from '@/components/ui/calendar';
+import { formatCurrency, cn } from '@/lib/utils';
 
 export default function HistoryPage() {
   const { customers, transactions, loading } = useMockData();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCustomerId, setSelectedCustomerId] = useState('all');
   const [transactionType, setTransactionType] = useState('all');
+  const [date, setDate] = useState<DateRange | undefined>({
+    from: subDays(new Date(), 29),
+    to: new Date(),
+  });
 
   const transactionsWithCustomer = useMemo(() => {
     return transactions
@@ -49,9 +72,39 @@ export default function HistoryPage() {
       const typeMatch =
         transactionType === 'all' || transaction.type === transactionType;
 
-      return searchMatch && customerMatch && typeMatch;
+      let dateMatch = true;
+      if (date && date.from) {
+        const interval = {
+          start: startOfDay(date.from),
+          end: endOfDay(date.to || date.from),
+        };
+        dateMatch = isWithinInterval(new Date(transaction.date), interval);
+      }
+
+      return searchMatch && customerMatch && typeMatch && dateMatch;
     });
-  }, [transactionsWithCustomer, searchTerm, selectedCustomerId, transactionType]);
+  }, [
+    transactionsWithCustomer,
+    searchTerm,
+    selectedCustomerId,
+    transactionType,
+    date,
+  ]);
+  
+  const { totalDebts, totalPayments, netChange } = useMemo(() => {
+    return filteredTransactions.reduce(
+      (acc, t) => {
+        if (t.type === 'debt') {
+          acc.totalDebts += t.amount;
+        } else {
+          acc.totalPayments += t.amount;
+        }
+        acc.netChange = acc.totalDebts - acc.totalPayments;
+        return acc;
+      },
+      { totalDebts: 0, totalPayments: 0, netChange: 0 }
+    );
+  }, [filteredTransactions]);
 
   if (loading) {
     return <HistoryLoading />;
@@ -64,7 +117,7 @@ export default function HistoryPage() {
     <div className="space-y-6">
       <header>
         <h1 className="text-3xl font-bold tracking-tight">
-          Historique des Transactions (سجل العمليات)
+          Historique des Transactions
         </h1>
         <p className="text-muted-foreground">
           Consultez et recherchez dans toutes les transactions enregistrées.
@@ -75,7 +128,7 @@ export default function HistoryPage() {
         <CardHeader>
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <CardTitle>Filtres de recherche</CardTitle>
-            <div className="flex w-full sm:w-auto items-center gap-2">
+            <div className="flex w-full flex-wrap sm:flex-nowrap items-center gap-2">
               <div className="relative w-full sm:w-auto sm:max-w-xs">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
@@ -87,6 +140,44 @@ export default function HistoryPage() {
                   disabled={!hasTransactions}
                 />
               </div>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    id="date"
+                    variant={'outline'}
+                    className={cn(
+                      'w-full sm:w-[260px] justify-start text-left font-normal',
+                      !date && 'text-muted-foreground'
+                    )}
+                    disabled={!hasTransactions}
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {date?.from ? (
+                      date.to ? (
+                        <>
+                          {format(date.from, 'LLL dd, y', { locale: fr })} -{' '}
+                          {format(date.to, 'LLL dd, y', { locale: fr })}
+                        </>
+                      ) : (
+                        format(date.from, 'LLL dd, y', { locale: fr })
+                      )
+                    ) : (
+                      <span>Choisir une date</span>
+                    )}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="end">
+                  <Calendar
+                    initialFocus
+                    mode="range"
+                    defaultMonth={date?.from}
+                    selected={date}
+                    onSelect={setDate}
+                    numberOfMonths={2}
+                    locale={fr}
+                  />
+                </PopoverContent>
+              </Popover>
               <Select
                 value={selectedCustomerId}
                 onValueChange={setSelectedCustomerId}
@@ -142,6 +233,33 @@ export default function HistoryPage() {
             </div>
           )}
         </CardContent>
+        {hasResults && (
+          <CardFooter className="flex justify-end space-x-8 pt-4">
+            <div className="text-right">
+              <p className="text-sm text-muted-foreground">Total Dettes</p>
+              <p className="text-lg font-semibold text-destructive">
+                {formatCurrency(totalDebts)}
+              </p>
+            </div>
+            <div className="text-right">
+              <p className="text-sm text-muted-foreground">Total Paiements</p>
+              <p className="text-lg font-semibold text-accent">
+                {formatCurrency(totalPayments)}
+              </p>
+            </div>
+            <div className="text-right">
+              <p className="text-sm text-muted-foreground">Solde Net</p>
+              <p
+                className={cn(
+                  'text-lg font-semibold',
+                  netChange > 0 ? 'text-destructive' : 'text-accent'
+                )}
+              >
+                {formatCurrency(netChange)}
+              </p>
+            </div>
+          </CardFooter>
+        )}
       </Card>
     </div>
   );
