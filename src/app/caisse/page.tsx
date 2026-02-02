@@ -278,8 +278,16 @@ export default function CaissePage() {
       if (Object.keys(carts).length > 1) {
           closeTab(activeTab);
       } else {
-          // Clear current cart, but keep the customer if they were selected
-          updateActiveCartState({ items: [], discount: 0 });
+          // When a sale is complete, we clear only the items and discount,
+          // but keep the customer associated with the tab for the next sale.
+          setCarts(prev => ({
+              ...prev,
+              [activeTab]: {
+                  ...prev[activeTab],
+                  items: [],
+                  discount: 0,
+              }
+          }));
       }
       barcodeInputRef.current?.focus();
   }
@@ -293,10 +301,6 @@ export default function CaissePage() {
         if (product) {
             addToCart(product);
             setBarcode(''); // Clear input after adding
-            toast({
-                title: 'Produit ajouté',
-                description: `${product.name} a été ajouté au panier.`,
-            });
         } else {
             toast({
                 title: 'Produit non trouvé',
