@@ -1,0 +1,88 @@
+{
+  "caisse": [
+    {
+      "id": "cafe-espresso",
+      "seed": "101",
+      "width": 400,
+      "height": 400,
+      "hint": "coffee cup"
+    },
+    {
+      "id": "croissant-beurre",
+      "seed": "102",
+      "width": 400,
+      "height": 400,
+      "hint": "croissant"
+    },
+    {
+      "id": "eau-minerale",
+      "seed": "103",
+      "width": 400,
+      "height": 400,
+      "hint": "water bottle"
+    },
+    {
+      "id": "jus-orange",
+      "seed": "104",
+      "width": 400,
+      "height": 400,
+      "hint": "orange juice"
+    },
+    {
+      "id": "pain-chocolat",
+      "seed": "105",
+      "width": 400,
+      "height": 400,
+      "hint": "chocolate croissant"
+    },
+    {
+      "id": "salade-cesar",
+      "seed": "106",
+      "width": 400,
+      "height": 400,
+      "hint": "caesar salad"
+    },
+    {
+      "id": "sandwich-poulet",
+      "seed": "107",
+      "width": 400,
+      "height": 400,
+      "hint": "chicken sandwich"
+    },
+    {
+      "id": "tarte-citron",
+      "seed": "108",
+      "width": 400,
+      "height": 400,
+      "hint": "lemon tart"
+    },
+    {
+      "id": "the-menthe",
+      "seed": "109",
+      "width": 400,
+      "height": 400,
+      "hint": "mint tea"
+    },
+    {
+      "id": "muffin-myrtille",
+      "seed": "110",
+      "width": 400,
+      "height": 400,
+      "hint": "blueberry muffin"
+    },
+    {
+      "id": "coca-cola",
+      "seed": "111",
+      "width": 400,
+      "height": 400,
+      "hint": "soda can"
+    },
+    {
+      "id": "wrap-vegetarien",
+      "seed": "112",
+      "width": 400,
+      "height": 400,
+      "hint": "veggie wrap"
+    }
+  ]
+}
