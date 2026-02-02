@@ -26,14 +26,26 @@ import { useMemo } from 'react';
 
 export function MainLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const { products, customers, loading } = useMockData();
+  const { products, customers, transactions, loading } = useMockData();
 
   const alertCount = useMemo(() => {
-    if (loading || !products || !customers) return 0;
+    if (loading || !products || !customers || !transactions) return 0;
     const lowStock = products.filter((p) => p.stock <= p.minStock).length;
-    const overdue = customers.filter((c) => c.balance > 0).length;
+    
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const overdue = customers.filter(c => {
+        if (c.balance <= 0) return false;
+        const customerDebts = transactions
+          .filter((t) => t.customerId === c.id && t.type === 'debt')
+          .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+        const lastDebt = customerDebts[0];
+        const dueDate = lastDebt ? new Date(lastDebt.date) : null;
+        return dueDate ? dueDate < today : false;
+    }).length;
+
     return lowStock + overdue;
-  }, [products, customers, loading]);
+  }, [products, customers, transactions, loading]);
 
 
   const navLinks = [
@@ -50,6 +62,7 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
     { href: '/rapports', label: 'Rapports', icon: FileText },
     { href: '/history', label: 'Historique', icon: History },
     { href: '/alerts', label: 'Alertes', icon: Bell },
+    { href: '/parametres', label: 'Paramètres', icon: Settings },
   ];
 
   const NavContent = () => (
