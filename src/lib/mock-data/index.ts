@@ -9,6 +9,7 @@ import {
   SEED_SUPPLIERS,
   SEED_PRODUCTS,
   SEED_SUPPLIER_TRANSACTIONS,
+  SEED_COMPANY_INFO,
 } from './seed';
 import type {
   Customer,
@@ -18,6 +19,7 @@ import type {
   Supplier,
   Product,
   SupplierTransaction,
+  AppSettings,
 } from '@/lib/types';
 
 interface MockData {
@@ -28,7 +30,7 @@ interface MockData {
   suppliers: Supplier[];
   supplierTransactions: SupplierTransaction[];
   products: Product[];
-  breadUnitPrice: number;
+  settings: AppSettings;
 }
 
 // In-memory store
@@ -40,7 +42,10 @@ export let mockDataStore: MockData = {
   suppliers: [],
   supplierTransactions: [],
   products: [],
-  breadUnitPrice: 10,
+  settings: {
+    breadUnitPrice: 10,
+    companyInfo: SEED_COMPANY_INFO,
+  },
 };
 
 const LOCAL_STORAGE_KEY = 'gestion-credit-data';
@@ -67,6 +72,15 @@ export function loadData() {
     if (savedData) {
       const parsedData = JSON.parse(savedData);
       
+      // Migration for settings
+      if (!parsedData.settings) {
+        parsedData.settings = {
+          breadUnitPrice: parsedData.breadUnitPrice || SEED_BREAD_UNIT_PRICE,
+          companyInfo: SEED_COMPANY_INFO
+        };
+        delete parsedData.breadUnitPrice;
+      }
+
       // Simple migration for old data structures
       if (parsedData.customers && parsedData.customers.length > 0 && !('email' in parsedData.customers[0])) {
         parsedData.customers = parsedData.customers.map((c: any) => ({ ...c, email: 'N/A' }));
@@ -74,7 +88,7 @@ export function loadData() {
       if (!parsedData.expenses) {
           parsedData.expenses = [];
       }
-      if (!parsedData.suppliers) {
+       if (!parsedData.suppliers) {
           parsedData.suppliers = [];
       }
        if (!parsedData.supplierTransactions) {
@@ -162,7 +176,10 @@ export function resetToSeedData() {
     suppliers,
     supplierTransactions,
     products,
-    breadUnitPrice: SEED_BREAD_UNIT_PRICE,
+    settings: {
+        breadUnitPrice: SEED_BREAD_UNIT_PRICE,
+        companyInfo: SEED_COMPANY_INFO,
+    },
   };
   saveData();
 }

@@ -1,5 +1,15 @@
-import type { Customer, Transaction, BreadOrder, Expense, Supplier, Product, SupplierTransaction } from '@/lib/types';
+import type { Customer, Transaction, BreadOrder, Expense, Supplier, Product, SupplierTransaction, CompanyInfo } from '@/lib/types';
 import { subDays, formatISO } from 'date-fns';
+
+export const SEED_COMPANY_INFO: CompanyInfo = {
+    name: 'Frucio',
+    phone: '555-1234',
+    address: '123 Market St, Commerce City',
+    email: 'contact@propos.com',
+    logoUrl: '',
+    extraInfo: '',
+    paymentTermsDays: 30,
+};
 
 export const SEED_CUSTOMERS: Omit<Customer, 'id' | 'totalDebts' | 'totalPayments'>[] = [
   { name: 'Boulangerie Al-Amal', email: 'contact@al-amal.dz', phone: '0555-123456', createdAt: formatISO(subDays(new Date(), 45)), balance: 1250, settlementDay: 'Dimanche' },

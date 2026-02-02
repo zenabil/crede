@@ -10,6 +10,7 @@ import type {
   Supplier,
   Product,
   SupplierTransaction,
+  CompanyInfo,
 } from '@/lib/types';
 
 interface MockDataState {
@@ -24,6 +25,16 @@ interface MockDataState {
   loading: boolean;
 }
 
+const initialCompanyInfo: CompanyInfo = {
+    name: '',
+    phone: '',
+    address: '',
+    email: '',
+    logoUrl: '',
+    extraInfo: '',
+    paymentTermsDays: 0
+};
+
 export function useMockData(): MockDataState {
   const [data, setData] = useState<MockDataState>({
     customers: [],
@@ -33,7 +44,10 @@ export function useMockData(): MockDataState {
     suppliers: [],
     products: [],
     supplierTransactions: [],
-    settings: { breadUnitPrice: 10 },
+    settings: {
+      breadUnitPrice: 10,
+      companyInfo: initialCompanyInfo
+    },
     loading: true,
   });
 
@@ -48,7 +62,7 @@ export function useMockData(): MockDataState {
         suppliers: [...mockDataStore.suppliers],
         products: [...mockDataStore.products],
         supplierTransactions: [...mockDataStore.supplierTransactions],
-        settings: { breadUnitPrice: mockDataStore.breadUnitPrice },
+        settings: { ...mockDataStore.settings },
         loading: false,
       });
     };

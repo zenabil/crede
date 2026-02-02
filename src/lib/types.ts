@@ -1,3 +1,18 @@
+export interface CompanyInfo {
+  name: string;
+  phone: string;
+  address: string;
+  email: string;
+  logoUrl: string;
+  extraInfo: string;
+  paymentTermsDays: number;
+}
+
+export interface AppSettings {
+  breadUnitPrice: number;
+  companyInfo: CompanyInfo;
+}
+
 export interface Customer {
   id: string;
   name: string;
@@ -85,9 +100,4 @@ export interface Product {
   stock: number;
   minStock: number;
   supplierId?: string | null;
-}
-
-
-export interface AppSettings {
-  breadUnitPrice: number;
 }
