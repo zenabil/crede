@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from 'react';
 import { useMockData } from '@/hooks/use-mock-data';
-import type { Customer, Transaction } from '@/lib/types';
+import type { Customer, Transaction, Product } from '@/lib/types';
 import HistoryLoading from './loading';
 import {
   Card,
@@ -45,7 +45,7 @@ interface SortConfig {
 }
 
 export default function HistoryPage() {
-  const { customers, transactions, loading } = useMockData();
+  const { customers, transactions, products, loading } = useMockData();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCustomerId, setSelectedCustomerId] = useState('all');
   const [transactionType, setTransactionType] = useState('all');
@@ -268,7 +268,8 @@ export default function HistoryPage() {
         <CardContent>
           {hasResults ? (
             <TransactionsHistoryTable 
-              transactions={filteredTransactions} 
+              transactions={filteredTransactions}
+              products={products} 
               onSort={requestSort}
               sortConfig={sortConfig}
             />
