@@ -407,6 +407,41 @@ export const exportCustomersToCsv = () => {
     document.body.removeChild(link);
 };
 
+export const exportProductsToCsv = () => {
+    if (mockDataStore.products.length === 0) {
+        return;
+    }
+    const headers = ['id', 'name', 'category', 'barcode', 'purchasePrice', 'sellingPrice', 'stock', 'minStock'];
+    const csvRows = [
+        headers.join(',')
+    ];
+
+    for (const product of mockDataStore.products) {
+        const values = headers.map(header => {
+            let val = (product as any)[header];
+            if (val === null || val === undefined) {
+                val = '';
+            }
+            const stringVal = String(val);
+            if (stringVal.includes(',') || stringVal.includes('"') || stringVal.includes('\n')) {
+                return `"${stringVal.replace(/"/g, '""')}"`;
+            }
+            return stringVal;
+        });
+        csvRows.push(values.join(','));
+    }
+
+    const blob = new Blob([csvRows.join('\n')], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.setAttribute('href', url);
+    link.setAttribute('download', 'products-export.csv');
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+};
+
 export const resetAllData = () => {
     resetSeed();
 };

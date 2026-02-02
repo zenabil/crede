@@ -12,6 +12,8 @@ import {
   LayoutGrid,
   List,
   MoreVertical,
+  Upload,
+  Download,
 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -42,6 +44,8 @@ import { AddProductDialog } from '@/components/produits/add-product-dialog';
 import { EditProductDialog } from '@/components/produits/edit-product-dialog';
 import { DeleteProductDialog } from '@/components/produits/delete-product-dialog';
 import imageData from '@/lib/placeholder-images.json';
+import { ProductCsvImportDialog } from '@/components/produits/csv-import-dialog';
+import { exportProductsToCsv } from '@/lib/mock-data/api';
 
 const productImages = imageData.caisse;
 
@@ -176,11 +180,21 @@ export default function ProduitsPage() {
                 <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                 <Input placeholder="Rechercher des produits..." className="pl-8 w-full" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap justify-end">
                 <div className="flex items-center gap-1 border rounded-md p-1">
                     <Button variant={viewMode === 'list' ? 'secondary' : 'ghost'} size="icon" onClick={() => setViewMode('list')} className="h-8 w-8"><List className="h-4 w-4" /></Button>
                     <Button variant={viewMode === 'grid' ? 'secondary' : 'ghost'} size="icon" onClick={() => setViewMode('grid')} className="h-8 w-8"><LayoutGrid className="h-4 w-4" /></Button>
                 </div>
+                 <ProductCsvImportDialog 
+                    trigger={
+                        <Button variant="outline">
+                        <Upload className="mr-2 h-4 w-4"/> Importer
+                        </Button>
+                    }
+                />
+                <Button variant="outline" onClick={exportProductsToCsv}>
+                    <Download className="mr-2 h-4 w-4"/> Exporter
+                </Button>
                 <AddProductDialog />
             </div>
            </div>
