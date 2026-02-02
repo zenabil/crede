@@ -165,6 +165,7 @@ export function ProductCsvImportDialog({ trigger }: { trigger?: React.ReactNode 
             sellingPrice: product.sellingPrice ?? 0,
             stock: product.stock ?? 0,
             minStock: product.minStock ?? 0,
+            supplierId: product.supplierId || null,
         };
       }
     );

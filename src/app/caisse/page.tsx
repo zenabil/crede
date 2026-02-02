@@ -8,7 +8,6 @@ import {
   Plus,
   Minus,
   Trash2,
-  PlusCircle,
   X,
   User,
   UserPlus,
@@ -322,14 +321,17 @@ export default function CaissePage() {
               <div className="flex-grow overflow-auto p-1 mt-4">
                   <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
                       {[...Array(10)].map((_, i) => (
-                           <Card key={i} className="overflow-hidden">
+                           <div key={i} className="rounded-lg border bg-card shadow-sm">
                               <Skeleton className="w-full h-32" />
-                              <CardContent className="p-3 space-y-2">
+                              <div className="p-3 space-y-2">
                                   <Skeleton className="h-5 w-3/4" />
                                   <Skeleton className="h-4 w-1/2" />
-                                  <Skeleton className="h-9 w-full mt-2" />
-                              </CardContent>
-                          </Card>
+                                   <div className="flex justify-between items-center mt-2">
+                                      <Skeleton className="h-6 w-16" />
+                                      <Skeleton className="h-5 w-20" />
+                                  </div>
+                              </div>
+                          </div>
                       ))}
                   </div>
               </div>
@@ -390,33 +392,37 @@ export default function CaissePage() {
                     const isOutOfStock = product.stock <= 0;
                     const isLowStock = !isOutOfStock && product.stock <= product.minStock;
                     return (
-                        <Card key={product.id} className={cn("overflow-hidden border bg-card", isOutOfStock && "bg-muted/50", isLowStock && "border-amber-500")}>
-                            <div className="relative">
-                                <Image
-                                    src={url}
-                                    alt={product.name}
-                                    width={400}
-                                    height={400}
-                                    className={cn("object-cover w-full h-32", isOutOfStock && "grayscale")}
-                                    data-ai-hint={hint}
-                                />
-                                {isOutOfStock ? (
-                                  <Badge variant="destructive" className="absolute top-2 left-2">ÉPUISÉ</Badge>
-                                ) : (
-                                  <Badge variant="secondary" className="absolute top-2 right-2">{formatCurrency(product.sellingPrice)}</Badge>
-                                )}
-                                {isLowStock && (
-                                    <Badge variant="outline" className="absolute top-2 left-2 bg-background/80 border-amber-500 text-amber-600">Stock Faible</Badge>
-                                )}
-                            </div>
-                            <CardContent className="p-3">
+                       <div key={product.id} 
+                            onClick={() => !isOutOfStock && addToCart(product)}
+                            className={cn(
+                                "relative rounded-lg overflow-hidden border bg-card shadow-sm transition-transform duration-200 ease-in-out hover:scale-[1.03] hover:shadow-lg",
+                                isOutOfStock ? "cursor-not-allowed" : "cursor-pointer"
+                            )}
+                        >
+                            <Image
+                                src={url}
+                                alt={product.name}
+                                width={400}
+                                height={400}
+                                className={cn("object-cover w-full h-32", isOutOfStock && "grayscale")}
+                                data-ai-hint={hint}
+                            />
+                            <div className="p-3">
                                 <h3 className="font-semibold truncate text-sm">{product.name}</h3>
                                 <p className="text-xs text-muted-foreground">{product.category}</p>
-                                <Button className="w-full mt-2" size="sm" onClick={() => addToCart(product)} disabled={isOutOfStock}>
-                                    {isOutOfStock ? 'Stock 0' : <><PlusCircle className="mr-2 h-4 w-4" /> Ajouter</>}
-                                </Button>
-                            </CardContent>
-                        </Card>
+                                <div className="flex justify-between items-center mt-2">
+                                    <span className="font-bold text-base">{formatCurrency(product.sellingPrice)}</span>
+                                    {isOutOfStock ? (
+                                        <Badge variant="destructive" className="text-xs">Épuisé</Badge>
+                                    ) : isLowStock ? (
+                                        <Badge variant="outline" className="border-amber-500 text-amber-600 text-xs">Stock Faible</Badge>
+                                    ) : (
+                                        <Badge variant="secondary" className="text-xs">Stock: {product.stock}</Badge>
+                                    )}
+                                </div>
+                            </div>
+                            {isOutOfStock && <div className="absolute inset-0 bg-white/70 dark:bg-black/70 flex items-center justify-center"></div>}
+                        </div>
                     )
                 })}
             </div>
