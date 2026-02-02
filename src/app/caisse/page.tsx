@@ -194,6 +194,10 @@ export default function CaissePage() {
         cart.push({ product, quantity: 1 });
     }
     updateActiveCartState({ items: cart });
+    toast({
+      title: 'Produit ajouté',
+      description: `${product.name} a été ajouté au panier.`,
+    });
   };
 
   const updateQuantity = (productId: string, quantity: number) => {
@@ -258,6 +262,7 @@ export default function CaissePage() {
           // Clear current cart, but keep the customer if they were selected
           updateActiveCartState({ items: [], discount: 0 });
       }
+      barcodeInputRef.current?.focus();
   }
 
   const handleBarcodeScan = (e: React.KeyboardEvent<HTMLInputElement>) => {
