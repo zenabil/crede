@@ -161,6 +161,7 @@ export default function AlertsPage() {
                     <TableHead>Catégorie</TableHead>
                     <TableHead>Stock Actuel</TableHead>
                     <TableHead>Stock Min.</TableHead>
+                    <TableHead>Manquant</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -175,6 +176,9 @@ export default function AlertsPage() {
                         {product.stock}
                       </TableCell>
                       <TableCell>{product.minStock}</TableCell>
+                      <TableCell className="font-semibold text-destructive">
+                        {product.minStock - product.stock}
+                      </TableCell>
                       <TableCell className="text-right">
                         <Button asChild variant="ghost" size="sm">
                           <Link href="/produits">
