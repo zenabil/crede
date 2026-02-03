@@ -39,6 +39,7 @@ import {
   CardFooter,
 } from '@/components/ui/card';
 import { BulkDeleteCustomersDialog } from '@/components/customers/bulk-delete-customer-dialog';
+import Link from 'next/link';
 
 type SortKey = keyof Customer | 'totalDebts' | 'totalPayments';
 type SortDirection = 'ascending' | 'descending';
@@ -68,6 +69,17 @@ export default function ClientsPage() {
     setCurrentPage(1);
     setSelectedCustomerIds([]);
   }, [searchTerm, balanceFilter, viewMode]);
+
+  const recentCustomers = useMemo(() => {
+    if (!customers) return [];
+    
+    // Sort customers by creation date descending
+    const sortedCustomers = [...customers].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+    
+    // Return the top 5
+    return sortedCustomers.slice(0, 5);
+
+  }, [customers]);
 
   const {
     totalCustomers,
@@ -286,6 +298,25 @@ export default function ClientsPage() {
           isActive={balanceFilter === 'credit'}
         />
       </div>
+      
+       {recentCustomers.length > 0 && (
+        <div>
+          <h2 className="text-lg font-semibold mb-2">Clients Nouveaux</h2>
+          <div className="flex flex-wrap gap-2">
+            {recentCustomers.map(customer => (
+              <Button 
+                key={customer.id} 
+                variant="outline" 
+                asChild
+              >
+                <Link href={`/clients/${customer.id}`}>
+                  {customer.name}
+                </Link>
+              </Button>
+            ))}
+          </div>
+        </div>
+      )}
 
       <Card>
         <CardHeader>
