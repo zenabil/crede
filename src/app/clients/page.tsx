@@ -17,6 +17,7 @@ import {
   UserX,
   Download,
   X,
+  ArrowRight,
 } from 'lucide-react';
 import {
   Select,
@@ -41,6 +42,7 @@ import {
 } from '@/components/ui/card';
 import { BulkDeleteCustomersDialog } from '@/components/customers/bulk-delete-customer-dialog';
 import Link from 'next/link';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 
 type SortKey = keyof Customer | 'totalDebts' | 'totalPayments';
 type SortDirection = 'ascending' | 'descending';
@@ -70,6 +72,17 @@ export default function ClientsPage() {
     setCurrentPage(1);
     setSelectedCustomerIds([]);
   }, [searchTerm, balanceFilter, viewMode]);
+
+  const getInitials = (name: string) => {
+    if (!name) return '?';
+    return name
+      .split(' ')
+      .map((n) => n[0])
+      .filter(Boolean)
+      .slice(0, 2)
+      .join('')
+      .toUpperCase();
+  };
 
   const recentCustomers = useMemo(() => {
     if (!rawTransactions || !customers) return [];
@@ -338,14 +351,25 @@ export default function ClientsPage() {
           <CardHeader>
             <CardTitle className="text-lg">Clients Récents</CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="flex flex-wrap gap-2">
+          <CardContent className="pt-6">
+            <div className="space-y-6">
               {recentCustomers.map((customer) => (
-                <Button key={customer.id} variant="outline" asChild>
-                  <Link href={`/clients/${customer.id}`}>
-                    {customer.name}
-                  </Link>
-                </Button>
+                <div key={customer.id} className="flex items-center">
+                  <Avatar className="h-10 w-10">
+                    <AvatarFallback>{getInitials(customer.name)}</AvatarFallback>
+                  </Avatar>
+                  <div className="ml-4 flex-grow">
+                    <p className="font-semibold text-sm">{customer.name}</p>
+                    <p className={cn("text-xs font-mono", getBalanceColorClassName(customer.balance))}>
+                      {formatCurrency(customer.balance)}
+                    </p>
+                  </div>
+                  <Button asChild variant="secondary" size="sm">
+                    <Link href={`/clients/${customer.id}`}>
+                      Voir <ArrowRight className="ml-2 h-4 w-4" />
+                    </Link>
+                  </Button>
+                </div>
               ))}
             </div>
           </CardContent>
