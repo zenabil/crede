@@ -71,15 +71,28 @@ export default function ClientsPage() {
   }, [searchTerm, balanceFilter, viewMode]);
 
   const recentCustomers = useMemo(() => {
-    if (!customers) return [];
-    
-    // Sort customers by creation date descending
-    const sortedCustomers = [...customers].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-    
-    // Return the top 5
-    return sortedCustomers.slice(0, 5);
+    if (!rawTransactions || !customers) return [];
 
-  }, [customers]);
+    const sortedTransactions = [...rawTransactions].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+    
+    const recentCustomerIds = new Set<string>();
+    
+    for (const t of sortedTransactions) {
+      if (t.customerId) {
+        recentCustomerIds.add(t.customerId);
+      }
+      if (recentCustomerIds.size >= 5) { // Get last 5 unique customers
+        break;
+      }
+    }
+
+    const customerMap = new Map(customers.map(c => [c.id, c]));
+    
+    return Array.from(recentCustomerIds)
+        .map(id => customerMap.get(id))
+        .filter((c): c is Customer => !!c);
+
+  }, [rawTransactions, customers]);
 
   const {
     totalCustomers,
@@ -301,7 +314,7 @@ export default function ClientsPage() {
       
        {recentCustomers.length > 0 && (
         <div>
-          <h2 className="text-lg font-semibold mb-2">Clients Nouveaux</h2>
+          <h2 className="text-lg font-semibold mb-2">Clients Récents</h2>
           <div className="flex flex-wrap gap-2">
             {recentCustomers.map(customer => (
               <Button 
