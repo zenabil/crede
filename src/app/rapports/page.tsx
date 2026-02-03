@@ -38,12 +38,12 @@ import {
 
 import {
   Wallet,
-  TrendingDown,
   TrendingUp,
   Package,
   Users,
   ShoppingCart,
   CalendarIcon,
+  BadgeDollarSign,
 } from 'lucide-react';
 
 const COLORS = [
@@ -90,16 +90,18 @@ export default function RapportsPage() {
     const totalExpenses = fe.reduce((sum, e) => sum + e.amount, 0);
 
     let totalCostOfGoods = 0;
-    let productsSoldCount = 0;
+    let salesFromProducts = 0;
     const productSales: { [key: string]: { name: string; quantity: number; sales: number } } = {};
     const categorySales: { [key: string]: number } = {};
     const productMap = new Map(products.map(p => [p.id, p]));
 
     salesTransactions.forEach(t => {
-      if (t.saleItems) {
+      if (t.saleItems && t.saleItems.length > 0) {
+        let saleTxTotal = 0;
         t.saleItems.forEach(item => {
-          totalCostOfGoods += item.purchasePrice * item.quantity;
-          productsSoldCount += item.quantity;
+          const itemTotal = item.unitPrice * item.quantity;
+          saleTxTotal += itemTotal;
+          totalCostOfGoods += (item.purchasePrice || 0) * item.quantity;
 
           const product = productMap.get(item.productId);
           if (product) {
@@ -107,26 +109,26 @@ export default function RapportsPage() {
                   productSales[product.id] = { name: product.name, quantity: 0, sales: 0 };
               }
               productSales[product.id].quantity += item.quantity;
-              productSales[product.id].sales += item.unitPrice * item.quantity;
+              productSales[product.id].sales += itemTotal;
 
               if (!categorySales[product.category]) {
                   categorySales[product.category] = 0;
               }
-              categorySales[product.category] += item.unitPrice * item.quantity;
+              categorySales[product.category] += itemTotal;
           }
         });
-      } else {
-        totalCostOfGoods += t.amount * 0.5;
+        salesFromProducts += saleTxTotal;
       }
     });
     
-    const netProfit = totalSales - totalCostOfGoods - totalExpenses;
+    const grossProfit = salesFromProducts - totalCostOfGoods;
+    const netProfit = grossProfit - totalExpenses;
 
     const _stats = {
       totalSales,
       totalExpenses,
       netProfit,
-      productsSoldCount,
+      grossProfit,
       newCustomersCount: fnc.length,
       salesCount: salesTransactions.length,
     };
@@ -229,11 +231,11 @@ export default function RapportsPage() {
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
         <StatCard title="Ventes Totales" value={formatCurrency(stats.totalSales)} icon={ShoppingCart} />
+        <StatCard title="Marge Brute (Produits)" value={formatCurrency(stats.grossProfit)} description="Ventes de produits - Coût des marchandises" icon={BadgeDollarSign} />
         <StatCard title="Dépenses Totales" value={formatCurrency(stats.totalExpenses)} icon={Wallet} />
-        <StatCard title="Bénéfices Nets" value={formatCurrency(stats.netProfit)} icon={TrendingUp} />
-        <StatCard title="Produits Vendus" value={`+${stats.productsSoldCount}`} icon={Package} />
+        <StatCard title="Bénéfice Net" value={formatCurrency(stats.netProfit)} description="Marge brute - Dépenses" icon={TrendingUp} />
         <StatCard title="Nouveaux Clients" value={`+${stats.newCustomersCount}`} icon={Users} />
-        <StatCard title="Ventes" value={`+${stats.salesCount}`} icon={TrendingUp} />
+        <StatCard title="Ventes" value={`+${stats.salesCount}`} description="Nombre total de transactions de vente" icon={TrendingUp} />
       </div>
 
       <Card>
