@@ -58,6 +58,7 @@ import { AdjustStockDialog } from '@/components/produits/adjust-stock-dialog';
 import { Checkbox } from '@/components/ui/checkbox';
 import { BulkDeleteProductsDialog } from '@/components/produits/bulk-delete-products-dialog';
 import { PrintBarcodeDialog } from '@/components/produits/print-barcode-dialog';
+import { PrintBulkBarcodeDialog } from '@/components/produits/print-bulk-barcode-dialog';
 
 type SortKey = keyof Product | 'margin' | 'supplierName';
 type SortDirection = 'ascending' | 'descending';
@@ -530,14 +531,17 @@ export default function ProduitsPage() {
         </CardHeader>
         <CardContent>
           {selectedProductIds.length > 0 && (
-            <div className="mb-4 p-3 bg-muted rounded-md flex items-center justify-between">
+            <div className="mb-4 p-3 bg-muted rounded-md flex items-center justify-between flex-wrap gap-2">
               <p className="text-sm font-medium">
                 {selectedProductIds.length} produit(s) sélectionné(s)
               </p>
-              <BulkDeleteProductsDialog
-                productIds={selectedProductIds}
-                onSuccess={() => setSelectedProductIds([])}
-              />
+              <div className="flex items-center gap-2">
+                <PrintBulkBarcodeDialog productIds={selectedProductIds} />
+                <BulkDeleteProductsDialog
+                  productIds={selectedProductIds}
+                  onSuccess={() => setSelectedProductIds([])}
+                />
+              </div>
             </div>
           )}
           {!hasResults ? (
