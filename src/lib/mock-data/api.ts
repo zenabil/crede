@@ -326,6 +326,9 @@ export const addExpense = async (data: AddExpenseData) => {
         id: nextId(),
     };
     mockDataStore.expenses.push(newExpense);
+    if (!mockDataStore.settings.expenseCategories.includes(data.category)) {
+        mockDataStore.settings.expenseCategories.push(data.category);
+    }
     saveData();
 };
 
@@ -740,6 +743,47 @@ export const exportBreadOrdersToCsv = (orders: BreadOrder[]) => {
     const link = document.createElement('a');
     link.setAttribute('href', url);
     link.setAttribute('download', 'commandes-boulangerie-export.csv');
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+};
+
+export const exportExpensesToCsv = (expenses: Expense[]) => {
+    if (expenses.length === 0) {
+        return;
+    }
+    const headers = ['id', 'date', 'description', 'category', 'amount'];
+    const csvRows = [
+        headers.join(',')
+    ];
+
+    for (const expense of expenses) {
+        const values = headers.map(header => {
+            let val: any;
+            if (header === 'date') {
+                val = format(new Date(expense.date), 'yyyy-MM-dd HH:mm:ss');
+            } else {
+                val = (expense as any)[header];
+            }
+            
+            if (val === null || val === undefined) {
+                val = '';
+            }
+            const stringVal = String(val);
+            if (stringVal.includes(',') || stringVal.includes('"') || stringVal.includes('\n')) {
+                return `"${stringVal.replace(/"/g, '""')}"`;
+            }
+            return stringVal;
+        });
+        csvRows.push(values.join(','));
+    }
+
+    const blob = new Blob([csvRows.join('\n')], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.setAttribute('href', url);
+    link.setAttribute('download', 'depenses-export.csv');
     link.style.visibility = 'hidden';
     document.body.appendChild(link);
     link.click();

@@ -22,11 +22,12 @@ import {
 const shortcuts = [
   { group: 'Navigation', key: 'F1', description: 'Rechercher une dépense' },
   { group: 'Navigation', key: 'Alt + → / ←', description: 'Naviguer entre les pages' },
-  { group: 'Filtres et Tri', key: 'Alt + S', description: 'Ouvrir la sélection de tri' },
-  { group: 'Filtres et Tri', key: 'Alt + C', description: 'Ouvrir la sélection de catégorie' },
-  { group: 'Filtres et Tri', key: 'Alt + D', description: 'Ouvrir le sélecteur de date' },
-  { group: 'Filtres et Tri', key: 'Alt + X', description: 'Effacer les filtres' },
+  { group: 'Filtres', key: 'Alt + C', description: 'Ouvrir la sélection de catégorie' },
+  { group: 'Filtres', key: 'Alt + D', description: 'Ouvrir le sélecteur de date' },
+  { group: 'Filtres', key: 'Alt + X', description: 'Effacer les filtres' },
   { group: 'Actions', key: 'Alt + N', description: 'Ajouter une nouvelle dépense' },
+  { group: 'Actions', key: 'Alt + I', description: "Importer des dépenses (CSV)" },
+  { group: 'Actions', key: 'Alt + E', description: "Exporter les dépenses (CSV)" },
 ];
 
 export function DepensesShortcutsDialog() {

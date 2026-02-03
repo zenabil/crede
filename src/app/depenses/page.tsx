@@ -11,6 +11,8 @@ import {
   ChevronsUpDown,
   ArrowUp,
   ArrowDown,
+  Download,
+  Upload,
 } from 'lucide-react';
 import { DateRange } from 'react-day-picker';
 import { Input } from '@/components/ui/input';
@@ -62,6 +64,9 @@ import {
 } from '@/components/ui/select';
 import { DepensesShortcutsDialog } from '@/components/depenses/shortcuts-dialog';
 import type { Expense } from '@/lib/types';
+import { exportExpensesToCsv } from '@/lib/mock-data/api';
+import { DepensesCsvImportDialog } from '@/components/depenses/csv-import-dialog';
+import { useToast } from '@/hooks/use-toast';
 
 type SortKey = 'description' | 'category' | 'amount' | 'date';
 type SortDirection = 'ascending' | 'descending';
@@ -86,12 +91,15 @@ export default function DepensesPage() {
   });
   const [currentPage, setCurrentPage] = useState(1);
   const { expenses, settings, loading } = useMockData();
+  const { toast } = useToast();
 
   const searchInputRef = useRef<HTMLInputElement>(null);
   const categorySelectTriggerRef = useRef<HTMLButtonElement>(null);
   const dateFilterTriggerRef = useRef<HTMLButtonElement>(null);
   const addExpenseTriggerRef = useRef<HTMLButtonElement>(null);
   const clearFiltersButtonRef = useRef<HTMLButtonElement>(null);
+  const importTriggerRef = useRef<HTMLButtonElement>(null);
+  const exportButtonRef = useRef<HTMLButtonElement>(null);
 
   const categories = useMemo(() => {
     if (!expenses || !settings) return [];
@@ -171,6 +179,25 @@ export default function DepensesPage() {
     return { paginatedExpenses: paginated, totalPages: pages };
   }, [filteredAndSortedExpenses, currentPage]);
 
+   useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+        if (e.key === 'F1') { e.preventDefault(); searchInputRef.current?.focus(); }
+        else if (e.altKey && (e.key === 'n' || e.key === 'N')) { e.preventDefault(); addExpenseTriggerRef.current?.click(); }
+        else if (e.altKey && (e.key === 'c' || e.key === 'C')) { e.preventDefault(); categorySelectTriggerRef.current?.click(); }
+        else if (e.altKey && (e.key === 'd' || e.key === 'D')) { e.preventDefault(); dateFilterTriggerRef.current?.click(); }
+        else if (e.altKey && (e.key === 'x' || e.key === 'X')) { e.preventDefault(); clearFiltersButtonRef.current?.click(); }
+        else if (e.altKey && (e.key === 'i' || e.key === 'I')) { e.preventDefault(); importTriggerRef.current?.click(); }
+        else if (e.altKey && (e.key === 'e' || e.key === 'E')) { e.preventDefault(); exportButtonRef.current?.click(); }
+        else if (e.altKey && e.key === 'ArrowRight') { e.preventDefault(); if (currentPage < totalPages) { setCurrentPage(p => p + 1); }}
+        else if (e.altKey && e.key === 'ArrowLeft') { e.preventDefault(); if (currentPage > 1) { setCurrentPage(p => p - 1); }}
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [currentPage, totalPages]);
+
   const areFiltersActive =
     searchTerm !== '' || selectedCategory !== 'Toutes' || date !== undefined;
 
@@ -213,6 +240,30 @@ export default function DepensesPage() {
       ? (currentPage - 1) * ITEMS_PER_PAGE + 1
       : 0;
   const endItem = startItem + paginatedExpenses.length - 1;
+
+  const handleExport = () => {
+    if (!hasResults) {
+      toast({
+        title: 'Aucune dépense à exporter',
+        description: 'Veuillez ajuster vos filtres pour exporter des données.',
+        variant: 'destructive',
+      });
+      return;
+    }
+    try {
+      exportExpensesToCsv(filteredAndSortedExpenses);
+      toast({
+        title: 'Exportation réussie',
+        description: 'Le fichier CSV des dépenses est en cours de téléchargement.',
+      });
+    } catch (e) {
+      toast({
+        title: 'Erreur',
+        description: "Impossible d'exporter les dépenses.",
+        variant: 'destructive',
+      });
+    }
+  };
 
 
   if (loading) {
@@ -260,7 +311,8 @@ export default function DepensesPage() {
               <div className="relative w-full sm:w-auto flex-grow">
                 <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                 <Input
-                  placeholder="Rechercher..."
+                  ref={searchInputRef}
+                  placeholder="Rechercher... (F1)"
                   className="pl-8 w-full"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
@@ -272,8 +324,8 @@ export default function DepensesPage() {
                 onValueChange={setSelectedCategory}
                 disabled={!hasExpenses}
               >
-                <SelectTrigger className="w-full sm:w-[200px]">
-                  <SelectValue placeholder="Filtrer par catégorie" />
+                <SelectTrigger ref={categorySelectTriggerRef} className="w-full sm:w-[200px]">
+                  <SelectValue placeholder="Catégories (Alt+C)" />
                 </SelectTrigger>
                 <SelectContent>
                   {categories.map((c) => (
@@ -286,6 +338,7 @@ export default function DepensesPage() {
               <Popover>
                 <PopoverTrigger asChild>
                   <Button
+                    ref={dateFilterTriggerRef}
                     variant={'outline'}
                     className="w-full sm:w-[260px] justify-start text-left font-normal"
                     disabled={!hasExpenses}
@@ -302,7 +355,7 @@ export default function DepensesPage() {
                           format(date.from, 'dd MMM yyyy', { locale: fr })
                         )
                       ) : (
-                        'Choisir une date'
+                        'Date (Alt+D)'
                       )}
                     </span>
                   </Button>
@@ -320,14 +373,29 @@ export default function DepensesPage() {
                 </PopoverContent>
               </Popover>
                {areFiltersActive && (
-                  <Button variant="ghost" onClick={handleClearFilters}>
+                  <Button ref={clearFiltersButtonRef} variant="ghost" onClick={handleClearFilters}>
                     <X className="mr-2 h-4 w-4" /> Effacer
                   </Button>
                 )}
+            </div>
+          </div>
+           <div className="flex justify-end gap-2 mt-4">
+                <DepensesCsvImportDialog trigger={
+                    <Button ref={importTriggerRef} variant="outline">
+                        <Upload className="mr-2 h-4 w-4" /> Importer
+                    </Button>
+                }/>
+                <Button
+                    ref={exportButtonRef}
+                    variant="outline"
+                    onClick={handleExport}
+                    disabled={!hasResults}
+                >
+                    <Download className="mr-2 h-4 w-4" /> Exporter
+                </Button>
                 <DepensesShortcutsDialog />
                 <AddExpenseDialog />
             </div>
-          </div>
         </CardHeader>
         <CardContent>
           <div className="overflow-hidden rounded-lg border">
