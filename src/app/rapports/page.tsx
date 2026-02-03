@@ -69,6 +69,7 @@ export default function RapportsPage() {
     salesOverTime,
     salesByCategory,
     topProducts,
+    topProductsBySales,
     salesByCustomer,
   } = useMemo(() => {
     const from = date?.from ? startOfDay(date.from) : new Date(0);
@@ -150,6 +151,7 @@ export default function RapportsPage() {
 
     const _salesByCategory = Object.entries(categorySales).map(([name, value]) => ({ name, value }));
     const _topProducts = Object.values(productSales).sort((a,b) => b.quantity - a.quantity).slice(0, 5);
+    const _topProductsBySales = Object.values(productSales).sort((a, b) => b.sales - a.sales).slice(0, 5);
 
     const _salesByCustomer = salesTransactions.reduce((acc, t) => {
         const customer = customers.find(c => c.id === t.customerId);
@@ -171,6 +173,7 @@ export default function RapportsPage() {
       salesOverTime: _salesOverTime,
       salesByCategory: _salesByCategory,
       topProducts: _topProducts,
+      topProductsBySales: _topProductsBySales,
       salesByCustomer: salesByCustomerData,
     };
   }, [date, transactions, expenses, customers, products]);
@@ -248,17 +251,21 @@ export default function RapportsPage() {
       <div className="grid gap-6 lg:grid-cols-5">
         <Card className="lg:col-span-3">
           <CardHeader>
-            <CardTitle>Ventes par Produit</CardTitle>
-             <CardDescription>Quantité des 5 produits les plus vendus</CardDescription>
+            <CardTitle>Top 5 Produits par Chiffre d'Affaires</CardTitle>
+             <CardDescription>Les produits qui ont généré le plus de revenus</CardDescription>
           </CardHeader>
           <CardContent className="h-80">
              <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={topProducts} layout="vertical" margin={{ top: 5, right: 20, left: 50, bottom: 5 }}>
+              <BarChart data={topProductsBySales} layout="vertical" margin={{ top: 5, right: 20, left: 50, bottom: 5 }}>
                  <CartesianGrid strokeDasharray="3 3" horizontal={false}/>
-                 <XAxis type="number" />
+                 <XAxis type="number" tickFormatter={(value) => formatCurrency(value as number)} />
                  <YAxis dataKey="name" type="category" width={100} tick={{ fontSize: 12 }}/>
-                 <Tooltip contentStyle={{ backgroundColor: 'hsl(var(--background))', border: '1px solid hsl(var(--border))' }} formatter={(value, name) => [value, name === 'quantity' ? 'Quantité' : name]}/>
-                 <Bar dataKey="quantity" fill="hsl(var(--primary))" background={{ fill: 'hsl(var(--muted))' }} />
+                 <Tooltip 
+                    contentStyle={{ backgroundColor: 'hsl(var(--background))', border: '1px solid hsl(var(--border))' }} 
+                    formatter={(value: number) => [formatCurrency(value), "Chiffre d'affaires"]}
+                    labelFormatter={(label) => <span className="font-semibold">{label}</span>}
+                 />
+                 <Bar dataKey="sales" name="Chiffre d'affaires" fill="hsl(var(--primary))" background={{ fill: 'hsl(var(--muted))' }} />
               </BarChart>
             </ResponsiveContainer>
           </CardContent>
@@ -286,7 +293,7 @@ export default function RapportsPage() {
        <div className="grid gap-6 lg:grid-cols-5">
         <Card className="lg:col-span-2">
           <CardHeader>
-            <CardTitle>Meilleures Ventes</CardTitle>
+            <CardTitle>Meilleures Ventes (par quantité)</CardTitle>
             <CardDescription>Top 5 des produits par unités vendues</CardDescription>
           </CardHeader>
           <CardContent>
