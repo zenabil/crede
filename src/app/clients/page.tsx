@@ -15,6 +15,7 @@ import {
   UserCheck,
   UserX,
   Download,
+  X,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { CustomersGrid } from '@/components/customers/customers-grid';
@@ -23,6 +24,11 @@ import { StatCard } from '@/components/dashboard/stat-card';
 import { formatCurrency } from '@/lib/utils';
 import { CsvImportDialog } from '@/components/customers/csv-import-dialog';
 import { exportCustomersToCsv } from '@/lib/mock-data/api';
+import {
+  Card,
+  CardContent,
+  CardHeader,
+} from '@/components/ui/card';
 
 type SortKey = keyof Customer;
 type SortDirection = 'ascending' | 'descending';
@@ -31,11 +37,13 @@ interface SortConfig {
   key: SortKey;
   direction: SortDirection;
 }
+type BalanceFilter = 'all' | 'debt' | 'credit';
 
 export default function ClientsPage() {
   const { customers, transactions: rawTransactions, loading } = useMockData();
   const [searchTerm, setSearchTerm] = useState('');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [balanceFilter, setBalanceFilter] = useState<BalanceFilter>('all');
   const [sortConfig, setSortConfig] = useState<SortConfig>({
     key: 'createdAt',
     direction: 'descending',
@@ -99,6 +107,12 @@ export default function ClientsPage() {
         (customer.email || '').toLowerCase().includes(searchTerm.toLowerCase())
     );
 
+    if (balanceFilter === 'debt') {
+      filtered = filtered.filter((c) => c.balance > 0);
+    } else if (balanceFilter === 'credit') {
+      filtered = filtered.filter((c) => c.balance < 0);
+    }
+
     filtered.sort((a, b) => {
       const aValue = a[sortConfig.key as keyof typeof a] as any;
       const bValue = b[sortConfig.key as keyof typeof b] as any;
@@ -124,7 +138,15 @@ export default function ClientsPage() {
     });
 
     return filtered;
-  }, [customersWithTotals, searchTerm, sortConfig]);
+  }, [customersWithTotals, searchTerm, sortConfig, balanceFilter]);
+  
+  const areFiltersActive = searchTerm !== '' || balanceFilter !== 'all';
+
+  const handleClearFilters = () => {
+    setSearchTerm('');
+    setBalanceFilter('all');
+  };
+
 
   if (loading) {
     return <CustomersLoading />;
@@ -145,7 +167,14 @@ export default function ClientsPage() {
       </header>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <StatCard title="Total Clients" value={totalCustomers} icon={Users} />
+        <StatCard
+          title="Total Clients"
+          value={totalCustomers}
+          description="Tous les clients enregistrés"
+          icon={Users}
+          onClick={() => setBalanceFilter('all')}
+          isActive={balanceFilter === 'all'}
+        />
         <StatCard
           title="Solde Total"
           value={formatCurrency(totalBalance)}
@@ -155,88 +184,106 @@ export default function ClientsPage() {
         <StatCard
           title="Clients en Dette"
           value={customersInDebt}
+          description="Clients avec un solde positif"
           icon={UserX}
+          onClick={() => setBalanceFilter('debt')}
+          isActive={balanceFilter === 'debt'}
         />
         <StatCard
           title="Clients avec Crédit"
           value={customersWithCredit}
+          description="Clients avec un solde négatif"
           icon={UserCheck}
+          onClick={() => setBalanceFilter('credit')}
+          isActive={balanceFilter === 'credit'}
         />
       </div>
 
-      <div className="flex flex-col gap-4">
-        <div className="flex flex-col sm:flex-row items-center gap-2 justify-between">
-          <div className="relative w-full sm:w-auto sm:max-w-xs">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              id="customer-search-input"
-              placeholder="Rechercher des clients..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10 w-full"
-              disabled={!hasCustomers}
-            />
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="flex items-center gap-1 border rounded-md p-1">
-              <Button
-                variant={viewMode === 'list' ? 'secondary' : 'ghost'}
-                size="icon"
-                onClick={() => setViewMode('list')}
-                className="h-8 w-8"
-              >
-                <List className="h-4 w-4" />
-              </Button>
-              <Button
-                variant={viewMode === 'grid' ? 'secondary' : 'ghost'}
-                size="icon"
-                onClick={() => setViewMode('grid')}
-                className="h-8 w-8"
-              >
-                <LayoutGrid className="h-4 w-4" />
-              </Button>
+      <Card>
+        <CardHeader>
+          <div className="flex flex-col gap-4">
+            <div className="flex flex-col sm:flex-row items-center gap-2 justify-between">
+              <div className="flex items-center gap-2 w-full sm:w-auto">
+                 <div className="relative w-full sm:w-auto sm:max-w-xs">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      id="customer-search-input"
+                      placeholder="Rechercher des clients..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="pl-10 w-full"
+                      disabled={!hasCustomers}
+                    />
+                  </div>
+                  {areFiltersActive && (
+                    <Button variant="ghost" onClick={handleClearFilters}>
+                      <X className="mr-2 h-4 w-4" /> Effacer
+                    </Button>
+                  )}
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1 border rounded-md p-1">
+                  <Button
+                    variant={viewMode === 'list' ? 'secondary' : 'ghost'}
+                    size="icon"
+                    onClick={() => setViewMode('list')}
+                    className="h-8 w-8"
+                  >
+                    <List className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant={viewMode === 'grid' ? 'secondary' : 'ghost'}
+                    size="icon"
+                    onClick={() => setViewMode('grid')}
+                    className="h-8 w-8"
+                  >
+                    <LayoutGrid className="h-4 w-4" />
+                  </Button>
+                </div>
+                <CsvImportDialog />
+                <Button
+                  variant="outline"
+                  onClick={exportCustomersToCsv}
+                  disabled={!hasCustomers}
+                >
+                  <Download className="mr-2 h-4 w-4" />
+                  Exporter
+                </Button>
+                <AddCustomerDialog />
+              </div>
             </div>
-            <CsvImportDialog />
-            <Button
-              variant="outline"
-              onClick={exportCustomersToCsv}
-              disabled={!hasCustomers}
-            >
-              <Download className="mr-2 h-4 w-4" />
-              Exporter
-            </Button>
-            <AddCustomerDialog />
           </div>
-        </div>
-      </div>
-
-      {hasResults ? (
-        viewMode === 'grid' ? (
-          <CustomersGrid customers={sortedAndFilteredCustomers} />
-        ) : (
-          <CustomersTable
-            customers={sortedAndFilteredCustomers}
-            onSort={handleSort}
-            sortConfig={sortConfig}
-          />
-        )
-      ) : (
-        <div className="text-center py-16 border-2 border-dashed rounded-lg flex flex-col items-center justify-center gap-4">
-          <Users className="h-12 w-12 text-muted-foreground" />
-          <div className="text-center">
-            <h3 className="text-xl font-semibold">
-              {hasCustomers
-                ? 'Aucun client trouvé'
-                : 'Aucun client pour le moment'}
-            </h3>
-            <p className="text-muted-foreground mt-2">
-              {hasCustomers
-                ? 'Essayez un autre terme de recherche.'
-                : 'Cliquez sur le bouton "Ajouter un client" pour commencer.'}
-            </p>
-          </div>
-        </div>
-      )}
+        </CardHeader>
+        <CardContent>
+          {hasResults ? (
+            viewMode === 'grid' ? (
+              <CustomersGrid customers={sortedAndFilteredCustomers} />
+            ) : (
+              <CustomersTable
+                customers={sortedAndFilteredCustomers}
+                onSort={handleSort}
+                sortConfig={sortConfig}
+              />
+            )
+          ) : (
+            <div className="text-center py-16 border-2 border-dashed rounded-lg flex flex-col items-center justify-center gap-4">
+              <Users className="h-12 w-12 text-muted-foreground" />
+              <div className="text-center">
+                <h3 className="text-xl font-semibold">
+                  {hasCustomers
+                    ? 'Aucun client trouvé'
+                    : 'Aucun client pour le moment'}
+                </h3>
+                <p className="text-muted-foreground mt-2">
+                  {hasCustomers
+                    ? 'Essayez un autre terme de recherche ou effacez vos filtres.'
+                    : 'Cliquez sur le bouton "Ajouter un client" pour commencer.'}
+                </p>
+              </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }
