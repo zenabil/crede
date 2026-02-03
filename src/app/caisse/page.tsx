@@ -421,15 +421,18 @@ export default function CaissePage() {
                     const { url, hint } = getProductImage(product);
                     const isOutOfStock = product.stock <= 0;
                     const isLowStock = !isOutOfStock && product.stock <= product.minStock;
+                    const itemInCart = activeCart.find(item => item.product.id === product.id);
+
                     return (
                        <Card
                         key={product.id}
                         onClick={() => !isOutOfStock && addToCart(product)}
                         className={cn(
-                          "overflow-hidden flex flex-col transition-all duration-200 ease-in-out hover:shadow-lg",
+                          "overflow-hidden flex flex-col transition-all duration-200 ease-in-out",
                           isOutOfStock
                             ? "cursor-not-allowed bg-muted/50"
-                            : "cursor-pointer hover:ring-2 hover:ring-primary"
+                            : "cursor-pointer hover:shadow-lg hover:ring-2 hover:ring-primary/50",
+                           itemInCart && "ring-2 ring-primary shadow-lg"
                         )}
                       >
                         <CardHeader className="p-0 relative">
@@ -446,6 +449,11 @@ export default function CaissePage() {
                               <Badge variant="destructive" className="px-3 py-1 text-sm">
                                 Épuisé
                               </Badge>
+                            </div>
+                          )}
+                          {itemInCart && !isOutOfStock && (
+                            <div className="absolute top-1 right-1 bg-primary text-primary-foreground rounded-full h-6 w-6 flex items-center justify-center text-xs font-bold pointer-events-none">
+                                {itemInCart.quantity}
                             </div>
                           )}
                         </CardHeader>
