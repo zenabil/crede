@@ -33,7 +33,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardFooter } from '@/components/ui/card';
 import { formatCurrency } from '@/lib/utils';
 import { cn } from '@/lib/utils';
 import ProduitsLoading from './loading';
@@ -71,6 +71,7 @@ interface SortConfig {
 }
 
 type StockStatusFilter = 'all' | 'ok' | 'low' | 'out';
+const ITEMS_PER_PAGE = 12;
 
 export default function ProduitsPage() {
   const [searchTerm, setSearchTerm] = useState('');
@@ -82,6 +83,7 @@ export default function ProduitsPage() {
   const [selectedSupplier, setSelectedSupplier] = useState('all');
   const [stockStatus, setStockStatus] = useState<StockStatusFilter>('all');
   const [selectedProductIds, setSelectedProductIds] = useState<string[]>([]);
+  const [currentPage, setCurrentPage] = useState(1);
 
   useEffect(() => {
     if (!loading && settings.productPageViewMode) {
@@ -89,14 +91,14 @@ export default function ProduitsPage() {
     }
   }, [loading, settings.productPageViewMode]);
 
-  // Reset selection when filters change
+  // Reset selection and page when filters change
   useEffect(() => {
+    setCurrentPage(1);
     setSelectedProductIds([]);
-  }, [searchTerm, selectedCategory, selectedSupplier, stockStatus]);
+  }, [searchTerm, selectedCategory, selectedSupplier, stockStatus, viewMode]);
 
   const handleViewModeChange = async (mode: 'list' | 'grid') => {
     if (viewMode === mode) return;
-    setSelectedProductIds([]); // Clear selection when changing view
     const oldViewMode = viewMode;
     setViewMode(mode); // Optimistic UI update
     try {
@@ -268,12 +270,21 @@ export default function ProduitsPage() {
     stockStatus,
   ]);
 
-  // New selection logic
+  const { paginatedProducts, totalPages } = useMemo(() => {
+    const total = sortedAndFilteredProducts.length;
+    const pages = Math.ceil(total / ITEMS_PER_PAGE);
+    const start = (currentPage - 1) * ITEMS_PER_PAGE;
+    const end = start + ITEMS_PER_PAGE;
+    const paginated = sortedAndFilteredProducts.slice(start, end);
+    return { paginatedProducts: paginated, totalPages: pages };
+  }, [sortedAndFilteredProducts, currentPage]);
+
   const handleSelectAll = (checked: boolean | 'indeterminate') => {
-    if (checked === true) {
-      setSelectedProductIds(sortedAndFilteredProducts.map((p) => p.id));
+     if (checked === true) {
+      setSelectedProductIds(prev => [...new Set([...prev, ...paginatedProducts.map(p => p.id)])]);
     } else {
-      setSelectedProductIds([]);
+      const currentPageIds = new Set(paginatedProducts.map(p => p.id));
+      setSelectedProductIds(prev => prev.filter(id => !currentPageIds.has(id)));
     }
   };
 
@@ -290,12 +301,8 @@ export default function ProduitsPage() {
     });
   };
 
-  const isAllSelected =
-    sortedAndFilteredProducts.length > 0 &&
-    selectedProductIds.length === sortedAndFilteredProducts.length;
-  const isSomeSelected =
-    selectedProductIds.length > 0 && !isAllSelected;
-  // End new selection logic
+  const isAllOnPageSelected = paginatedProducts.length > 0 && paginatedProducts.every(p => selectedProductIds.includes(p.id));
+  const isSomeOnPageSelected = paginatedProducts.some(p => selectedProductIds.includes(p.id)) && !isAllOnPageSelected;
 
   const requestSort = (key: SortKey) => {
     let direction: SortDirection = 'ascending';
@@ -584,10 +591,7 @@ export default function ProduitsPage() {
                   <TableRow>
                     <TableHead className="p-2 w-10">
                       <Checkbox
-                        checked={
-                          isAllSelected ||
-                          (isSomeSelected ? 'indeterminate' : false)
-                        }
+                        checked={isAllOnPageSelected ? true : isSomeOnPageSelected ? 'indeterminate' : false}
                         onCheckedChange={handleSelectAll}
                       />
                     </TableHead>
@@ -622,7 +626,7 @@ export default function ProduitsPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {sortedAndFilteredProducts.map((product) => {
+                  {paginatedProducts.map((product) => {
                     const margin = product.sellingPrice - product.purchasePrice;
                     const isLowStock =
                       product.stock > 0 && product.stock <= product.minStock;
@@ -731,12 +735,44 @@ export default function ProduitsPage() {
             </div>
           ) : (
             <ProduitsGrid
-              products={sortedAndFilteredProducts}
+              products={paginatedProducts}
               selectedProductIds={selectedProductIds}
               onSelectionChange={handleSelectProduct}
             />
           )}
+          {totalPages > 1 && (
+            <div className="flex items-center justify-between pt-4">
+              <div className="text-sm text-muted-foreground">
+                Page {currentPage} sur {totalPages}
+              </div>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                  disabled={currentPage === 1}
+                >
+                  Précédent
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                  disabled={currentPage === totalPages}
+                >
+                  Suivant
+                </Button>
+              </div>
+            </div>
+          )}
         </CardContent>
+        {hasResults && (
+           <CardFooter>
+            <div className="text-xs text-muted-foreground">
+              Affichage de <strong>{paginatedProducts.length}</strong> sur <strong>{sortedAndFilteredProducts.length}</strong> produits.
+            </div>
+          </CardFooter>
+        )}
       </Card>
     </div>
   );
