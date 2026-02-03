@@ -46,7 +46,7 @@ import { Receipt, type ReceiptData } from '@/components/caisse/receipt';
 const productImages = imageData.caisse;
 
 interface CartItem {
-  product: Product;
+  productId: string;
   quantity: number;
 }
 
@@ -85,6 +85,8 @@ export default function CaissePage() {
   const searchInputRef = useRef<HTMLInputElement>(null);
   const barcodeInputRef = useRef<HTMLInputElement>(null);
   
+  const productMap = useMemo(() => new Map(products.map(p => [p.id, p])), [products]);
+  
   const activeCartState = carts[activeTab] || { items: [], discount: 0, customerId: null };
   const activeCart = activeCartState.items;
   const activeDiscount = activeCartState.discount;
@@ -95,16 +97,55 @@ export default function CaissePage() {
     return customers.find(c => c.id === activeCustomerId);
   }, [activeCustomerId, customers]);
 
+  // Load cart from localStorage on initial render, with migration from old structure
+  useEffect(() => {
+    try {
+      const savedCarts = localStorage.getItem('caisse-carts-data');
+      if (savedCarts) {
+        const parsedCarts = JSON.parse(savedCarts);
+        if (typeof parsedCarts === 'object' && parsedCarts !== null && Object.keys(parsedCarts).length > 0) {
+          
+          // --- MIGRATION LOGIC ---
+          // This handles carts saved with the old structure (full product object)
+          Object.keys(parsedCarts).forEach(cartKey => {
+              if (parsedCarts[cartKey].items) {
+                  parsedCarts[cartKey].items = parsedCarts[cartKey].items.map((item: any) => {
+                      if (item.product && typeof item.product === 'object' && item.product.id) {
+                          return { productId: item.product.id, quantity: item.quantity };
+                      }
+                      if (item.productId && typeof item.quantity === 'number') {
+                          return { productId: item.productId, quantity: item.quantity };
+                      }
+                      return null;
+                  }).filter((item: any): item is CartItem => item !== null);
+              }
+          });
+          // --- END MIGRATION LOGIC ---
+
+          setCarts(parsedCarts);
+          const firstTabKey = Object.keys(parsedCarts)[0];
+          if (firstTabKey) {
+            setActiveTab(firstTabKey);
+          }
+        }
+      }
+    } catch (error) {
+      console.error("Failed to load or migrate cart state from localStorage", error);
+    } finally {
+        setIsStateLoaded(true);
+    }
+  }, []);
+
   const hasCartIssues = useMemo(() => {
     if (!products) return false;
     return activeCart.some(item => {
-        const upToDateProduct = products.find(p => p.id === item.product.id);
+        const upToDateProduct = productMap.get(item.productId);
         if (!upToDateProduct) {
             return true; // Product in cart no longer exists
         }
         return item.quantity > upToDateProduct.stock; // Not enough stock
     });
-  }, [activeCart, products]);
+  }, [activeCart, productMap, products]);
 
     const recentCustomers = useMemo(() => {
     if (!transactions || !customers) return [];
@@ -146,29 +187,6 @@ export default function CaissePage() {
         window.removeEventListener('keydown', handleKeyDown);
     };
   }, []);
-
-  // Load cart from localStorage on initial render
-  useEffect(() => {
-    try {
-      const savedCarts = localStorage.getItem('caisse-carts-data');
-      if (savedCarts) {
-        const parsedCarts = JSON.parse(savedCarts);
-        // Basic validation
-        if (typeof parsedCarts === 'object' && parsedCarts !== null && Object.keys(parsedCarts).length > 0) {
-          setCarts(parsedCarts);
-          const firstTabKey = Object.keys(parsedCarts)[0];
-          if (firstTabKey) {
-            setActiveTab(firstTabKey);
-          }
-        }
-      }
-    } catch (error) {
-      console.error("Failed to load cart state from localStorage", error);
-      // If there's an error, we just proceed with the default empty state
-    } finally {
-        setIsStateLoaded(true);
-    }
-  }, []); // Empty array means this runs only once on mount
 
   // Save cart to localStorage whenever it changes
   useEffect(() => {
@@ -223,7 +241,10 @@ export default function CaissePage() {
   };
 
   const addToCart = (product: Product) => {
-    if (product.stock <= 0) {
+    const upToDateProduct = productMap.get(product.id);
+    const availableStock = upToDateProduct ? upToDateProduct.stock : 0;
+
+    if (availableStock <= 0) {
         toast({
             title: 'Produit épuisé',
             description: `${product.name} n'est pas disponible en stock.`,
@@ -233,10 +254,10 @@ export default function CaissePage() {
     }
 
     const cart = [...activeCart];
-    const existingItem = cart.find(item => item.product.id === product.id);
+    const existingItem = cart.find(item => item.productId === product.id);
     const currentQuantityInCart = existingItem ? existingItem.quantity : 0;
 
-    if (currentQuantityInCart >= product.stock) {
+    if (currentQuantityInCart >= availableStock) {
       toast({
         title: 'Stock insuffisant',
         description: `Vous avez déjà la quantité maximale de ${product.name} dans le panier.`,
@@ -248,7 +269,7 @@ export default function CaissePage() {
     if (existingItem) {
         existingItem.quantity += 1;
     } else {
-        cart.push({ product, quantity: 1 });
+        cart.push({ productId: product.id, quantity: 1 });
     }
     updateActiveCartState({ items: cart });
     toast({
@@ -259,36 +280,34 @@ export default function CaissePage() {
 
   const updateQuantity = (productId: string, quantity: number) => {
     let cart = [...activeCart];
-    const itemIndex = cart.findIndex(item => item.product.id === productId);
+    const itemIndex = cart.findIndex(item => item.productId === productId);
 
     if (itemIndex > -1) {
-        const item = cart[itemIndex];
-        const upToDateProduct = products.find(p => p.id === productId);
+        const upToDateProduct = productMap.get(productId);
         
-        if (!upToDateProduct) {
-            cart.splice(itemIndex, 1);
-            updateActiveCartState({ items: cart });
+        if (!upToDateProduct && quantity > 0) { // If product deleted, only allow removal
             toast({
-                title: 'Produit retiré',
-                description: `${item.product.name} a été retiré du panier car il n'existe plus.`,
+                title: 'Produit non trouvé',
+                description: 'Ce produit a été supprimé et ne peut pas être modifié.',
                 variant: 'destructive',
             });
             return;
         }
 
-        const maxStock = upToDateProduct.stock;
-
-        if (quantity > maxStock) {
-            toast({
-              title: 'Stock insuffisant',
-              description: `Le stock disponible pour ${item.product.name} est de ${maxStock}.`,
-              variant: 'destructive',
-            });
-            cart[itemIndex].quantity = maxStock;
-        } else if (quantity <= 0) {
+        if (quantity <= 0) {
             cart.splice(itemIndex, 1);
         } else {
-            cart[itemIndex].quantity = quantity;
+            const maxStock = upToDateProduct!.stock;
+            if (quantity > maxStock) {
+                toast({
+                  title: 'Stock insuffisant',
+                  description: `Le stock disponible pour ${upToDateProduct!.name} est de ${maxStock}.`,
+                  variant: 'destructive',
+                });
+                cart[itemIndex].quantity = maxStock;
+            } else {
+                cart[itemIndex].quantity = quantity;
+            }
         }
     }
     updateActiveCartState({ items: cart });
@@ -366,8 +385,11 @@ export default function CaissePage() {
   };
 
   const subtotal = useMemo(() => {
-    return activeCart.reduce((sum, item) => sum + item.product.sellingPrice * item.quantity, 0);
-  }, [activeCart]);
+    return activeCart.reduce((sum, item) => {
+        const product = productMap.get(item.productId);
+        return sum + (product ? product.sellingPrice : 0) * item.quantity;
+    }, 0);
+  }, [activeCart, productMap]);
 
   const total = subtotal - activeDiscount;
 
@@ -379,6 +401,15 @@ export default function CaissePage() {
       return matchesCategory && matchesSearch;
     });
   }, [products, searchTerm, selectedCategory]);
+
+  const cartItemsForPayment = useMemo(() => {
+    return activeCart
+        .map(item => {
+            const product = productMap.get(item.productId);
+            return product ? { product, quantity: item.quantity } : null;
+        })
+        .filter((i): i is { product: Product; quantity: number } => i !== null);
+  }, [activeCart, productMap]);
   
   const getProductImage = (product: Product) => {
       const imageId = slugify(product.name);
@@ -476,7 +507,7 @@ export default function CaissePage() {
                       const { url, hint } = getProductImage(product);
                       const isOutOfStock = product.stock <= 0;
                       const isLowStock = !isOutOfStock && product.stock <= product.minStock;
-                      const itemInCart = activeCart.find(item => item.product.id === product.id);
+                      const itemInCart = activeCart.find(item => item.productId === product.id);
 
                       return (
                         <Card
@@ -665,33 +696,44 @@ export default function CaissePage() {
                           </Button>
                       </div>
                       {activeCart.map(item => {
-                          const upToDateProduct = products.find(p => p.id === item.product.id);
-                          const productNotFound = !upToDateProduct;
-                          const stockIssue = upToDateProduct && item.quantity > upToDateProduct.stock;
-                          const hasIssue = productNotFound || stockIssue;
+                          const product = productMap.get(item.productId);
+                          if (!product) {
+                              return (
+                                  <div key={item.productId} className="flex items-center gap-4 transition-colors p-2 rounded-lg -m-2 bg-destructive/10">
+                                      <div className="h-12 w-12 rounded-md bg-muted flex items-center justify-center">
+                                          <X className="h-6 w-6 text-destructive"/>
+                                      </div>
+                                      <div className="flex-grow">
+                                          <p className="font-medium text-sm truncate text-destructive">Produit Supprimé</p>
+                                          <p className="text-xs text-muted-foreground">Cet article a été retiré de la vente.</p>
+                                      </div>
+                                      <Button size="icon" variant="ghost" className="h-7 w-7 text-destructive" onClick={() => updateQuantity(item.productId, 0)}><Trash2 className="h-4 w-4"/></Button>
+                                  </div>
+                              );
+                          }
+
+                          const stockIssue = item.quantity > product.stock;
+                          const hasIssue = stockIssue;
 
                           return (
-                              <div key={item.product.id} className={cn("flex items-center gap-4 transition-colors p-2 rounded-lg -m-2", hasIssue && "bg-destructive/10")}>
-                                  <Image src={getProductImage(item.product).url} alt={item.product.name} width={48} height={48} className="rounded-md" data-ai-hint={getProductImage(item.product).hint} />
+                              <div key={item.productId} className={cn("flex items-center gap-4 transition-colors p-2 rounded-lg -m-2", hasIssue && "bg-destructive/10")}>
+                                  <Image src={getProductImage(product).url} alt={product.name} width={48} height={48} className="rounded-md" data-ai-hint={getProductImage(product).hint} />
                                   <div className="flex-grow">
-                                      <p className="font-medium text-sm truncate">{item.product.name}</p>
-                                      <p className="text-xs text-muted-foreground">{formatCurrency(item.product.sellingPrice)}</p>
-                                      {productNotFound && (
-                                        <p className="text-xs text-destructive font-bold">Produit supprimé</p>
-                                      )}
+                                      <p className="font-medium text-sm truncate">{product.name}</p>
+                                      <p className="text-xs text-muted-foreground">{formatCurrency(product.sellingPrice)}</p>
                                       {stockIssue && (
                                           <p className="text-xs text-destructive font-bold">
-                                              Stock insuffisant (dispo: {upToDateProduct?.stock ?? 0})
+                                              Stock insuffisant (dispo: {product.stock})
                                           </p>
                                       )}
                                   </div>
                                   <div className="flex items-center gap-2">
-                                      <Button size="icon" variant="outline" className="h-7 w-7" onClick={() => updateQuantity(item.product.id, item.quantity - 1)} disabled={productNotFound}><Minus className="h-3 w-3" /></Button>
+                                      <Button size="icon" variant="outline" className="h-7 w-7" onClick={() => updateQuantity(item.productId, item.quantity - 1)}><Minus className="h-3 w-3" /></Button>
                                       <span className="text-sm font-medium w-4 text-center">{item.quantity}</span>
-                                      <Button size="icon" variant="outline" className="h-7 w-7" onClick={() => updateQuantity(item.product.id, item.quantity + 1)} disabled={productNotFound}><Plus className="h-3 w-3" /></Button>
+                                      <Button size="icon" variant="outline" className="h-7 w-7" onClick={() => updateQuantity(item.productId, item.quantity + 1)}><Plus className="h-3 w-3" /></Button>
                                   </div>
-                                  <p className="font-semibold text-sm w-16 text-right">{formatCurrency(item.product.sellingPrice * item.quantity)}</p>
-                                  <Button size="icon" variant="ghost" className="h-7 w-7 text-destructive" onClick={() => updateQuantity(item.product.id, 0)}><Trash2 className="h-4 w-4"/></Button>
+                                  <p className="font-semibold text-sm w-16 text-right">{formatCurrency(product.sellingPrice * item.quantity)}</p>
+                                  <Button size="icon" variant="ghost" className="h-7 w-7 text-destructive" onClick={() => updateQuantity(item.productId, 0)}><Trash2 className="h-4 w-4"/></Button>
                               </div>
                           )
                       })}
@@ -734,7 +776,7 @@ export default function CaissePage() {
                   </div>
               </div>
               <PaymentDialog
-                  cartItems={activeCart}
+                  cartItems={cartItemsForPayment}
                   subtotal={subtotal}
                   discount={activeDiscount}
                   total={total}
