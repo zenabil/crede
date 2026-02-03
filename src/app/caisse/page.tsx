@@ -392,13 +392,17 @@ export default function CaissePage() {
 
   const total = subtotal - activeDiscount;
 
-  const filteredProducts = useMemo(() => {
-    if (!products) return [];
-    return products.filter(product => {
+  const { displayedProducts, totalFilteredCount } = useMemo(() => {
+    if (!products) return { displayedProducts: [], totalFilteredCount: 0 };
+    const filtered = products.filter(product => {
       const matchesCategory = selectedCategory === 'Toutes' || product.category === selectedCategory;
       const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase());
       return matchesCategory && matchesSearch;
     });
+    return {
+        displayedProducts: filtered.slice(0, 15),
+        totalFilteredCount: filtered.length
+    };
   }, [products, searchTerm, selectedCategory]);
 
   const cartItemsForPayment = useMemo(() => {
@@ -500,68 +504,75 @@ export default function CaissePage() {
             </CardHeader>
           </Card>
           <div className="flex-grow overflow-auto p-1 mt-4">
-            {filteredProducts.length > 0 ? (
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-                  {filteredProducts.map(product => {
-                      const { url, hint } = getProductImage(product);
-                      const isOutOfStock = product.stock <= 0;
-                      const isLowStock = !isOutOfStock && product.stock <= product.minStock;
-                      const itemInCart = activeCart.find(item => item.productId === product.id);
+            {displayedProducts.length > 0 ? (
+              <>
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+                    {displayedProducts.map(product => {
+                        const { url, hint } = getProductImage(product);
+                        const isOutOfStock = product.stock <= 0;
+                        const isLowStock = !isOutOfStock && product.stock <= product.minStock;
+                        const itemInCart = activeCart.find(item => item.productId === product.id);
 
-                      return (
-                        <Card
-                          key={product.id}
-                          onClick={() => !isOutOfStock && addToCart(product)}
-                          className={cn(
-                            "overflow-hidden flex flex-col transition-all duration-200 ease-in-out",
-                            isOutOfStock
-                              ? "cursor-not-allowed bg-muted/50"
-                              : "cursor-pointer hover:shadow-lg hover:ring-2 hover:ring-primary/50",
-                            itemInCart && "ring-2 ring-primary shadow-lg"
-                          )}
-                        >
-                          <CardHeader className="p-0 relative">
-                            <Image
-                              src={url}
-                              alt={product.name}
-                              width={400}
-                              height={400}
-                              className={cn("object-cover w-full h-32", isOutOfStock && "grayscale")}
-                              data-ai-hint={hint}
-                            />
-                            {isOutOfStock && (
-                              <div className="absolute inset-0 bg-white/60 dark:bg-black/60 flex items-center justify-center">
-                                <Badge variant="destructive" className="px-3 py-1 text-sm">
-                                  Épuisé
-                                </Badge>
-                              </div>
+                        return (
+                          <Card
+                            key={product.id}
+                            onClick={() => !isOutOfStock && addToCart(product)}
+                            className={cn(
+                              "overflow-hidden flex flex-col transition-all duration-200 ease-in-out",
+                              isOutOfStock
+                                ? "cursor-not-allowed bg-muted/50"
+                                : "cursor-pointer hover:shadow-lg hover:ring-2 hover:ring-primary/50",
+                              itemInCart && "ring-2 ring-primary shadow-lg"
                             )}
-                            {itemInCart && !isOutOfStock && (
-                              <div className="absolute top-1 right-1 bg-primary text-primary-foreground rounded-full h-6 w-6 flex items-center justify-center text-xs font-bold pointer-events-none">
-                                  {itemInCart.quantity}
-                              </div>
-                            )}
-                          </CardHeader>
-                          <CardContent className="p-3 flex-grow">
-                            <h3 className="font-semibold truncate text-sm">{product.name}</h3>
-                            <p className="text-xs text-muted-foreground">{product.category}</p>
-                          </CardContent>
-                          <CardFooter className="p-3 pt-0 flex justify-between items-center bg-muted/50">
-                            <span className="font-bold text-base">
-                              {formatCurrency(product.sellingPrice)}
-                            </span>
-                            {!isOutOfStock && (
-                              isLowStock ? (
-                                  <Badge variant="outline" className="border-amber-500 text-amber-600 text-xs">Faible</Badge>
-                              ) : (
-                                  <Badge variant="secondary" className="text-xs">Stock: {product.stock}</Badge>
-                              )
-                            )}
-                          </CardFooter>
-                        </Card>
-                      )
-                  })}
-              </div>
+                          >
+                            <CardHeader className="p-0 relative">
+                              <Image
+                                src={url}
+                                alt={product.name}
+                                width={400}
+                                height={400}
+                                className={cn("object-cover w-full h-32", isOutOfStock && "grayscale")}
+                                data-ai-hint={hint}
+                              />
+                              {isOutOfStock && (
+                                <div className="absolute inset-0 bg-white/60 dark:bg-black/60 flex items-center justify-center">
+                                  <Badge variant="destructive" className="px-3 py-1 text-sm">
+                                    Épuisé
+                                  </Badge>
+                                </div>
+                              )}
+                              {itemInCart && !isOutOfStock && (
+                                <div className="absolute top-1 right-1 bg-primary text-primary-foreground rounded-full h-6 w-6 flex items-center justify-center text-xs font-bold pointer-events-none">
+                                    {itemInCart.quantity}
+                                </div>
+                              )}
+                            </CardHeader>
+                            <CardContent className="p-3 flex-grow">
+                              <h3 className="font-semibold truncate text-sm">{product.name}</h3>
+                              <p className="text-xs text-muted-foreground">{product.category}</p>
+                            </CardContent>
+                            <CardFooter className="p-3 pt-0 flex justify-between items-center bg-muted/50">
+                              <span className="font-bold text-base">
+                                {formatCurrency(product.sellingPrice)}
+                              </span>
+                              {!isOutOfStock && (
+                                isLowStock ? (
+                                    <Badge variant="outline" className="border-amber-500 text-amber-600 text-xs">Faible</Badge>
+                                ) : (
+                                    <Badge variant="secondary" className="text-xs">Stock: {product.stock}</Badge>
+                                )
+                              )}
+                            </CardFooter>
+                          </Card>
+                        )
+                    })}
+                </div>
+                {totalFilteredCount > 15 && (
+                  <p className="text-center text-sm text-muted-foreground mt-4">
+                    Affichage de 15 sur {totalFilteredCount} résultats. Affinez votre recherche pour en voir plus.
+                  </p>
+                )}
+              </>
             ) : (
               <div className="flex flex-col items-center justify-center h-full text-muted-foreground border-2 border-dashed rounded-lg">
                   <Search className="h-16 w-16" />
