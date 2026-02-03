@@ -17,9 +17,12 @@ import { Label } from '@/components/ui/label';
 import { Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { processSale } from '@/lib/mock-data/api';
-import type { Product } from '@/lib/types';
+import type { Product, Customer } from '@/lib/types';
 import { formatCurrency, cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
+import { Checkbox } from '@/components/ui/checkbox';
+import type { ReceiptData } from './receipt';
+import { useMockData } from '@/hooks/use-mock-data';
 
 interface CartItem {
   product: Product;
@@ -29,13 +32,17 @@ interface CartItem {
 export function PaymentDialog({
   cartItems,
   onSuccess,
+  subtotal,
+  discount,
   total,
   customerId,
   customerName,
   trigger,
 }: {
   cartItems: CartItem[];
-  onSuccess: () => void;
+  onSuccess: (receiptData: ReceiptData | null) => void;
+  subtotal: number;
+  discount: number;
   total: number;
   customerId: string | null;
   customerName: string | null;
@@ -44,12 +51,14 @@ export function PaymentDialog({
   const [open, setOpen] = useState(false);
   const [isPending, setIsPending] = useState(false);
   const [amountPaidStr, setAmountPaidStr] = useState('');
+  const [printReceipt, setPrintReceipt] = useState(true);
   const { toast } = useToast();
+  const { customers } = useMockData();
 
   useEffect(() => {
-    // Reset amount when total changes (e.g., cart is cleared)
     if (open) {
       setAmountPaidStr(total > 0 ? total.toString() : '');
+      setPrintReceipt(true); // Default to printing receipt
     }
   }, [total, open]);
 
@@ -99,7 +108,24 @@ export function PaymentDialog({
           description: formatCurrency(changeDue),
         });
       }
-      onSuccess();
+
+      if (printReceipt) {
+        const fullCustomer = customerId ? customers.find(c => c.id === customerId) : null;
+        const receiptData: ReceiptData = {
+            cart: cartItems,
+            customer: fullCustomer,
+            subtotal,
+            discount,
+            total,
+            amountPaid,
+            changeDue,
+            saleDate: new Date().toISOString(),
+        };
+        onSuccess(receiptData);
+      } else {
+        onSuccess(null);
+      }
+
       setOpen(false);
     } catch (error) {
       console.error('Failed to process sale', error);
@@ -118,7 +144,6 @@ export function PaymentDialog({
     if (!isOpen) {
       setAmountPaidStr('');
     } else {
-      // When opening, default amount paid to total
       setAmountPaidStr(total > 0 ? total.toString() : '');
     }
     setOpen(isOpen);
@@ -204,6 +229,11 @@ export function PaymentDialog({
                 {formatCurrency(changeDue)}
               </p>
             </div>
+          </div>
+
+          <div className="flex items-center space-x-2 pt-2">
+            <Checkbox id="print-receipt" checked={printReceipt} onCheckedChange={(checked) => setPrintReceipt(!!checked)} />
+            <Label htmlFor="print-receipt" className="cursor-pointer">Imprimer le reçu</Label>
           </div>
         </div>
 
