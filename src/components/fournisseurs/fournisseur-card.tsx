@@ -10,7 +10,7 @@ import {
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { formatCurrency, getBalanceColorClassName } from '@/lib/utils';
+import { formatCurrency, getBalanceColorClassName, cn } from '@/lib/utils';
 import {
   MoreVertical,
   Mail,
@@ -34,8 +34,17 @@ import { EditSupplierDialog } from './edit-supplier-dialog';
 import { DeleteSupplierDialog } from './delete-supplier-dialog';
 import { AddSupplierTransactionDialog } from './add-supplier-transaction-dialog';
 import Link from 'next/link';
+import { Checkbox } from '../ui/checkbox';
 
-export function FournisseurCard({ supplier }: { supplier: Supplier }) {
+export function FournisseurCard({
+  supplier,
+  isSelected,
+  onSelectionChange,
+}: {
+  supplier: Supplier;
+  isSelected: boolean;
+  onSelectionChange: (checked: boolean | 'indeterminate') => void;
+}) {
   const getInitials = (name: string) => {
     if (!name) return '?';
     return name
@@ -48,13 +57,18 @@ export function FournisseurCard({ supplier }: { supplier: Supplier }) {
   };
 
   return (
-    <Card>
+    <Card className={cn('transition-all', isSelected && 'ring-2 ring-primary')}>
       <CardHeader className="flex flex-row items-start justify-between gap-4">
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-4 flex-grow">
+           <Checkbox 
+            checked={isSelected}
+            onCheckedChange={onSelectionChange}
+            className="mt-1"
+          />
           <Avatar>
             <AvatarFallback>{getInitials(supplier.name)}</AvatarFallback>
           </Avatar>
-          <div className="grid gap-1">
+          <div className="grid gap-1 flex-grow">
             <CardTitle className="text-lg">
               <Link
                 href={`/fournisseurs/${supplier.id}`}
@@ -78,7 +92,7 @@ export function FournisseurCard({ supplier }: { supplier: Supplier }) {
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" className="h-8 w-8">
+            <Button variant="ghost" size="icon" className="h-8 w-8 flex-shrink-0">
               <MoreVertical className="h-4 w-4" />
             </Button>
           </DropdownMenuTrigger>

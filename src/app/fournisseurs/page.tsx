@@ -63,6 +63,8 @@ import { FournisseursGrid } from '@/components/fournisseurs/fournisseurs-grid';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { SupplierCsvImportDialog } from '@/components/fournisseurs/csv-import-dialog';
 import { exportSuppliersToCsv } from '@/lib/mock-data/api';
+import { Checkbox } from '@/components/ui/checkbox';
+import { BulkDeleteSuppliersDialog } from '@/components/fournisseurs/bulk-delete-supplier-dialog';
 
 type SortKey = keyof Supplier;
 type SortDirection = 'ascending' | 'descending';
@@ -82,6 +84,7 @@ export default function FournisseursPage() {
   const { suppliers, supplierTransactions, loading } = useMockData();
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [currentPage, setCurrentPage] = useState(1);
+  const [selectedSupplierIds, setSelectedSupplierIds] = useState<string[]>([]);
 
   const {
     totalSuppliers,
@@ -190,6 +193,7 @@ export default function FournisseursPage() {
   
   useEffect(() => {
     setCurrentPage(1);
+    setSelectedSupplierIds([]);
   }, [searchTerm, activeFilter, viewMode, sortConfig]);
 
   const itemsPerPage = viewMode === 'grid' ? ITEMS_PER_PAGE_GRID : ITEMS_PER_PAGE_LIST;
@@ -231,6 +235,35 @@ export default function FournisseursPage() {
       .join('')
       .toUpperCase();
   };
+
+  const handleSelectAll = (checked: boolean | 'indeterminate') => {
+    if (checked === true) {
+      setSelectedSupplierIds((prev) => [
+        ...new Set([...prev, ...paginatedSuppliers.map((p) => p.id)]),
+      ]);
+    } else {
+      const currentPageIds = new Set(paginatedSuppliers.map((p) => p.id));
+      setSelectedSupplierIds((prev) =>
+        prev.filter((id) => !currentPageIds.has(id))
+      );
+    }
+  };
+
+  const handleSelectSupplier = (
+    supplierId: string,
+    checked: boolean | 'indeterminate'
+  ) => {
+    setSelectedSupplierIds((prev) => {
+      if (checked === true) {
+        return [...prev, supplierId];
+      } else {
+        return prev.filter((id) => id !== supplierId);
+      }
+    });
+  };
+
+  const isAllOnPageSelected = paginatedSuppliers.length > 0 && paginatedSuppliers.every(p => selectedSupplierIds.includes(p.id));
+  const isSomeOnPageSelected = paginatedSuppliers.some(p => selectedSupplierIds.includes(p.id)) && !isAllOnPageSelected;
 
   if (loading) {
       return <FournisseursLoading />;
@@ -327,56 +360,81 @@ export default function FournisseursPage() {
 
       <Card>
         <CardHeader>
-           <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-            <div className="relative w-full sm:w-auto">
-                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                <Input placeholder="Rechercher des fournisseurs..." className="pl-8 w-full" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} disabled={!hasSuppliers}/>
-            </div>
-            <div className="flex items-center gap-2">
-                <div className="flex items-center gap-1 border rounded-md p-1">
-                  <Button
-                    variant={viewMode === 'list' ? 'secondary' : 'ghost'}
-                    size="icon"
-                    onClick={() => setViewMode('list')}
-                    className="h-8 w-8"
-                  >
-                    <List className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    variant={viewMode === 'grid' ? 'secondary' : 'ghost'}
-                    size="icon"
-                    onClick={() => setViewMode('grid')}
-                    className="h-8 w-8"
-                  >
-                    <LayoutGrid className="h-4 w-4" />
-                  </Button>
-                </div>
-                <SupplierCsvImportDialog trigger={
-                    <Button variant="outline">
-                        <Upload className="mr-2 h-4 w-4" /> Importer
+           <div className="flex flex-col gap-4">
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+              <div className="relative w-full sm:w-auto">
+                  <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                  <Input placeholder="Rechercher des fournisseurs..." className="pl-8 w-full" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} disabled={!hasSuppliers}/>
+              </div>
+              <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-1 border rounded-md p-1">
+                    <Button
+                      variant={viewMode === 'list' ? 'secondary' : 'ghost'}
+                      size="icon"
+                      onClick={() => setViewMode('list')}
+                      className="h-8 w-8"
+                    >
+                      <List className="h-4 w-4" />
                     </Button>
-                } />
-                <Button
-                  variant="outline"
-                  onClick={exportSuppliersToCsv}
-                  disabled={!hasSuppliers}
-                >
-                  <Download className="mr-2 h-4 w-4" />
-                  Exporter
-                </Button>
-                <AddSupplierDialog />
+                    <Button
+                      variant={viewMode === 'grid' ? 'secondary' : 'ghost'}
+                      size="icon"
+                      onClick={() => setViewMode('grid')}
+                      className="h-8 w-8"
+                    >
+                      <LayoutGrid className="h-4 w-4" />
+                    </Button>
+                  </div>
+                  <SupplierCsvImportDialog trigger={
+                      <Button variant="outline">
+                          <Upload className="mr-2 h-4 w-4" /> Importer
+                      </Button>
+                  } />
+                  <Button
+                    variant="outline"
+                    onClick={exportSuppliersToCsv}
+                    disabled={!hasSuppliers}
+                  >
+                    <Download className="mr-2 h-4 w-4" />
+                    Exporter
+                  </Button>
+                  <AddSupplierDialog />
+              </div>
             </div>
+            {selectedSupplierIds.length > 0 && (
+              <div className="p-3 bg-muted rounded-md flex items-center justify-between flex-wrap gap-4">
+                 <p className="text-sm font-medium">
+                    {selectedSupplierIds.length} fournisseur(s) sélectionné(s)
+                  </p>
+                <div className="flex items-center gap-2">
+                  <BulkDeleteSuppliersDialog
+                    supplierIds={selectedSupplierIds}
+                    onSuccess={() => setSelectedSupplierIds([])}
+                  />
+                </div>
+              </div>
+            )}
            </div>
         </CardHeader>
         <CardContent>
             {hasResults ? (
                viewMode === 'grid' ? (
-                  <FournisseursGrid suppliers={paginatedSuppliers} />
+                  <FournisseursGrid 
+                    suppliers={paginatedSuppliers}
+                    selectedSupplierIds={selectedSupplierIds}
+                    onSelectionChange={handleSelectSupplier}
+                  />
               ) : (
               <div className="overflow-hidden rounded-lg border">
                   <Table>
                       <TableHeader>
                           <TableRow>
+                              <TableHead className="p-2 w-10">
+                                <Checkbox
+                                  checked={isAllOnPageSelected ? true : isSomeOnPageSelected ? 'indeterminate' : false}
+                                  onCheckedChange={handleSelectAll}
+                                />
+                              </TableHead>
                               <TableHead>
                                   <Button variant="ghost" onClick={() => requestSort('name')} className="px-2 py-1 h-auto">Nom{getSortIcon('name')}</Button>
                               </TableHead>
@@ -397,7 +455,15 @@ export default function FournisseursPage() {
                       </TableHeader>
                       <TableBody>
                           {paginatedSuppliers.map((supplier) => (
-                              <TableRow key={supplier.id}>
+                              <TableRow key={supplier.id} data-state={selectedSupplierIds.includes(supplier.id) && 'selected'}>
+                                  <TableCell className="p-4">
+                                    <Checkbox
+                                      checked={selectedSupplierIds.includes(supplier.id)}
+                                      onCheckedChange={(checked) =>
+                                        handleSelectSupplier(supplier.id, checked)
+                                      }
+                                    />
+                                  </TableCell>
                                   <TableCell className="font-medium">
                                     <Link href={`/fournisseurs/${supplier.id}`} className="hover:underline">
                                       {supplier.name}
