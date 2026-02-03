@@ -22,6 +22,7 @@ import {
   Copy,
 } from 'lucide-react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import {
@@ -61,6 +62,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { BulkDeleteProductsDialog } from '@/components/produits/bulk-delete-products-dialog';
 import { PrintBarcodeDialog } from '@/components/produits/print-barcode-dialog';
 import { PrintBulkBarcodeDialog } from '@/components/produits/print-bulk-barcode-dialog';
+import imageData from '@/lib/placeholder-images.json';
 
 type SortKey = keyof Product | 'margin' | 'supplierName';
 type SortDirection = 'ascending' | 'descending';
@@ -84,6 +86,35 @@ export default function ProduitsPage() {
   const [stockStatus, setStockStatus] = useState<StockStatusFilter>('all');
   const [selectedProductIds, setSelectedProductIds] = useState<string[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
+
+  const slugify = (text: string) => {
+    return text
+      .toString()
+      .toLowerCase()
+      .replace(/\s+/g, '-')
+      .replace(/'/g, '')
+      .replace(/[^\w\-]+/g, '')
+      .replace(/\-\-+/g, '-')
+      .replace(/^-+/, '')
+      .replace(/-+$/, '');
+  };
+  const productImages = imageData.caisse;
+
+  const getProductImage = (product: Product) => {
+    const imageId = slugify(product.name);
+    const img = productImages.find((i) => i.id === imageId);
+    if (img) {
+      return {
+        url: `https://picsum.photos/seed/${img.seed}/${img.width}/${img.height}`,
+        hint: img.hint,
+      };
+    }
+    return {
+      url: `https://picsum.photos/seed/${product.id}/400/400`,
+      hint: 'product',
+    };
+  };
+
 
   useEffect(() => {
     if (!loading && settings.productPageViewMode) {
@@ -595,6 +626,7 @@ export default function ProduitsPage() {
                         onCheckedChange={handleSelectAll}
                       />
                     </TableHead>
+                    <TableHead className="w-16 p-2"></TableHead>
                     {headers.map((header) => (
                       <TableHead
                         key={header.label}
@@ -631,6 +663,7 @@ export default function ProduitsPage() {
                     const isLowStock =
                       product.stock > 0 && product.stock <= product.minStock;
                     const isOutOfStock = product.stock <= 0;
+                    const { url, hint } = getProductImage(product);
                     return (
                       <TableRow
                         key={product.id}
@@ -651,6 +684,16 @@ export default function ProduitsPage() {
                             onCheckedChange={(checked) =>
                               handleSelectProduct(product.id, checked)
                             }
+                          />
+                        </TableCell>
+                        <TableCell className="p-1">
+                          <Image
+                              src={url}
+                              alt={product.name}
+                              width={48}
+                              height={48}
+                              className="rounded-lg object-cover"
+                              data-ai-hint={hint}
                           />
                         </TableCell>
                         <TableCell className="font-medium p-4">
