@@ -495,22 +495,36 @@ export default function CaissePage() {
                     <Tabs value={activeTab} onValueChange={setActiveTab}>
                       <div className="flex items-center justify-between">
                         <TabsList className="flex-grow">
-                            {Object.keys(carts).map(tabId => (
-                                <TabsTrigger key={tabId} value={tabId} className="relative pr-7 flex-grow">
-                                    {tabId.replace('-', ' ')}
-                                     <Button
-                                        size="icon"
-                                        variant="ghost"
-                                        className="absolute top-1/2 right-0 -translate-y-1/2 h-5 w-5 rounded-full"
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            closeTab(tabId);
-                                        }}
-                                    >
-                                        <X className="h-3 w-3" />
-                                    </Button>
-                                </TabsTrigger>
-                            ))}
+                          {Object.keys(carts).map(tabId => {
+                            const cartData = carts[tabId];
+                            const customer = cartData?.customerId
+                              ? customers.find(c => c.id === cartData.customerId)
+                              : null;
+                            const tabLabel = customer
+                              ? customer.name.split(' ')[0]
+                              : tabId.replace('-', ' ');
+
+                            return (
+                              <TabsTrigger
+                                key={tabId}
+                                value={tabId}
+                                className="relative pr-7 flex-grow"
+                              >
+                                <span className="truncate">{tabLabel}</span>
+                                <Button
+                                  size="icon"
+                                  variant="ghost"
+                                  className="absolute top-1/2 right-0 -translate-y-1/2 h-5 w-5 rounded-full"
+                                  onClick={e => {
+                                    e.stopPropagation();
+                                    closeTab(tabId);
+                                  }}
+                                >
+                                  <X className="h-3 w-3" />
+                                </Button>
+                              </TabsTrigger>
+                            );
+                          })}
                         </TabsList>
                         <Button size="icon" variant="ghost" onClick={addNewTab}><Plus /></Button>
                       </div>
