@@ -21,6 +21,7 @@ import {
   PackageCheck,
   Copy,
   Unarchive,
+  Wallet,
 } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -481,7 +482,7 @@ export default function ProduitsPage() {
           title="Valeur d'Achat"
           value={formatCurrency(totalValue)}
           description="Valeur totale à l'achat"
-          icon={Archive}
+          icon={Wallet}
         />
         <StatCard
           title="Valeur de Vente"
