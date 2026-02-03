@@ -92,7 +92,9 @@ export default function CaissePage() {
   const deselectCustomerTriggerRef = useRef<HTMLButtonElement>(null);
   const discountTriggerRef = useRef<HTMLButtonElement>(null);
   const paymentTriggerRef = useRef<HTMLButtonElement>(null);
-  
+  const newTabTriggerRef = useRef<HTMLButtonElement>(null);
+  const clearCartTriggerRef = useRef<HTMLButtonElement>(null);
+
   const productMap = useMemo(() => new Map(products.map(p => [p.id, p])), [products]);
   
   const activeCartState = carts[activeTab] || { items: [], discount: 0, customerId: null };
@@ -197,6 +199,12 @@ export default function CaissePage() {
         } else if (e.key === 'F6') {
             e.preventDefault();
             discountTriggerRef.current?.click();
+        } else if (e.key === 'F8') {
+            e.preventDefault();
+            newTabTriggerRef.current?.click();
+        } else if (e.key === 'F9') {
+            e.preventDefault();
+            clearCartTriggerRef.current?.click();
         } else if (e.key === 'F10') {
             e.preventDefault();
             paymentTriggerRef.current?.click();
@@ -639,7 +647,7 @@ export default function CaissePage() {
                               );
                             })}
                           </TabsList>
-                          <Button size="icon" variant="ghost" onClick={addNewTab}><Plus /></Button>
+                          <Button ref={newTabTriggerRef} size="icon" variant="ghost" onClick={addNewTab}><Plus /></Button>
                         </div>
                       </Tabs>
                   </div>
@@ -728,6 +736,7 @@ export default function CaissePage() {
                       <div className="flex justify-between items-center -mt-2 mb-2">
                           <h3 className="font-semibold text-md text-muted-foreground">Articles ({activeCart.reduce((sum, item) => sum + item.quantity, 0)})</h3>
                           <Button
+                              ref={clearCartTriggerRef}
                               variant="ghost"
                               size="sm"
                               className="text-destructive hover:bg-destructive/10 hover:text-destructive h-8 px-2"
