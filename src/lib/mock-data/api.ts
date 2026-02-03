@@ -1,7 +1,7 @@
 'use client';
 import { mockDataStore, saveData, resetToSeedData as resetSeed } from './index';
 import type { Transaction, Customer, TransactionType, BreadOrder, Expense, Supplier, Product, SupplierTransaction, CompanyInfo } from '@/lib/types';
-import { startOfDay, format, isSameDay } from 'date-fns';
+import { startOfDay, format, isSameDay, isBefore } from 'date-fns';
 import { formatCurrency } from '../utils';
 
 let nextId = () => Date.now().toString() + Math.random().toString(36).substring(2, 9);
@@ -215,13 +215,19 @@ export const deleteBreadOrder = async (orderId: string) => {
 };
 
 export const resetBreadOrders = async () => {
-    mockDataStore.breadOrders = mockDataStore.breadOrders
-        .filter(o => o.isPinned)
+    const todayStart = startOfDay(new Date());
+
+    const pastOrders = mockDataStore.breadOrders.filter(o => isBefore(new Date(o.createdAt), todayStart));
+    
+    const todaysPinnedOrdersToReset = mockDataStore.breadOrders
+        .filter(o => !isBefore(new Date(o.createdAt), todayStart) && o.isPinned)
         .map(order => ({
             ...order,
             isPaid: false,
             isDelivered: false,
         }));
+
+    mockDataStore.breadOrders = [...pastOrders, ...todaysPinnedOrdersToReset];
     saveData();
 };
 
