@@ -12,6 +12,11 @@ import {
   PlusCircle,
   MinusCircle,
   ArrowRight,
+  Truck,
+  ListChecks,
+  ListX,
+  WalletCards,
+  HandCoins,
 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -31,6 +36,13 @@ import { EditSupplierDialog } from '@/components/fournisseurs/edit-supplier-dial
 import { DeleteSupplierDialog } from '@/components/fournisseurs/delete-supplier-dialog';
 import { AddSupplierTransactionDialog } from '@/components/fournisseurs/add-supplier-transaction-dialog';
 import Link from 'next/link';
+import { StatCard } from '@/components/dashboard/stat-card';
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 
 type SortKey = keyof Supplier;
 type SortDirection = 'ascending' | 'descending';
@@ -43,15 +55,63 @@ interface SortConfig {
 export default function FournisseursPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [sortConfig, setSortConfig] = useState<SortConfig | null>(null);
+  const [activeFilter, setActiveFilter] = useState<'all' | 'toPay' | 'inCredit'>('all');
   const { suppliers, loading } = useMockData();
+
+  const {
+    totalSuppliers,
+    suppliersToPayCount,
+    suppliersInCreditCount,
+    totalDebtToSuppliers,
+    totalCreditFromSuppliers,
+  } = useMemo(() => {
+    if (!suppliers) {
+      return {
+        totalSuppliers: 0,
+        suppliersToPayCount: 0,
+        suppliersInCreditCount: 0,
+        totalDebtToSuppliers: 0,
+        totalCreditFromSuppliers: 0,
+      };
+    }
+
+    let debt = 0;
+    let credit = 0;
+    let toPayCount = 0;
+    let inCreditCount = 0;
+
+    for (const s of suppliers) {
+      if (s.balance > 0) {
+        debt += s.balance;
+        toPayCount++;
+      } else if (s.balance < 0) {
+        credit += s.balance;
+        inCreditCount++;
+      }
+    }
+
+    return {
+      totalSuppliers: suppliers.length,
+      suppliersToPayCount: toPayCount,
+      suppliersInCreditCount: inCreditCount,
+      totalDebtToSuppliers: debt,
+      totalCreditFromSuppliers: Math.abs(credit),
+    };
+  }, [suppliers]);
 
   const sortedAndFilteredSuppliers = useMemo(() => {
     if (!suppliers) return [];
     let filtered = suppliers.filter(supplier =>
       supplier.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      supplier.category.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      supplier.phone.toLowerCase().includes(searchTerm.toLowerCase())
+      (supplier.category || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (supplier.phone || '').toLowerCase().includes(searchTerm.toLowerCase())
     );
+
+    if (activeFilter === 'toPay') {
+      filtered = filtered.filter((c) => c.balance > 0);
+    } else if (activeFilter === 'inCredit') {
+      filtered = filtered.filter((c) => c.balance < 0);
+    }
 
     if (sortConfig !== null) {
       filtered.sort((a, b) => {
@@ -76,7 +136,7 @@ export default function FournisseursPage() {
     }
 
     return filtered;
-  }, [searchTerm, sortConfig, suppliers]);
+  }, [searchTerm, sortConfig, suppliers, activeFilter]);
 
   const requestSort = (key: SortKey) => {
     let direction: SortDirection = 'ascending';
@@ -105,89 +165,141 @@ export default function FournisseursPage() {
 
   return (
     <div className="space-y-6">
-       <header className="flex items-center justify-between">
+       <header>
         <h1 className="text-3xl font-bold tracking-tight">
             Gestion des Fournisseurs
         </h1>
-        <div className="flex items-center gap-2">
+        <p className="text-muted-foreground">
+          Affichez, recherchez et gérez tous vos fournisseurs.
+        </p>
+      </header>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
+        <StatCard
+          title="Total Fournisseurs"
+          value={totalSuppliers}
+          description="Tous les fournisseurs enregistrés"
+          icon={Truck}
+          onClick={() => setActiveFilter('all')}
+          isActive={activeFilter === 'all'}
+        />
+        <StatCard
+          title="Fournisseurs à Payer"
+          value={suppliersToPayCount}
+          description="Fournisseurs avec solde > 0"
+          icon={ListChecks}
+          onClick={() => setActiveFilter('toPay')}
+          isActive={activeFilter === 'toPay'}
+        />
+        <StatCard
+          title="Fournisseurs en Crédit"
+          value={suppliersInCreditCount}
+          description="Fournisseurs avec solde < 0"
+          icon={ListX}
+          onClick={() => setActiveFilter('inCredit')}
+          isActive={activeFilter === 'inCredit'}
+        />
+         <StatCard
+          title="Dette Totale"
+          value={formatCurrency(totalDebtToSuppliers)}
+          description="Argent dû aux fournisseurs"
+          icon={WalletCards}
+        />
+        <StatCard
+          title="Crédit Total"
+          value={formatCurrency(totalCreditFromSuppliers)}
+          description="Argent avancé aux fournisseurs"
+          icon={HandCoins}
+        />
+      </div>
+
+      <Card>
+        <CardHeader>
+           <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
             <div className="relative w-full sm:w-auto">
                 <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                 <Input placeholder="Rechercher des fournisseurs..." className="pl-8 w-full" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} disabled={!hasSuppliers}/>
             </div>
             <AddSupplierDialog />
-        </div>
-      </header>
-
-      {hasResults ? (
-        <div className="overflow-hidden rounded-lg border">
-            <Table>
-                <TableHeader>
-                    <TableRow>
-                        <TableHead>
-                            <Button variant="ghost" onClick={() => requestSort('name')} className="px-2 py-1 h-auto">Nom{getSortIcon('name')}</Button>
-                        </TableHead>
-                        <TableHead>
-                            <Button variant="ghost" onClick={() => requestSort('phone')} className="px-2 py-1 h-auto">Téléphone{getSortIcon('phone')}</Button>
-                        </TableHead>
-                        <TableHead>
-                            <Button variant="ghost" onClick={() => requestSort('category')} className="px-2 py-1 h-auto">Catégorie de produits{getSortIcon('category')}</Button>
-                        </TableHead>
-                        <TableHead>
-                            <Button variant="ghost" onClick={() => requestSort('visitDay')} className="px-2 py-1 h-auto">Jours de visite{getSortIcon('visitDay')}</Button>
-                        </TableHead>
-                        <TableHead className="text-right">
-                            <Button variant="ghost" onClick={() => requestSort('balance')} className="px-2 py-1 h-auto justify-end w-full">Solde{getSortIcon('balance')}</Button>
-                        </TableHead>
-                        <TableHead className="text-right">Actions</TableHead>
-                    </TableRow>
-                </TableHeader>
-                <TableBody>
-                    {sortedAndFilteredSuppliers.map((supplier) => (
-                        <TableRow key={supplier.id}>
-                            <TableCell className="font-medium">{supplier.name}</TableCell>
-                            <TableCell className="text-muted-foreground">{supplier.phone}</TableCell>
-                            <TableCell>
-                                <Badge variant="outline">{supplier.category}</Badge>
-                            </TableCell>
-                            <TableCell className="text-muted-foreground">{supplier.visitDay || '-'}</TableCell>
-                            <TableCell className={cn("text-right font-mono", getBalanceVariant(supplier.balance))}>
-                                {formatCurrency(supplier.balance)}
-                            </TableCell>
-                            <TableCell className="text-right">
-                                <div className="flex items-center justify-end gap-0.5">
-                                    <AddSupplierTransactionDialog
-                                        type="purchase"
-                                        supplierId={supplier.id}
-                                        trigger={<Button variant="ghost" size="icon" className="h-8 w-8"><PlusCircle /><span className="sr-only">Enregistrer un Achat</span></Button>}
-                                    />
-                                    {supplier.balance > 0 && (
-                                        <AddSupplierTransactionDialog
-                                            type="payment"
-                                            supplierId={supplier.id}
-                                            defaultAmount={supplier.balance}
-                                            trigger={<Button variant="ghost" size="icon" className="h-8 w-8"><MinusCircle className="text-accent" /><span className="sr-only">Enregistrer un Paiement</span></Button>}
-                                        />
-                                    )}
-                                     <Button variant="ghost" size="icon" asChild className="h-8 w-8">
-                                        <Link href={`/fournisseurs/${supplier.id}`}>
-                                            <ArrowRight />
-                                        </Link>
-                                    </Button>
-                                    <EditSupplierDialog supplier={supplier} />
-                                    <DeleteSupplierDialog supplierId={supplier.id} supplierName={supplier.name} />
-                                </div>
-                            </TableCell>
-                        </TableRow>
-                    ))}
-                </TableBody>
-            </Table>
-        </div>
-      ) : (
-          <div className="text-center py-16 border-2 border-dashed rounded-lg">
-            <h3 className="text-xl font-semibold">Aucun fournisseur trouvé</h3>
-            <p className="text-muted-foreground mt-2">Essayez un autre terme de recherche ou ajoutez un nouveau fournisseur.</p>
-        </div>
-      )}
+           </div>
+        </CardHeader>
+        <CardContent>
+            {hasResults ? (
+              <div className="overflow-hidden rounded-lg border">
+                  <Table>
+                      <TableHeader>
+                          <TableRow>
+                              <TableHead>
+                                  <Button variant="ghost" onClick={() => requestSort('name')} className="px-2 py-1 h-auto">Nom{getSortIcon('name')}</Button>
+                              </TableHead>
+                              <TableHead>
+                                  <Button variant="ghost" onClick={() => requestSort('phone')} className="px-2 py-1 h-auto">Téléphone{getSortIcon('phone')}</Button>
+                              </TableHead>
+                              <TableHead>
+                                  <Button variant="ghost" onClick={() => requestSort('category')} className="px-2 py-1 h-auto">Catégorie{getSortIcon('category')}</Button>
+                              </TableHead>
+                              <TableHead>
+                                  <Button variant="ghost" onClick={() => requestSort('visitDay')} className="px-2 py-1 h-auto">Jours de visite{getSortIcon('visitDay')}</Button>
+                              </TableHead>
+                              <TableHead className="text-right">
+                                  <Button variant="ghost" onClick={() => requestSort('balance')} className="px-2 py-1 h-auto justify-end w-full">Solde{getSortIcon('balance')}</Button>
+                              </TableHead>
+                              <TableHead className="text-right">Actions</TableHead>
+                          </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                          {sortedAndFilteredSuppliers.map((supplier) => (
+                              <TableRow key={supplier.id}>
+                                  <TableCell className="font-medium">{supplier.name}</TableCell>
+                                  <TableCell className="text-muted-foreground">{supplier.phone}</TableCell>
+                                  <TableCell>
+                                      <Badge variant="outline">{supplier.category}</Badge>
+                                  </TableCell>
+                                  <TableCell className="text-muted-foreground">{supplier.visitDay || '-'}</TableCell>
+                                  <TableCell className={cn("text-right font-mono", getBalanceVariant(supplier.balance))}>
+                                      {formatCurrency(supplier.balance)}
+                                  </TableCell>
+                                  <TableCell className="text-right">
+                                      <div className="flex items-center justify-end gap-0.5">
+                                          <AddSupplierTransactionDialog
+                                              type="purchase"
+                                              supplierId={supplier.id}
+                                              trigger={<Button variant="ghost" size="icon" className="h-8 w-8"><PlusCircle /><span className="sr-only">Enregistrer un Achat</span></Button>}
+                                          />
+                                          {supplier.balance > 0 && (
+                                              <AddSupplierTransactionDialog
+                                                  type="payment"
+                                                  supplierId={supplier.id}
+                                                  defaultAmount={supplier.balance}
+                                                  trigger={<Button variant="ghost" size="icon" className="h-8 w-8"><MinusCircle className="text-accent" /><span className="sr-only">Enregistrer un Paiement</span></Button>}
+                                              />
+                                          )}
+                                          <Button variant="ghost" size="icon" asChild className="h-8 w-8">
+                                              <Link href={`/fournisseurs/${supplier.id}`}>
+                                                  <ArrowRight />
+                                              </Link>
+                                          </Button>
+                                          <EditSupplierDialog supplier={supplier} />
+                                          <DeleteSupplierDialog supplierId={supplier.id} supplierName={supplier.name} />
+                                      </div>
+                                  </TableCell>
+                              </TableRow>
+                          ))}
+                      </TableBody>
+                  </Table>
+              </div>
+            ) : (
+                <div className="text-center py-16 border-2 border-dashed rounded-lg">
+                  <h3 className="text-xl font-semibold">
+                    {hasSuppliers ? 'Aucun fournisseur trouvé' : 'Aucun fournisseur pour le moment'}
+                  </h3>
+                  <p className="text-muted-foreground mt-2">
+                    {hasSuppliers ? 'Essayez un autre terme de recherche.' : 'Cliquez sur "Ajouter un fournisseur" pour commencer.'}
+                  </p>
+              </div>
+            )}
+        </CardContent>
+      </Card>
     </div>
   );
 }
