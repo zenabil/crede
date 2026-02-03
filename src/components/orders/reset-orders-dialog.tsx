@@ -28,7 +28,7 @@ export function ResetOrdersDialog({ trigger }: { trigger?: React.ReactNode }) {
       await resetBreadOrders();
       toast({
         title: 'Succès !',
-        description: `Les commandes non épinglées ont été supprimées.`,
+        description: `Les commandes ont été réinitialisées.`,
       });
       setOpen(false);
     } catch (error) {
@@ -59,9 +59,7 @@ export function ResetOrdersDialog({ trigger }: { trigger?: React.ReactNode }) {
         <AlertDialogHeader>
           <AlertDialogTitle>Êtes-vous sûr ?</AlertDialogTitle>
           <AlertDialogDescription>
-            Cette action est irréversible. Toutes les commandes de pain non
-            épinglées seront définitivement supprimées. Les commandes épinglées
-            resteront.
+            Cette action est irréversible. Toutes les commandes non épinglées seront supprimées. Le statut des commandes épinglées sera réinitialisé à 'Non payé' et 'Non livré'.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>

@@ -215,7 +215,13 @@ export const deleteBreadOrder = async (orderId: string) => {
 };
 
 export const resetBreadOrders = async () => {
-    mockDataStore.breadOrders = mockDataStore.breadOrders.filter(o => o.isPinned);
+    mockDataStore.breadOrders = mockDataStore.breadOrders
+        .filter(o => o.isPinned)
+        .map(order => ({
+            ...order,
+            isPaid: false,
+            isDelivered: false,
+        }));
     saveData();
 };
 
