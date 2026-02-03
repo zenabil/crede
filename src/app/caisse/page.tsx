@@ -71,7 +71,7 @@ const slugify = (text: string) => {
 
 
 export default function CaissePage() {
-  const { products, customers, loading } = useMockData();
+  const { products, customers, transactions, loading } = useMockData();
   const { toast } = useToast();
 
   const [activeTab, setActiveTab] = useState('vente-1');
@@ -105,6 +105,30 @@ export default function CaissePage() {
         return item.quantity > upToDateProduct.stock; // Not enough stock
     });
   }, [activeCart, products]);
+
+    const recentCustomers = useMemo(() => {
+    if (!transactions || !customers) return [];
+
+    const sortedTransactions = [...transactions].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+    
+    const recentCustomerIds = new Set<string>();
+    
+    for (const t of sortedTransactions) {
+      if (t.customerId) {
+        recentCustomerIds.add(t.customerId);
+      }
+      if (recentCustomerIds.size >= 4) { // Get last 4 unique customers
+        break;
+      }
+    }
+
+    const customerMap = new Map(customers.map(c => [c.id, c]));
+    
+    return Array.from(recentCustomerIds)
+        .map(id => customerMap.get(id))
+        .filter((c): c is Customer => !!c);
+
+  }, [transactions, customers]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -578,24 +602,44 @@ export default function CaissePage() {
                               </Button>
                           </div>
                       ) : (
-                        <div className="flex items-center gap-2">
-                              <CustomerCombobox
-                                  customers={customers}
-                                  selectedCustomerId={activeCustomerId}
-                                  onSelectCustomer={(id) => updateActiveCartState({ customerId: id })}
-                                  className="flex-grow"
-                              />
-                              <AddCustomerDialog
-                                  trigger={
-                                      <Button variant="outline" size="icon" className="flex-shrink-0">
-                                          <UserPlus className="h-4 w-4" />
-                                      </Button>
-                                  }
-                                  onCustomerAdded={(newCustomer) => {
-                                      updateActiveCartState({ customerId: newCustomer.id });
-                                  }}
-                              />
-                          </div>
+                        <div>
+                            <div className="flex items-center gap-2">
+                                <CustomerCombobox
+                                    customers={customers}
+                                    selectedCustomerId={activeCustomerId}
+                                    onSelectCustomer={(id) => updateActiveCartState({ customerId: id })}
+                                    className="flex-grow"
+                                />
+                                <AddCustomerDialog
+                                    trigger={
+                                        <Button variant="outline" size="icon" className="flex-shrink-0">
+                                            <UserPlus className="h-4 w-4" />
+                                        </Button>
+                                    }
+                                    onCustomerAdded={(newCustomer) => {
+                                        updateActiveCartState({ customerId: newCustomer.id });
+                                    }}
+                                />
+                            </div>
+                             {recentCustomers.length > 0 && (
+                              <div className="mt-2">
+                                <p className="text-xs text-muted-foreground mb-1">Clients récents :</p>
+                                <div className="flex flex-wrap gap-1">
+                                  {recentCustomers.map(customer => (
+                                    <Button 
+                                      key={customer.id} 
+                                      variant="outline" 
+                                      size="sm" 
+                                      className="h-auto px-2 py-1 text-xs"
+                                      onClick={() => updateActiveCartState({ customerId: customer.id })}
+                                    >
+                                      {customer.name}
+                                    </Button>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+                        </div>
                       )}
                   </div>
                   <Separator />
