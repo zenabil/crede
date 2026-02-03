@@ -20,6 +20,7 @@ import {
   Tags,
   PackageCheck,
   Copy,
+  Unarchive,
 } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -603,6 +604,7 @@ export default function ProduitsPage() {
                 <PrintBulkBarcodeDialog productIds={selectedProductIds} />
                 <BulkDeleteProductsDialog
                   productIds={selectedProductIds}
+                  isArchivedView={stockStatus === 'archived'}
                   onSuccess={() => setSelectedProductIds([])}
                 />
               </div>
@@ -777,6 +779,7 @@ export default function ProduitsPage() {
                             <DeleteProductDialog
                               productId={product.id}
                               productName={product.name}
+                              isArchived={product.isArchived}
                             />
                           </div>
                         </TableCell>

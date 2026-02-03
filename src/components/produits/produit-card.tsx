@@ -11,7 +11,7 @@ import {
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { MoreVertical, Truck, Copy, Archive } from 'lucide-react';
+import { MoreVertical, Truck, Copy, Archive, Unarchive } from 'lucide-react';
 import { formatCurrency, cn } from '@/lib/utils';
 import imageData from '@/lib/placeholder-images.json';
 import { EditProductDialog } from './edit-product-dialog';
@@ -172,12 +172,15 @@ export function ProduitCard({
               <DeleteProductDialog
                 productId={product.id}
                 productName={product.name}
+                isArchived={product.isArchived}
                 trigger={
-                  <DropdownMenuItem
-                    onSelect={(e) => e.preventDefault()}
-                  >
-                    <Archive className="mr-2 h-4 w-4" />
-                    Archiver
+                  <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                    {product.isArchived ? (
+                      <Unarchive className="mr-2 h-4 w-4" />
+                    ) : (
+                      <Archive className="mr-2 h-4 w-4" />
+                    )}
+                    <span>{product.isArchived ? 'Désarchiver' : 'Archiver'}</span>
                   </DropdownMenuItem>
                 }
               />

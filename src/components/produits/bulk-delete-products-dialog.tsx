@@ -13,37 +13,46 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
-import { Archive, Loader2 } from 'lucide-react';
+import { Archive, Unarchive, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { deleteProduct } from '@/lib/mock-data/api';
+import { deleteProduct, unarchiveProduct } from '@/lib/mock-data/api';
 
 export function BulkDeleteProductsDialog({
   productIds,
+  isArchivedView,
   onSuccess,
 }: {
   productIds: string[];
+  isArchivedView?: boolean;
   onSuccess: () => void;
 }) {
   const [open, setOpen] = useState(false);
   const [isPending, setIsPending] = useState(false);
   const { toast } = useToast();
 
-  const handleArchive = async () => {
+  const actionText = isArchivedView ? 'Désarchiver' : 'Archiver';
+  const ActionIcon = isArchivedView ? Unarchive : Archive;
+
+  const handleAction = async () => {
     if (productIds.length === 0) return;
     setIsPending(true);
     try {
-      await Promise.all(productIds.map((id) => deleteProduct(id))); // This now archives products
+      if (isArchivedView) {
+        await Promise.all(productIds.map((id) => unarchiveProduct(id)));
+      } else {
+        await Promise.all(productIds.map((id) => deleteProduct(id))); // This archives
+      }
       toast({
         title: 'Succès !',
-        description: `${productIds.length} produit(s) ont été archivé(s).`,
+        description: `${productIds.length} produit(s) ont été ${isArchivedView ? 'désarchivés' : 'archivés'}.`,
       });
       onSuccess();
       setOpen(false);
     } catch (error) {
-      console.error('Failed to bulk archive products', error);
+      console.error(`Failed to bulk ${actionText.toLowerCase()} products`, error);
       toast({
         title: 'Erreur',
-        description: `Une erreur est survenue lors de l'archivage des produits.`,
+        description: `Une erreur est survenue.`,
         variant: 'destructive',
       });
     } finally {
@@ -59,24 +68,24 @@ export function BulkDeleteProductsDialog({
           variant="outline"
           disabled={productIds.length === 0}
         >
-          <Archive className="mr-2 h-4 w-4" /> Archiver la sélection (
-          {productIds.length})
+          <ActionIcon className="mr-2 h-4 w-4" /> {actionText} la sélection ({productIds.length})
         </Button>
       </AlertDialogTrigger>
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle>Êtes-vous sûr ?</AlertDialogTitle>
           <AlertDialogDescription>
-            Cette action archivera {productIds.length} produit(s). Ils n'apparaîtront plus dans les listes actives mais ne seront pas supprimés définitivement.
+            Cette action va {actionText.toLowerCase()} {productIds.length} produit(s) sélectionné(s).
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel disabled={isPending}>Annuler</AlertDialogCancel>
           <AlertDialogAction
-            onClick={handleArchive}
+            onClick={handleAction}
             disabled={isPending}
+            className={!isArchivedView ? 'bg-destructive hover:bg-destructive/90' : ''}
           >
-            {isPending ? <Loader2 className="animate-spin" /> : 'Archiver'}
+            {isPending ? <Loader2 className="animate-spin" /> : actionText}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

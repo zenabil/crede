@@ -13,37 +13,53 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
-import { Archive, Loader2 } from 'lucide-react';
+import { Archive, Unarchive, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { deleteProduct } from '@/lib/mock-data/api';
+import { deleteProduct, unarchiveProduct } from '@/lib/mock-data/api';
 
 export function DeleteProductDialog({
   productId,
   productName,
+  isArchived,
+  onSuccess,
   trigger,
 }: {
   productId: string;
   productName: string;
+  isArchived?: boolean;
+  onSuccess?: () => void;
   trigger?: React.ReactNode;
 }) {
   const [open, setOpen] = useState(false);
   const [isPending, setIsPending] = useState(false);
   const { toast } = useToast();
 
-  const handleArchive = async () => {
+  const actionText = isArchived ? 'Désarchiver' : 'Archiver';
+  const ActionIcon = isArchived ? Unarchive : Archive;
+
+  const handleAction = async () => {
     setIsPending(true);
     try {
-      await deleteProduct(productId); // This now archives the product
-      toast({
-        title: 'Succès !',
-        description: 'Le produit a été archivé.',
-      });
+      if (isArchived) {
+        await unarchiveProduct(productId);
+        toast({
+          title: 'Succès !',
+          description: 'Le produit a été désarchivé.',
+        });
+      } else {
+        await deleteProduct(productId); // This archives the product
+        toast({
+          title: 'Succès !',
+          description: 'Le produit a été archivé.',
+        });
+      }
       setOpen(false);
+      onSuccess?.();
     } catch (error) {
-      console.error('Failed to archive product', error);
+      console.error(`Failed to ${actionText.toLowerCase()} product`, error);
       toast({
         title: 'Erreur',
-        description: `Une erreur est survenue lors de l'archivage du produit.`,
+        description: `Une erreur est survenue lors de l'action.`,
         variant: 'destructive',
       });
     } finally {
@@ -53,7 +69,7 @@ export function DeleteProductDialog({
 
   const defaultTrigger = (
     <Button variant="ghost" size="icon" className="h-8 w-8">
-      <Archive className="h-4 w-4" />
+      <ActionIcon className="h-4 w-4" />
     </Button>
   );
 
@@ -62,17 +78,21 @@ export function DeleteProductDialog({
       <AlertDialogTrigger asChild>{trigger || defaultTrigger}</AlertDialogTrigger>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>Archiver le produit ?</AlertDialogTitle>
+          <AlertDialogTitle>{actionText} le produit ?</AlertDialogTitle>
           <AlertDialogDescription>
-            Cette action archivera le produit "{productName}". Il n'apparaîtra
-            plus dans la caisse ou les listes par défaut, mais ses données
-            historiques seront conservées.
+            {isArchived
+              ? `Le produit "${productName}" sera restauré et apparaîtra à nouveau dans la caisse et les listes de produits.`
+              : `Cette action archivera le produit "${productName}". Il n'apparaîtra plus dans les listes actives mais ses données historiques seront conservées.`}
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel disabled={isPending}>Annuler</AlertDialogCancel>
-          <AlertDialogAction onClick={handleArchive} disabled={isPending}>
-            {isPending ? <Loader2 className="animate-spin" /> : 'Archiver'}
+          <AlertDialogAction
+            onClick={handleAction}
+            disabled={isPending}
+            className={!isArchived ? 'bg-destructive hover:bg-destructive/90' : ''}
+          >
+            {isPending ? <Loader2 className="animate-spin" /> : actionText}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

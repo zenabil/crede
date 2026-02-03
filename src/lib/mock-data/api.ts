@@ -454,6 +454,14 @@ export const deleteProduct = async (productId: string) => {
     }
 };
 
+export const unarchiveProduct = async (productId: string) => {
+    const product = mockDataStore.products.find(p => p.id === productId);
+    if (product) {
+        product.isArchived = false;
+        saveData();
+    }
+};
+
 export const duplicateProduct = async (productId: string): Promise<Product> => {
     const originalProduct = mockDataStore.products.find(p => p.id === productId);
     if (!originalProduct) {
