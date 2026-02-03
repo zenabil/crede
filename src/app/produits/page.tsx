@@ -38,7 +38,7 @@ import { AddProductDialog } from '@/components/produits/add-product-dialog';
 import { EditProductDialog } from '@/components/produits/edit-product-dialog';
 import { DeleteProductDialog } from '@/components/produits/delete-product-dialog';
 import { ProductCsvImportDialog } from '@/components/produits/csv-import-dialog';
-import { exportProductsToCsv } from '@/lib/mock-data/api';
+import { exportProductsToCsv, updateProductPageViewMode } from '@/lib/mock-data/api';
 import { ProduitsGrid } from '@/components/produits/produits-grid';
 import { StatCard } from '@/components/dashboard/stat-card';
 import {
@@ -48,6 +48,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { useToast } from '@/hooks/use-toast';
 
 
 type SortKey = keyof Product | 'margin' | 'supplierName';
@@ -64,6 +65,7 @@ export default function ProduitsPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [sortConfig, setSortConfig] = useState<SortConfig | null>(null);
   const { products, suppliers, settings, loading } = useMockData();
+  const { toast } = useToast();
   const [viewMode, setViewMode] = useState<'list' | 'grid'>('grid');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [selectedSupplier, setSelectedSupplier] = useState('all');
@@ -74,6 +76,28 @@ export default function ProduitsPage() {
       setViewMode(settings.productPageViewMode);
     }
   }, [loading, settings.productPageViewMode]);
+  
+  const handleViewModeChange = async (mode: 'list' | 'grid') => {
+    if (viewMode === mode) return;
+
+    const oldViewMode = viewMode;
+    setViewMode(mode); // Optimistic UI update
+    try {
+      await updateProductPageViewMode(mode);
+      toast({
+        title: 'Vue par défaut mise à jour',
+        description: `La vue des produits est maintenant en mode ${mode === 'list' ? 'liste' : 'grille'}.`,
+      });
+    } catch (error) {
+      toast({
+        title: 'Erreur',
+        description: 'Impossible de sauvegarder la préférence de vue.',
+        variant: 'destructive',
+      });
+      // Revert state on failure
+      setViewMode(oldViewMode);
+    }
+  };
 
   const productsWithSupplier = useMemo(() => {
     if (!products || !suppliers) return [];
@@ -288,8 +312,8 @@ export default function ProduitsPage() {
                 </div>
                 <div className="flex items-center gap-2 flex-wrap justify-end">
                     <div className="flex items-center gap-1 border rounded-md p-1">
-                        <Button variant={viewMode === 'list' ? 'secondary' : 'ghost'} size="icon" onClick={() => setViewMode('list')} className="h-8 w-8"><List className="h-4 w-4" /></Button>
-                        <Button variant={viewMode === 'grid' ? 'secondary' : 'ghost'} size="icon" onClick={() => setViewMode('grid')} className="h-8 w-8"><LayoutGrid className="h-4 w-4" /></Button>
+                        <Button variant={viewMode === 'list' ? 'secondary' : 'ghost'} size="icon" onClick={() => handleViewModeChange('list')} className="h-8 w-8"><List className="h-4 w-4" /></Button>
+                        <Button variant={viewMode === 'grid' ? 'secondary' : 'ghost'} size="icon" onClick={() => handleViewModeChange('grid')} className="h-8 w-8"><LayoutGrid className="h-4 w-4" /></Button>
                     </div>
                     <ProductCsvImportDialog 
                         trigger={
