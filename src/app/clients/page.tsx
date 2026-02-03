@@ -83,64 +83,30 @@ export default function ClientsPage() {
   const exportButtonRef = useRef<HTMLButtonElement>(null);
   const clearFiltersButtonRef = useRef<HTMLButtonElement>(null);
 
-  // Keyboard shortcut handler
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'F1') {
-        e.preventDefault();
-        searchInputRef.current?.focus();
-      } else if (e.altKey && (e.key === 'n' || e.key === 'N')) {
-        e.preventDefault();
-        addCustomerTriggerRef.current?.click();
-      } else if (e.altKey && (e.key === 's' || e.key === 'S')) {
-        e.preventDefault();
-        sortSelectTriggerRef.current?.click();
-      } else if (e.altKey && (e.key === 'v' || e.key === 'V')) {
-        e.preventDefault();
-        if (viewMode === 'grid') {
-          viewModeListButtonRef.current?.click();
-        } else {
-          viewModeGridButtonRef.current?.click();
-        }
-      } else if (e.altKey && (e.key === 'i' || e.key === 'I')) {
-        e.preventDefault();
-        importTriggerRef.current?.click();
-      } else if (e.altKey && (e.key === 'e' || e.key === 'E')) {
-        e.preventDefault();
-        exportButtonRef.current?.click();
-      } else if (e.altKey && (e.key === 'a' || e.key === 'A')) {
-        e.preventDefault();
-        setActiveFilter('all');
-      } else if (e.altKey && (e.key === 'd' || e.key === 'D')) {
-        e.preventDefault();
-        setActiveFilter('debt');
-      } else if (e.altKey && (e.key === 'c' || e.key === 'C')) {
-        e.preventDefault();
-        setActiveFilter('credit');
-      } else if (e.altKey && (e.key === 'j' || e.key === 'J')) {
-        e.preventDefault();
-        setActiveFilter('dueToday');
-      } else if (e.altKey && (e.key === 'x' || e.key === 'X')) {
-        e.preventDefault();
-        clearFiltersButtonRef.current?.click();
-      } else if (e.altKey && e.key === 'ArrowRight') {
-        e.preventDefault();
-        if (currentPage < totalPages) {
-          setCurrentPage((p) => p + 1);
-        }
-      } else if (e.altKey && e.key === 'ArrowLeft') {
-        e.preventDefault();
-        if (currentPage > 1) {
-          setCurrentPage((p) => p - 1);
-        }
-      }
-    };
+  const customersWithTotals = useMemo(() => {
+    if (!customers || !rawTransactions) return [];
 
-    window.addEventListener('keydown', handleKeyDown);
-    return () => {
-      window.removeEventListener('keydown', handleKeyDown);
-    };
-  }, [viewMode, currentPage, totalPages]);
+    const financialsByCustomer = rawTransactions.reduce(
+      (acc, t) => {
+        if (!acc[t.customerId]) {
+          acc[t.customerId] = { debts: 0, payments: 0 };
+        }
+        if (t.type === 'debt') {
+          acc[t.customerId].debts += t.amount;
+        } else {
+          acc[t.customerId].payments += t.amount;
+        }
+        return acc;
+      },
+      {} as Record<string, { debts: number; payments: number }>
+    );
+
+    return customers.map((customer) => ({
+      ...customer,
+      totalDebts: financialsByCustomer[customer.id]?.debts || 0,
+      totalPayments: financialsByCustomer[customer.id]?.payments || 0,
+    }));
+  }, [customers, rawTransactions]);
 
   const sortedAndFilteredCustomers = useMemo(() => {
     let filtered = customersWithTotals.filter(
@@ -200,6 +166,65 @@ export default function ClientsPage() {
     const paginated = sortedAndFilteredCustomers.slice(start, end);
     return { paginatedCustomers: paginated, totalPages: pages };
   }, [sortedAndFilteredCustomers, currentPage, itemsPerPage]);
+
+  // Keyboard shortcut handler
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'F1') {
+        e.preventDefault();
+        searchInputRef.current?.focus();
+      } else if (e.altKey && (e.key === 'n' || e.key === 'N')) {
+        e.preventDefault();
+        addCustomerTriggerRef.current?.click();
+      } else if (e.altKey && (e.key === 's' || e.key === 'S')) {
+        e.preventDefault();
+        sortSelectTriggerRef.current?.click();
+      } else if (e.altKey && (e.key === 'v' || e.key === 'V')) {
+        e.preventDefault();
+        if (viewMode === 'grid') {
+          viewModeListButtonRef.current?.click();
+        } else {
+          viewModeGridButtonRef.current?.click();
+        }
+      } else if (e.altKey && (e.key === 'i' || e.key === 'I')) {
+        e.preventDefault();
+        importTriggerRef.current?.click();
+      } else if (e.altKey && (e.key === 'e' || e.key === 'E')) {
+        e.preventDefault();
+        exportButtonRef.current?.click();
+      } else if (e.altKey && (e.key === 'a' || e.key === 'A')) {
+        e.preventDefault();
+        setActiveFilter('all');
+      } else if (e.altKey && (e.key === 'd' || e.key === 'D')) {
+        e.preventDefault();
+        setActiveFilter('debt');
+      } else if (e.altKey && (e.key === 'c' || e.key === 'C')) {
+        e.preventDefault();
+        setActiveFilter('credit');
+      } else if (e.altKey && (e.key === 'j' || e.key === 'J')) {
+        e.preventDefault();
+        setActiveFilter('dueToday');
+      } else if (e.altKey && (e.key === 'x' || e.key === 'X')) {
+        e.preventDefault();
+        clearFiltersButtonRef.current?.click();
+      } else if (e.altKey && e.key === 'ArrowRight') {
+        e.preventDefault();
+        if (currentPage < totalPages) {
+          setCurrentPage((p) => p + 1);
+        }
+      } else if (e.altKey && e.key === 'ArrowLeft') {
+        e.preventDefault();
+        if (currentPage > 1) {
+          setCurrentPage((p) => p - 1);
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [viewMode, currentPage, totalPages]);
 
   // Reset selection and page when filters change
   useEffect(() => {
@@ -293,31 +318,6 @@ export default function ClientsPage() {
       dueTodayCount: dueToday,
     };
   }, [customers]);
-
-  const customersWithTotals = useMemo(() => {
-    if (!customers || !rawTransactions) return [];
-
-    const financialsByCustomer = rawTransactions.reduce(
-      (acc, t) => {
-        if (!acc[t.customerId]) {
-          acc[t.customerId] = { debts: 0, payments: 0 };
-        }
-        if (t.type === 'debt') {
-          acc[t.customerId].debts += t.amount;
-        } else {
-          acc[t.customerId].payments += t.amount;
-        }
-        return acc;
-      },
-      {} as Record<string, { debts: number; payments: number }>
-    );
-
-    return customers.map((customer) => ({
-      ...customer,
-      totalDebts: financialsByCustomer[customer.id]?.debts || 0,
-      totalPayments: financialsByCustomer[customer.id]?.payments || 0,
-    }));
-  }, [customers, rawTransactions]);
 
   const selectedCustomersBalance = useMemo(() => {
     if (selectedCustomerIds.length === 0) return 0;
