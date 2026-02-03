@@ -3,7 +3,7 @@
 import { useMemo, useState, useEffect } from 'react';
 import { useMockData } from '@/hooks/use-mock-data';
 import type { Customer } from '@/lib/types';
-import CustomersLoading from './loading';
+import ClientsLoading from './loading';
 import { AddCustomerDialog } from '@/components/customers/add-customer-dialog';
 import { Input } from '@/components/ui/input';
 import {
@@ -37,6 +37,7 @@ import {
   CardContent,
   CardHeader,
   CardFooter,
+  CardTitle,
 } from '@/components/ui/card';
 import { BulkDeleteCustomersDialog } from '@/components/customers/bulk-delete-customer-dialog';
 import Link from 'next/link';
@@ -256,7 +257,7 @@ export default function ClientsPage() {
   };
 
   if (loading) {
-    return <CustomersLoading />;
+    return <ClientsLoading />;
   }
 
   const hasCustomers = customers.length > 0;
@@ -313,22 +314,26 @@ export default function ClientsPage() {
       </div>
       
        {recentCustomers.length > 0 && (
-        <div>
-          <h2 className="text-lg font-semibold mb-2">Clients Récents</h2>
-          <div className="flex flex-wrap gap-2">
-            {recentCustomers.map(customer => (
-              <Button 
-                key={customer.id} 
-                variant="outline" 
-                asChild
-              >
-                <Link href={`/clients/${customer.id}`}>
-                  {customer.name}
-                </Link>
-              </Button>
-            ))}
-          </div>
-        </div>
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg">Clients Récents</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex flex-wrap gap-2">
+              {recentCustomers.map(customer => (
+                <Button 
+                  key={customer.id} 
+                  variant="outline" 
+                  asChild
+                >
+                  <Link href={`/clients/${customer.id}`}>
+                    {customer.name}
+                  </Link>
+                </Button>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
       )}
 
       <Card>
