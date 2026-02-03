@@ -545,11 +545,18 @@ export default function ProduitsPage() {
             </div>
           )}
           {!hasResults ? (
-            <div className="text-center py-16">
-              <h3 className="text-xl font-semibold">Aucun produit trouvé</h3>
-              <p className="text-muted-foreground mt-2">
-                Essayez un autre terme de recherche ou modifiez vos filtres.
-              </p>
+             <div className="text-center py-16 border-2 border-dashed rounded-lg flex flex-col items-center justify-center gap-4">
+                <Package className="h-12 w-12 text-muted-foreground" />
+                <div className="text-center">
+                    <h3 className="text-xl font-semibold">
+                        {hasProducts ? 'Aucun produit trouvé' : 'Aucun produit pour le moment'}
+                    </h3>
+                    <p className="text-muted-foreground mt-2">
+                        {hasProducts
+                            ? 'Essayez un autre terme de recherche ou modifiez vos filtres.'
+                            : 'Cliquez sur le bouton "Ajouter un produit" pour commencer.'}
+                    </p>
+                </div>
             </div>
           ) : viewMode === 'list' ? (
             <div className="overflow-hidden rounded-lg border">
