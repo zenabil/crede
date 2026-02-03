@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import { useMockData } from '@/hooks/use-mock-data';
 import type { Product, Supplier } from '@/lib/types';
 import {
@@ -23,6 +23,7 @@ import {
   Unarchive,
   Wallet,
   X,
+  Plus,
 } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -66,6 +67,7 @@ import { BulkDeleteProductsDialog } from '@/components/produits/bulk-delete-prod
 import { PrintBarcodeDialog } from '@/components/produits/print-barcode-dialog';
 import { PrintBulkBarcodeDialog } from '@/components/produits/print-bulk-barcode-dialog';
 import imageData from '@/lib/placeholder-images.json';
+import { ProductShortcutsDialog } from '@/components/produits/shortcuts-dialog';
 
 type SortKey = keyof Product | 'margin' | 'supplierName';
 type SortDirection = 'ascending' | 'descending';
@@ -89,6 +91,56 @@ export default function ProduitsPage() {
   const [stockStatus, setStockStatus] = useState<StockStatusFilter>('all');
   const [selectedProductIds, setSelectedProductIds] = useState<string[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
+
+  const searchInputRef = useRef<HTMLInputElement>(null);
+  const addProductTriggerRef = useRef<HTMLButtonElement>(null);
+  const categorySelectTriggerRef = useRef<HTMLButtonElement>(null);
+  const supplierSelectTriggerRef = useRef<HTMLButtonElement>(null);
+  const stockStatusTriggerRef = useRef<HTMLButtonElement>(null);
+  const viewModeListButtonRef = useRef<HTMLButtonElement>(null);
+  const viewModeGridButtonRef = useRef<HTMLButtonElement>(null);
+  const importTriggerRef = useRef<HTMLButtonElement>(null);
+  const exportButtonRef = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+        if (e.key === 'F1') {
+            e.preventDefault();
+            searchInputRef.current?.focus();
+        } else if (e.altKey && (e.key === 'n' || e.key === 'N')) {
+            e.preventDefault();
+            addProductTriggerRef.current?.click();
+        } else if (e.altKey && (e.key === 'c' || e.key === 'C')) {
+            e.preventDefault();
+            categorySelectTriggerRef.current?.click();
+        } else if (e.altKey && (e.key === 's' || e.key === 'S')) {
+            e.preventDefault();
+            supplierSelectTriggerRef.current?.click();
+        } else if (e.altKey && (e.key === 't' || e.key === 'T')) { // 't' for sTatus
+            e.preventDefault();
+            stockStatusTriggerRef.current?.click();
+        } else if (e.altKey && (e.key === 'v' || e.key === 'V')) {
+            e.preventDefault();
+            if (viewMode === 'grid') {
+                viewModeListButtonRef.current?.click();
+            } else {
+                viewModeGridButtonRef.current?.click();
+            }
+        } else if (e.altKey && (e.key === 'i' || e.key === 'I')) {
+            e.preventDefault();
+            importTriggerRef.current?.click();
+        } else if (e.altKey && (e.key === 'e' || e.key === 'E')) {
+            e.preventDefault();
+            exportButtonRef.current?.click();
+        }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+        window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [viewMode]);
+
 
   const slugify = (text: string) => {
     return text
@@ -306,7 +358,7 @@ export default function ProduitsPage() {
     const total = sortedAndFilteredProducts.length;
     const pages = Math.ceil(total / ITEMS_PER_PAGE);
     const start = (currentPage - 1) * ITEMS_PER_PAGE;
-    const end = start + ITEMS_PER_PAGE;
+    const end = start + itemsPerPage;
     const paginated = sortedAndFilteredProducts.slice(start, end);
     return { paginatedProducts: paginated, totalPages: pages };
   }, [sortedAndFilteredProducts, currentPage]);
@@ -509,7 +561,8 @@ export default function ProduitsPage() {
               <div className="relative flex-grow w-full">
                 <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                 <Input
-                  placeholder="Rechercher des produits..."
+                  ref={searchInputRef}
+                  placeholder="Rechercher... (F1)"
                   className="pl-8 w-full"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
@@ -521,8 +574,8 @@ export default function ProduitsPage() {
                 onValueChange={setSelectedCategory}
                 disabled={!hasProducts}
               >
-                <SelectTrigger className="w-full sm:w-[200px]">
-                  <SelectValue placeholder="Toutes les catégories" />
+                <SelectTrigger ref={categorySelectTriggerRef} className="w-full sm:w-[200px]">
+                  <SelectValue placeholder="Catégories (Alt+C)" />
                 </SelectTrigger>
                 <SelectContent>
                   {categories.map((cat) => (
@@ -537,8 +590,8 @@ export default function ProduitsPage() {
                 onValueChange={setSelectedSupplier}
                 disabled={!hasProducts}
               >
-                <SelectTrigger className="w-full sm:w-[200px]">
-                  <SelectValue placeholder="Tous les fournisseurs" />
+                <SelectTrigger ref={supplierSelectTriggerRef} className="w-full sm:w-[200px]">
+                  <SelectValue placeholder="Fournisseurs (Alt+S)" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">Tous les fournisseurs</SelectItem>
@@ -556,8 +609,8 @@ export default function ProduitsPage() {
                 }
                 disabled={!hasProducts}
               >
-                <SelectTrigger className="w-full sm:w-[180px]">
-                  <SelectValue placeholder="État du stock" />
+                <SelectTrigger ref={stockStatusTriggerRef} className="w-full sm:w-[180px]">
+                  <SelectValue placeholder="État du stock (Alt+T)" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">Tout le stock</SelectItem>
@@ -578,8 +631,10 @@ export default function ProduitsPage() {
                 )}
               </div>
               <div className="flex items-center gap-2 flex-wrap">
+                <ProductShortcutsDialog />
                 <div className="flex items-center gap-1 border rounded-md p-1">
                   <Button
+                    ref={viewModeListButtonRef}
                     variant={viewMode === 'list' ? 'secondary' : 'ghost'}
                     size="icon"
                     onClick={() => handleViewModeChange('list')}
@@ -588,6 +643,7 @@ export default function ProduitsPage() {
                     <List className="h-4 w-4" />
                   </Button>
                   <Button
+                    ref={viewModeGridButtonRef}
                     variant={viewMode === 'grid' ? 'secondary' : 'ghost'}
                     size="icon"
                     onClick={() => handleViewModeChange('grid')}
@@ -598,19 +654,24 @@ export default function ProduitsPage() {
                 </div>
                 <ProductCsvImportDialog
                   trigger={
-                    <Button variant="outline">
+                    <Button ref={importTriggerRef} variant="outline">
                       <Upload className="mr-2 h-4 w-4" /> Importer
                     </Button>
                   }
                 />
                 <Button
+                  ref={exportButtonRef}
                   variant="outline"
                   onClick={exportProductsToCsv}
                   disabled={!hasProducts}
                 >
                   <Download className="mr-2 h-4 w-4" /> Exporter
                 </Button>
-                <AddProductDialog />
+                <AddProductDialog trigger={
+                    <Button ref={addProductTriggerRef} className="w-full sm:w-auto">
+                        <Plus className="mr-2 h-4 w-4" /> Ajouter un produit
+                    </Button>
+                } />
               </div>
             </div>
           </div>

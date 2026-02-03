@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState, useEffect } from 'react';
+import { useMemo, useState, useEffect, useRef } from 'react';
 import { useMockData } from '@/hooks/use-mock-data';
 import type { Customer } from '@/lib/types';
 import ClientsLoading from './loading';
@@ -19,6 +19,8 @@ import {
   X,
   ArrowRight,
   CalendarCheck2,
+  Upload,
+  PlusCircle,
 } from 'lucide-react';
 import {
   Select,
@@ -46,6 +48,7 @@ import Link from 'next/link';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
+import { CustomerShortcutsDialog } from '@/components/customers/shortcuts-dialog';
 
 type SortKey = keyof Customer | 'totalDebts' | 'totalPayments';
 type SortDirection = 'ascending' | 'descending';
@@ -69,6 +72,49 @@ export default function ClientsPage() {
   });
   const [selectedCustomerIds, setSelectedCustomerIds] = useState<string[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
+
+  // Refs for keyboard shortcuts
+  const searchInputRef = useRef<HTMLInputElement>(null);
+  const addCustomerTriggerRef = useRef<HTMLButtonElement>(null);
+  const sortSelectTriggerRef = useRef<HTMLButtonElement>(null);
+  const viewModeListButtonRef = useRef<HTMLButtonElement>(null);
+  const viewModeGridButtonRef = useRef<HTMLButtonElement>(null);
+  const importTriggerRef = useRef<HTMLButtonElement>(null);
+  const exportButtonRef = useRef<HTMLButtonElement>(null);
+
+  // Keyboard shortcut handler
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'F1') {
+        e.preventDefault();
+        searchInputRef.current?.focus();
+      } else if (e.altKey && (e.key === 'n' || e.key === 'N')) {
+        e.preventDefault();
+        addCustomerTriggerRef.current?.click();
+      } else if (e.altKey && (e.key === 's' || e.key === 'S')) {
+        e.preventDefault();
+        sortSelectTriggerRef.current?.click();
+      } else if (e.altKey && (e.key === 'v' || e.key === 'V')) {
+        e.preventDefault();
+        if (viewMode === 'grid') {
+          viewModeListButtonRef.current?.click();
+        } else {
+          viewModeGridButtonRef.current?.click();
+        }
+      } else if (e.altKey && (e.key === 'i' || e.key === 'I')) {
+        e.preventDefault();
+        importTriggerRef.current?.click();
+      } else if (e.altKey && (e.key === 'e' || e.key === 'E')) {
+        e.preventDefault();
+        exportButtonRef.current?.click();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [viewMode]);
 
   // Reset selection and page when filters change
   useEffect(() => {
@@ -409,8 +455,9 @@ export default function ClientsPage() {
                 <div className="relative w-full sm:w-auto sm:max-w-xs">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
+                    ref={searchInputRef}
                     id="customer-search-input"
-                    placeholder="Rechercher des clients..."
+                    placeholder="Rechercher... (F1)"
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     className="pl-10 w-full"
@@ -424,12 +471,13 @@ export default function ClientsPage() {
                 )}
               </div>
               <div className="flex items-center gap-2">
+                 <CustomerShortcutsDialog />
                 <Select
                   value={`${sortConfig.key}:${sortConfig.direction}`}
                   onValueChange={handleSortChange}
                   disabled={!hasCustomers}
                 >
-                  <SelectTrigger className="w-[180px]">
+                  <SelectTrigger ref={sortSelectTriggerRef} className="w-[180px]">
                     <SelectValue placeholder="Trier par..." />
                   </SelectTrigger>
                   <SelectContent>
@@ -454,6 +502,7 @@ export default function ClientsPage() {
                 </Select>
                 <div className="flex items-center gap-1 border rounded-md p-1">
                   <Button
+                    ref={viewModeListButtonRef}
                     variant={viewMode === 'list' ? 'secondary' : 'ghost'}
                     size="icon"
                     onClick={() => setViewMode('list')}
@@ -462,6 +511,7 @@ export default function ClientsPage() {
                     <List className="h-4 w-4" />
                   </Button>
                   <Button
+                    ref={viewModeGridButtonRef}
                     variant={viewMode === 'grid' ? 'secondary' : 'ghost'}
                     size="icon"
                     onClick={() => setViewMode('grid')}
@@ -470,8 +520,13 @@ export default function ClientsPage() {
                     <LayoutGrid className="h-4 w-4" />
                   </Button>
                 </div>
-                <CsvImportDialog />
+                <CsvImportDialog trigger={
+                    <Button ref={importTriggerRef} variant="outline">
+                      <Upload className="mr-2 h-4 w-4" /> Importer
+                    </Button>
+                } />
                 <Button
+                  ref={exportButtonRef}
                   variant="outline"
                   onClick={exportCustomersToCsv}
                   disabled={!hasCustomers}
@@ -479,7 +534,12 @@ export default function ClientsPage() {
                   <Download className="mr-2 h-4 w-4" />
                   Exporter
                 </Button>
-                <AddCustomerDialog />
+                <AddCustomerDialog trigger={
+                    <Button ref={addCustomerTriggerRef} id="add-customer-btn">
+                        <PlusCircle />
+                        Ajouter un client
+                    </Button>
+                } />
               </div>
             </div>
             {selectedCustomerIds.length > 0 && (
