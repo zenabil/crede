@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { useMockData } from '@/hooks/use-mock-data';
 import type { BreadOrder } from '@/lib/types';
 import { AddOrderDialog } from '@/components/orders/add-order-dialog';
@@ -17,6 +17,8 @@ import {
   ClipboardCheck,
   ClipboardX,
   Wallet,
+  LayoutGrid,
+  List,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -57,11 +59,21 @@ import {
 } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
 import { StatCard } from '@/components/dashboard/stat-card';
+import { Checkbox } from '@/components/ui/checkbox';
+import { OrderCard } from '@/components/orders/order-card';
+import { ResetOrdersDialog } from '@/components/orders/reset-orders-dialog';
+import { BulkDeleteOrdersDialog } from '@/components/orders/bulk-delete-orders-dialog';
 
 export default function OrdersPage() {
   const { breadOrders: orders, loading } = useMockData();
   const { toast } = useToast();
   const [date, setDate] = useState<DateRange | undefined>();
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [selectedOrderIds, setSelectedOrderIds] = useState<string[]>([]);
+  
+  useEffect(() => {
+    setSelectedOrderIds([]);
+  }, [viewMode]);
 
   const getOrderStatusScore = (order: BreadOrder) => {
     // Status scoring: Pinned > Unpaid/Undelivered > Paid/Undelivered > Unpaid/Delivered > Paid/Delivered
@@ -106,6 +118,30 @@ export default function OrdersPage() {
 
     return { todayOrders: today, pastOrders: past };
   }, [orders, date]);
+  
+  // Selection handlers
+  const handleSelectAllToday = (checked: boolean | 'indeterminate') => {
+    if (checked === true) {
+      setSelectedOrderIds(prev => [...new Set([...prev, ...todayOrders.map(o => o.id)])]);
+    } else {
+      const todayIds = new Set(todayOrders.map(o => o.id));
+      setSelectedOrderIds(prev => prev.filter(id => !todayIds.has(id)));
+    }
+  };
+
+  const handleSelectionChange = (orderId: string, checked: boolean | 'indeterminate') => {
+    setSelectedOrderIds(prev => {
+      if (checked === true) {
+        return [...prev, orderId];
+      } else {
+        return prev.filter(id => id !== orderId);
+      }
+    });
+  };
+
+  const isAllTodaySelected = todayOrders.length > 0 && todayOrders.every(o => selectedOrderIds.includes(o.id));
+  const isSomeTodaySelected = todayOrders.some(o => selectedOrderIds.includes(o.id)) && !isAllTodaySelected;
+
 
   const totalPainsRequis = useMemo(() => {
     if (!todayOrders) return 0;
@@ -154,14 +190,25 @@ export default function OrdersPage() {
   const OrdersTable = ({
     orders: tableOrders,
     noOrdersMessage,
+    isToday,
   }: {
     orders: BreadOrder[];
     noOrdersMessage: string;
+    isToday?: boolean;
   }) => (
     <div className="overflow-hidden rounded-lg border">
       <Table>
         <TableHeader>
           <TableRow>
+            {isToday && (
+              <TableHead className="w-12">
+                 <Checkbox
+                    checked={isAllTodaySelected ? true : isSomeTodaySelected ? 'indeterminate' : false}
+                    onCheckedChange={handleSelectAllToday}
+                    aria-label="Select all orders on this page"
+                />
+              </TableHead>
+            )}
             <TableHead>Date</TableHead>
             <TableHead>Nom</TableHead>
             <TableHead>Quantité</TableHead>
@@ -173,7 +220,16 @@ export default function OrdersPage() {
         <TableBody>
           {tableOrders.length > 0 ? (
             tableOrders.map((order) => (
-              <TableRow key={order.id}>
+              <TableRow key={order.id} data-state={selectedOrderIds.includes(order.id) && 'selected'}>
+                 {isToday && (
+                  <TableCell>
+                    <Checkbox
+                      checked={selectedOrderIds.includes(order.id)}
+                      onCheckedChange={(checked) => handleSelectionChange(order.id, checked)}
+                      aria-label={`Select order ${order.name}`}
+                    />
+                  </TableCell>
+                )}
                 <TableCell className="text-muted-foreground">
                   {format(new Date(order.createdAt), 'dd MMM yyyy', {
                     locale: fr,
@@ -261,7 +317,7 @@ export default function OrdersPage() {
             ))
           ) : (
             <TableRow>
-              <TableCell colSpan={6} className="h-24 text-center">
+              <TableCell colSpan={isToday ? 7 : 6} className="h-24 text-center">
                 {noOrdersMessage}
               </TableCell>
             </TableRow>
@@ -273,11 +329,14 @@ export default function OrdersPage() {
 
   return (
     <div className="space-y-6">
-      <header className="flex items-center justify-between">
+      <header className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <h1 className="text-3xl font-bold tracking-tight">
           Commandes Boulangerie
         </h1>
-        <AddOrderDialog />
+        <div className="flex items-center gap-2">
+            <ResetOrdersDialog />
+            <AddOrderDialog />
+        </div>
       </header>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -309,16 +368,65 @@ export default function OrdersPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Commandes du jour</CardTitle>
-          <CardDescription>
-            Gérez les commandes de pain et de pâtisseries du jour ici.
-          </CardDescription>
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <div>
+                <CardTitle>Commandes du jour</CardTitle>
+                <CardDescription>
+                  Gérez les commandes de pain et de pâtisseries du jour ici.
+                </CardDescription>
+              </div>
+              <div className="flex items-center gap-1 border rounded-md p-1">
+                <Button
+                    variant={viewMode === 'list' ? 'secondary' : 'ghost'}
+                    size="icon"
+                    onClick={() => setViewMode('list')}
+                    className="h-8 w-8"
+                >
+                    <List className="h-4 w-4" />
+                </Button>
+                <Button
+                    variant={viewMode === 'grid' ? 'secondary' : 'ghost'}
+                    size="icon"
+                    onClick={() => setViewMode('grid')}
+                    className="h-8 w-8"
+                >
+                    <LayoutGrid className="h-4 w-4" />
+                </Button>
+            </div>
+          </div>
         </CardHeader>
         <CardContent>
-          <OrdersTable
-            orders={todayOrders}
-            noOrdersMessage="Aucune commande pour aujourd'hui."
-          />
+            {selectedOrderIds.length > 0 && (
+                <div className="mb-4 p-3 bg-muted rounded-md flex items-center justify-between">
+                    <p className="font-medium text-sm">{selectedOrderIds.length} commande(s) sélectionnée(s)</p>
+                    <BulkDeleteOrdersDialog orderIds={selectedOrderIds} onSuccess={() => setSelectedOrderIds([])} />
+                </div>
+            )}
+
+            {todayOrders.length > 0 ? (
+                viewMode === 'grid' ? (
+                  <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+                    {todayOrders.map(order => (
+                      <OrderCard 
+                        key={order.id} 
+                        order={order}
+                        isSelected={selectedOrderIds.includes(order.id)}
+                        onSelectionChange={(checked) => handleSelectionChange(order.id, checked)}
+                      />
+                    ))}
+                  </div>
+                ) : (
+                  <OrdersTable
+                    orders={todayOrders}
+                    noOrdersMessage="Aucune commande pour aujourd'hui."
+                    isToday
+                  />
+                )
+            ) : (
+                 <div className="text-center py-10 text-muted-foreground border-2 border-dashed rounded-lg">
+                    <p>Aucune commande pour aujourd'hui.</p>
+                </div>
+            )}
         </CardContent>
         <CardFooter className="justify-end pt-4 font-semibold">
           Total Pains Requis: {totalPainsRequis}
