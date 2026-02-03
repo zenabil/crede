@@ -348,14 +348,7 @@ export default function CaissePage() {
           closeTab(activeTab);
       } else {
           // If it's the last tab, clear the items and discount, but keep the customer.
-          setCarts(prev => ({
-              ...prev,
-              [activeTab]: {
-                  ...prev[activeTab],
-                  items: [],
-                  discount: 0,
-              }
-          }));
+          updateActiveCartState({ items: [], discount: 0 });
       }
 
       if (data) {
@@ -618,19 +611,22 @@ export default function CaissePage() {
                   </div>
                   <div className="px-4 pb-4">
                       {selectedCustomer ? (
-                          <div className="flex items-center justify-between mt-1 p-2 border rounded-md bg-muted/50">
-                              <div className="flex items-center gap-3">
-                                  <User className="h-5 w-5 text-muted-foreground" />
-                                  <div>
-                                      <p className="font-semibold">{selectedCustomer.name}</p>
-                                      <p className={cn("text-xs font-mono", getBalanceColorClassName(selectedCustomer.balance))}>
-                                          Solde: {formatCurrency(selectedCustomer.balance)}
-                                      </p>
-                                  </div>
-                              </div>
-                              <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => updateActiveCartState({ customerId: null })}>
-                                  <X className="h-4 w-4"/>
-                              </Button>
+                          <div className="mt-1 p-3 border rounded-md bg-muted/50 space-y-2">
+                            <div className="flex items-start justify-between">
+                                <div className="flex items-center gap-3">
+                                    <User className="h-5 w-5 text-muted-foreground mt-1" />
+                                    <p className="font-semibold">{selectedCustomer.name}</p>
+                                </div>
+                                <Button variant="ghost" size="icon" className="h-7 w-7 flex-shrink-0" onClick={() => updateActiveCartState({ customerId: null })}>
+                                    <X className="h-4 w-4"/>
+                                </Button>
+                            </div>
+                            <div className="text-center pt-1">
+                                <p className={cn("text-2xl font-bold font-mono", getBalanceColorClassName(selectedCustomer.balance))}>
+                                    {formatCurrency(selectedCustomer.balance)}
+                                </p>
+                                <p className="text-xs text-muted-foreground">Solde actuel du client</p>
+                            </div>
                           </div>
                       ) : (
                         <div>
