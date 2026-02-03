@@ -21,6 +21,7 @@ import {
   PlusCircle,
   MinusCircle,
   WalletCards,
+  CalendarCheck2,
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -33,6 +34,8 @@ import { EditCustomerDialog } from './edit-customer-dialog';
 import { DeleteCustomerDialog } from './delete-customer-dialog';
 import { AddTransactionDialog } from '../transactions/add-transaction-dialog';
 import { Checkbox } from '@/components/ui/checkbox';
+import { format } from 'date-fns';
+import { fr } from 'date-fns/locale';
 
 export function CustomerCard({ 
   customer,
@@ -53,6 +56,12 @@ export function CustomerCard({
       .join('')
       .toUpperCase();
   };
+
+  const todayName = format(new Date(), 'EEEE', { locale: fr }).toLowerCase();
+  const isSettlementDay =
+    customer.settlementDay &&
+    todayName &&
+    customer.settlementDay.toLowerCase().includes(todayName);
 
   return (
     <Card className={cn('transition-all', isSelected && 'ring-2 ring-primary')}>
@@ -158,6 +167,15 @@ export function CustomerCard({
             <div className="flex items-center gap-2">
               <WalletCards className="h-4 w-4" />
               <span>Total dépensé: {formatCurrency(customer.totalDebts)}</span>
+            </div>
+          )}
+           {customer.settlementDay && (
+            <div className={cn(
+              'flex items-center gap-2',
+              isSettlementDay && 'font-semibold text-amber-600 dark:text-amber-400'
+            )}>
+              <CalendarCheck2 className="h-4 w-4" />
+              <span>{customer.settlementDay}</span>
             </div>
           )}
         </div>
