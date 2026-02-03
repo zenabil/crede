@@ -451,6 +451,22 @@ export const deleteProduct = async (productId: string) => {
     saveData();
 };
 
+export const duplicateProduct = async (productId: string): Promise<Product> => {
+    const originalProduct = mockDataStore.products.find(p => p.id === productId);
+    if (!originalProduct) {
+        throw new Error("Produit original non trouvé.");
+    }
+    const newProduct: Product = {
+        ...originalProduct,
+        id: nextId(),
+        name: `${originalProduct.name} (Copie)`,
+        barcode: '', // Barcodes should be unique
+    };
+    mockDataStore.products.push(newProduct);
+    saveData();
+    return newProduct;
+};
+
 export const adjustStock = async (productId: string, quantityChange: number) => {
     const product = mockDataStore.products.find(p => p.id === productId);
     if (product) {

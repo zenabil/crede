@@ -11,7 +11,7 @@ import {
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { MoreVertical, Truck } from 'lucide-react';
+import { MoreVertical, Truck, Copy } from 'lucide-react';
 import { formatCurrency, cn } from '@/lib/utils';
 import imageData from '@/lib/placeholder-images.json';
 import { EditProductDialog } from './edit-product-dialog';
@@ -27,6 +27,8 @@ import Link from 'next/link';
 import { AdjustStockDialog } from './adjust-stock-dialog';
 import { Checkbox } from '@/components/ui/checkbox';
 import { PrintBarcodeDialog } from './print-barcode-dialog';
+import { useToast } from '@/hooks/use-toast';
+import { duplicateProduct } from '@/lib/mock-data/api';
 
 const slugify = (text: string) => {
   return text
@@ -50,6 +52,25 @@ export function ProduitCard({
   isSelected: boolean;
   onSelectionChange: (checked: boolean | 'indeterminate') => void;
 }) {
+  const { toast } = useToast();
+
+  const handleDuplicate = async () => {
+    try {
+      await duplicateProduct(product.id);
+      toast({
+        title: 'Produit dupliqué',
+        description: `Le produit "${product.name}" a été dupliqué avec succès.`,
+      });
+    } catch (error) {
+      toast({
+        title: 'Erreur de duplication',
+        description:
+          error instanceof Error ? error.message : 'Une erreur est survenue.',
+        variant: 'destructive',
+      });
+    }
+  };
+
   const getProductImage = (product: Product) => {
     const imageId = slugify(product.name);
     const img = productImages.find((i) => i.id === imageId);
@@ -110,6 +131,15 @@ export function ProduitCard({
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
+              <DropdownMenuItem
+                onSelect={(e) => {
+                  e.preventDefault();
+                  handleDuplicate();
+                }}
+              >
+                <Copy className="mr-2 h-4 w-4" />
+                <span>Dupliquer</span>
+              </DropdownMenuItem>
               <EditProductDialog
                 product={product}
                 trigger={

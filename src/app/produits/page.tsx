@@ -19,6 +19,7 @@ import {
   Truck,
   Tags,
   PackageCheck,
+  Copy,
 } from 'lucide-react';
 import Link from 'next/link';
 import { Input } from '@/components/ui/input';
@@ -43,6 +44,7 @@ import { ProductCsvImportDialog } from '@/components/produits/csv-import-dialog'
 import {
   exportProductsToCsv,
   updateProductPageViewMode,
+  duplicateProduct,
 } from '@/lib/mock-data/api';
 import { ProduitsGrid } from '@/components/produits/produits-grid';
 import { StatCard } from '@/components/dashboard/stat-card';
@@ -113,6 +115,23 @@ export default function ProduitsPage() {
       });
       // Revert state on failure
       setViewMode(oldViewMode);
+    }
+  };
+
+  const handleDuplicate = async (productId: string, productName: string) => {
+    try {
+      await duplicateProduct(productId);
+      toast({
+        title: 'Produit dupliqué',
+        description: `Le produit "${productName}" a été dupliqué avec succès.`,
+      });
+    } catch (error) {
+      toast({
+        title: 'Erreur de duplication',
+        description:
+          error instanceof Error ? error.message : 'Une erreur est survenue.',
+        variant: 'destructive',
+      });
     }
   };
 
@@ -682,6 +701,19 @@ export default function ProduitsPage() {
                         </TableCell>
                         <TableCell className="text-right p-4">
                           <div className="flex items-center justify-end gap-0.5">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8"
+                              onClick={() =>
+                                handleDuplicate(product.id, product.name)
+                              }
+                            >
+                              <Copy className="h-4 w-4" />
+                              <span className="sr-only">
+                                Dupliquer le produit
+                              </span>
+                            </Button>
                             <PrintBarcodeDialog product={product} />
                             <AdjustStockDialog product={product} />
                             <EditProductDialog product={product} />
