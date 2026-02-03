@@ -183,39 +183,56 @@ export default function CaissePage() {
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-        if (e.key === 'F1') {
-            e.preventDefault();
-            searchInputRef.current?.focus();
-        } else if (e.key === 'F2') {
-            e.preventDefault();
-            barcodeInputRef.current?.focus();
-        } else if (e.key === 'F4') {
-            e.preventDefault();
-            if (selectedCustomer) {
-                deselectCustomerTriggerRef.current?.click();
-            } else {
-                customerComboboxTriggerRef.current?.click();
-            }
-        } else if (e.key === 'F6') {
-            e.preventDefault();
-            discountTriggerRef.current?.click();
-        } else if (e.key === 'F8') {
-            e.preventDefault();
-            newTabTriggerRef.current?.click();
-        } else if (e.key === 'F9') {
-            e.preventDefault();
-            clearCartTriggerRef.current?.click();
-        } else if (e.key === 'F10') {
-            e.preventDefault();
-            paymentTriggerRef.current?.click();
+      if (e.key === 'F1') {
+        e.preventDefault();
+        searchInputRef.current?.focus();
+      } else if (e.key === 'F2') {
+        e.preventDefault();
+        barcodeInputRef.current?.focus();
+      } else if (e.key === 'F4') {
+        e.preventDefault();
+        if (selectedCustomer) {
+          deselectCustomerTriggerRef.current?.click();
+        } else {
+          customerComboboxTriggerRef.current?.click();
         }
+      } else if (e.key === 'F6') {
+        e.preventDefault();
+        discountTriggerRef.current?.click();
+      } else if (e.key === 'F8') {
+        e.preventDefault();
+        newTabTriggerRef.current?.click();
+      } else if (e.key === 'F9') {
+        e.preventDefault();
+        clearCartTriggerRef.current?.click();
+      } else if (e.key === 'F10') {
+        e.preventDefault();
+        paymentTriggerRef.current?.click();
+      } else if (e.altKey && e.key === 'ArrowRight') {
+        e.preventDefault();
+        const tabIds = Object.keys(carts);
+        if (tabIds.length <= 1) return;
+        const currentIndex = tabIds.indexOf(activeTab);
+        const nextIndex = (currentIndex + 1) % tabIds.length;
+        setActiveTab(tabIds[nextIndex]);
+      } else if (e.altKey && e.key === 'ArrowLeft') {
+        e.preventDefault();
+        const tabIds = Object.keys(carts);
+        if (tabIds.length <= 1) return;
+        const currentIndex = tabIds.indexOf(activeTab);
+        const prevIndex = (currentIndex - 1 + tabIds.length) % tabIds.length;
+        setActiveTab(tabIds[prevIndex]);
+      } else if (e.altKey && (e.key === 'w' || e.key === 'W')) {
+        e.preventDefault();
+        closeTab(activeTab);
+      }
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => {
-        window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [selectedCustomer]);
+  }, [selectedCustomer, carts, activeTab]);
 
   // Save cart to localStorage whenever it changes
   useEffect(() => {
