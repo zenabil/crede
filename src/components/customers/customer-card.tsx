@@ -20,6 +20,7 @@ import {
   Trash2,
   PlusCircle,
   MinusCircle,
+  WalletCards,
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -151,6 +152,12 @@ export function CustomerCard({
             <div className="flex items-center gap-2">
               <Mail className="h-4 w-4" />
               <span>{customer.email}</span>
+            </div>
+          )}
+          {customer.totalDebts && customer.totalDebts > 0 && (
+            <div className="flex items-center gap-2">
+              <WalletCards className="h-4 w-4" />
+              <span>Total dépensé: {formatCurrency(customer.totalDebts)}</span>
             </div>
           )}
         </div>
