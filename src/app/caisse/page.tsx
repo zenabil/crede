@@ -95,11 +95,14 @@ export default function CaissePage() {
     return customers.find(c => c.id === activeCustomerId);
   }, [activeCustomerId, customers]);
 
-  const hasStockIssues = useMemo(() => {
+  const hasCartIssues = useMemo(() => {
     if (!products) return false;
     return activeCart.some(item => {
         const upToDateProduct = products.find(p => p.id === item.product.id);
-        return upToDateProduct && item.quantity > upToDateProduct.stock;
+        if (!upToDateProduct) {
+            return true; // Product in cart no longer exists
+        }
+        return item.quantity > upToDateProduct.stock; // Not enough stock
     });
   }, [activeCart, products]);
 
@@ -237,7 +240,19 @@ export default function CaissePage() {
     if (itemIndex > -1) {
         const item = cart[itemIndex];
         const upToDateProduct = products.find(p => p.id === productId);
-        const maxStock = upToDateProduct ? upToDateProduct.stock : item.product.stock;
+        
+        if (!upToDateProduct) {
+            cart.splice(itemIndex, 1);
+            updateActiveCartState({ items: cart });
+            toast({
+                title: 'Produit retiré',
+                description: `${item.product.name} a été retiré du panier car il n'existe plus.`,
+                variant: 'destructive',
+            });
+            return;
+        }
+
+        const maxStock = upToDateProduct.stock;
 
         if (quantity > maxStock) {
             toast({
@@ -245,10 +260,8 @@ export default function CaissePage() {
               description: `Le stock disponible pour ${item.product.name} est de ${maxStock}.`,
               variant: 'destructive',
             });
-            return;
-        }
-
-        if (quantity <= 0) {
+            cart[itemIndex].quantity = maxStock;
+        } else if (quantity <= 0) {
             cart.splice(itemIndex, 1);
         } else {
             cart[itemIndex].quantity = quantity;
@@ -291,6 +304,7 @@ export default function CaissePage() {
       if (Object.keys(carts).length > 1) {
           closeTab(activeTab);
       } else {
+          // If it's the last tab, clear the items and discount, but keep the customer.
           setCarts(prev => ({
               ...prev,
               [activeTab]: {
@@ -402,7 +416,7 @@ export default function CaissePage() {
       )
   }
 
-  const paymentButtonText = hasStockIssues ? "Stock insuffisant" : "Finaliser la vente";
+  const paymentButtonText = hasCartIssues ? "Problème dans le panier" : "Finaliser la vente";
 
   return (
     <>
@@ -608,24 +622,29 @@ export default function CaissePage() {
                       </div>
                       {activeCart.map(item => {
                           const upToDateProduct = products.find(p => p.id === item.product.id);
-                          const hasStockIssue = upToDateProduct && item.quantity > upToDateProduct.stock;
+                          const productNotFound = !upToDateProduct;
+                          const stockIssue = upToDateProduct && item.quantity > upToDateProduct.stock;
+                          const hasIssue = productNotFound || stockIssue;
 
                           return (
-                              <div key={item.product.id} className={cn("flex items-center gap-4 transition-colors p-2 rounded-lg -m-2", hasStockIssue && "bg-destructive/10")}>
+                              <div key={item.product.id} className={cn("flex items-center gap-4 transition-colors p-2 rounded-lg -m-2", hasIssue && "bg-destructive/10")}>
                                   <Image src={getProductImage(item.product).url} alt={item.product.name} width={48} height={48} className="rounded-md" data-ai-hint={getProductImage(item.product).hint} />
                                   <div className="flex-grow">
                                       <p className="font-medium text-sm truncate">{item.product.name}</p>
                                       <p className="text-xs text-muted-foreground">{formatCurrency(item.product.sellingPrice)}</p>
-                                      {hasStockIssue && (
+                                      {productNotFound && (
+                                        <p className="text-xs text-destructive font-bold">Produit supprimé</p>
+                                      )}
+                                      {stockIssue && (
                                           <p className="text-xs text-destructive font-bold">
                                               Stock insuffisant (dispo: {upToDateProduct?.stock ?? 0})
                                           </p>
                                       )}
                                   </div>
                                   <div className="flex items-center gap-2">
-                                      <Button size="icon" variant="outline" className="h-7 w-7" onClick={() => updateQuantity(item.product.id, item.quantity - 1)}><Minus className="h-3 w-3" /></Button>
+                                      <Button size="icon" variant="outline" className="h-7 w-7" onClick={() => updateQuantity(item.product.id, item.quantity - 1)} disabled={productNotFound}><Minus className="h-3 w-3" /></Button>
                                       <span className="text-sm font-medium w-4 text-center">{item.quantity}</span>
-                                      <Button size="icon" variant="outline" className="h-7 w-7" onClick={() => updateQuantity(item.product.id, item.quantity + 1)}><Plus className="h-3 w-3" /></Button>
+                                      <Button size="icon" variant="outline" className="h-7 w-7" onClick={() => updateQuantity(item.product.id, item.quantity + 1)} disabled={productNotFound}><Plus className="h-3 w-3" /></Button>
                                   </div>
                                   <p className="font-semibold text-sm w-16 text-right">{formatCurrency(item.product.sellingPrice * item.quantity)}</p>
                                   <Button size="icon" variant="ghost" className="h-7 w-7 text-destructive" onClick={() => updateQuantity(item.product.id, 0)}><Trash2 className="h-4 w-4"/></Button>
@@ -678,7 +697,7 @@ export default function CaissePage() {
                   customerId={activeCustomerId}
                   customerName={selectedCustomer?.name || null}
                   onSuccess={handlePaymentSuccess}
-                  trigger={<Button className="w-full" size="lg" disabled={activeCart.length === 0 || hasStockIssues}>{paymentButtonText}</Button>}
+                  trigger={<Button className="w-full" size="lg" disabled={activeCart.length === 0 || hasCartIssues}>{paymentButtonText}</Button>}
               />
             </div>
           </Card>
