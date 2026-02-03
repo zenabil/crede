@@ -94,6 +94,8 @@ export default function CaissePage() {
   const paymentTriggerRef = useRef<HTMLButtonElement>(null);
   const newTabTriggerRef = useRef<HTMLButtonElement>(null);
   const clearCartTriggerRef = useRef<HTMLButtonElement>(null);
+  const addCustomerTriggerRef = useRef<HTMLButtonElement>(null);
+  const categoryTriggerRef = useRef<HTMLButtonElement>(null);
 
   const productMap = useMemo(() => new Map(products.map(p => [p.id, p])), [products]);
   
@@ -225,6 +227,12 @@ export default function CaissePage() {
       } else if (e.altKey && (e.key === 'w' || e.key === 'W')) {
         e.preventDefault();
         closeTab(activeTab);
+      } else if (e.altKey && (e.key === 'c' || e.key === 'C')) {
+        e.preventDefault();
+        categoryTriggerRef.current?.click();
+      } else if (e.altKey && (e.key === 'n' || e.key === 'N')) {
+        e.preventDefault();
+        addCustomerTriggerRef.current?.click();
       }
     };
 
@@ -535,7 +543,7 @@ export default function CaissePage() {
                   <Input ref={barcodeInputRef} placeholder="Saisir le code-barres... (F2)" className="pl-8" value={barcode} onChange={e => setBarcode(e.target.value)} onKeyDown={handleBarcodeScan} />
                 </div>
                 <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-                  <SelectTrigger className="w-full md:w-[200px]">
+                  <SelectTrigger ref={categoryTriggerRef} className="w-full md:w-[200px]">
                     <SelectValue placeholder="Catégories" />
                   </SelectTrigger>
                   <SelectContent>
@@ -710,7 +718,7 @@ export default function CaissePage() {
                                 />
                                 <AddCustomerDialog
                                     trigger={
-                                        <Button variant="outline" size="icon" className="flex-shrink-0">
+                                        <Button ref={addCustomerTriggerRef} variant="outline" size="icon" className="flex-shrink-0">
                                             <UserPlus className="h-4 w-4" />
                                         </Button>
                                     }
