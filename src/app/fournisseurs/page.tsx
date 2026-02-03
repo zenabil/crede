@@ -71,8 +71,15 @@ import { exportSuppliersToCsv } from '@/lib/mock-data/api';
 import { Checkbox } from '@/components/ui/checkbox';
 import { BulkDeleteSuppliersDialog } from '@/components/fournisseurs/bulk-delete-supplier-dialog';
 import { SupplierShortcutsDialog } from '@/components/fournisseurs/shortcuts-dialog';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 
-type SortKey = keyof Supplier;
+type SortKey = keyof Supplier | 'totalPurchases' | 'totalPayments';
 type SortDirection = 'ascending' | 'descending';
 
 interface SortConfig {
@@ -85,7 +92,10 @@ const ITEMS_PER_PAGE_LIST = 10;
 
 export default function FournisseursPage() {
   const [searchTerm, setSearchTerm] = useState('');
-  const [sortConfig, setSortConfig] = useState<SortConfig | null>(null);
+  const [sortConfig, setSortConfig] = useState<SortConfig>({
+    key: 'createdAt',
+    direction: 'descending',
+  });
   const [activeFilter, setActiveFilter] = useState<'all' | 'toPay' | 'inCredit'>(
     'all'
   );
@@ -97,11 +107,37 @@ export default function FournisseursPage() {
   // Refs for keyboard shortcuts
   const searchInputRef = useRef<HTMLInputElement>(null);
   const addSupplierTriggerRef = useRef<HTMLButtonElement>(null);
+  const sortSelectTriggerRef = useRef<HTMLButtonElement>(null);
   const viewModeListButtonRef = useRef<HTMLButtonElement>(null);
   const viewModeGridButtonRef = useRef<HTMLButtonElement>(null);
   const importTriggerRef = useRef<HTMLButtonElement>(null);
   const exportButtonRef = useRef<HTMLButtonElement>(null);
   const clearFiltersButtonRef = useRef<HTMLButtonElement>(null);
+
+  const suppliersWithTotals = useMemo(() => {
+    if (!suppliers || !supplierTransactions) return [];
+
+    const financialsBySupplier = supplierTransactions.reduce(
+      (acc, t) => {
+        if (!acc[t.supplierId]) {
+          acc[t.supplierId] = { purchases: 0, payments: 0 };
+        }
+        if (t.type === 'purchase') {
+          acc[t.supplierId].purchases += t.amount;
+        } else {
+          acc[t.supplierId].payments += t.amount;
+        }
+        return acc;
+      },
+      {} as Record<string, { purchases: number; payments: number }>
+    );
+
+    return suppliers.map((supplier) => ({
+      ...supplier,
+      totalPurchases: financialsBySupplier[supplier.id]?.purchases || 0,
+      totalPayments: financialsBySupplier[supplier.id]?.payments || 0,
+    }));
+  }, [suppliers, supplierTransactions]);
 
   const {
     totalSuppliers,
@@ -171,8 +207,7 @@ export default function FournisseursPage() {
   }, [supplierTransactions, suppliers]);
 
   const sortedAndFilteredSuppliers = useMemo(() => {
-    if (!suppliers) return [];
-    let filtered = suppliers.filter(
+    let filtered = suppliersWithTotals.filter(
       (supplier) =>
         supplier.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         (supplier.category || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -185,36 +220,36 @@ export default function FournisseursPage() {
       filtered = filtered.filter((c) => c.balance < 0);
     }
 
-    if (sortConfig !== null) {
-      filtered.sort((a, b) => {
-        let aValue = a[sortConfig.key as keyof Supplier] as any;
-        let bValue = b[sortConfig.key as keyof Supplier] as any;
+    filtered.sort((a, b) => {
+      const aValue = a[sortConfig.key as keyof typeof a] as any;
+      const bValue = b[sortConfig.key as keyof typeof b] as any;
 
-        if (aValue === undefined || aValue === null) aValue = '';
-        if (bValue === undefined || bValue === null) bValue = '';
+      if (aValue === undefined || aValue === null)
+        return sortConfig.direction === 'ascending' ? -1 : 1;
+      if (bValue === undefined || bValue === null)
+        return sortConfig.direction === 'ascending' ? 1 : -1;
 
-        if (typeof aValue === 'string' && typeof bValue === 'string') {
-          return sortConfig.direction === 'ascending'
-            ? aValue.localeCompare(bValue)
-            : bValue.localeCompare(aValue);
-        }
+      if (typeof aValue === 'string' && typeof bValue === 'string') {
+        return sortConfig.direction === 'ascending'
+          ? aValue.localeCompare(bValue)
+          : bValue.localeCompare(aValue);
+      }
 
-        if (aValue < bValue) {
-          return sortConfig.direction === 'ascending' ? -1 : 1;
-        }
-        if (aValue > bValue) {
-          return sortConfig.direction === 'ascending' ? 1 : -1;
-        }
-        return 0;
-      });
-    }
+      if (aValue < bValue) {
+        return sortConfig.direction === 'ascending' ? -1 : 1;
+      }
+      if (aValue > bValue) {
+        return sortConfig.direction === 'ascending' ? 1 : -1;
+      }
+      return 0;
+    });
 
     return filtered;
-  }, [searchTerm, sortConfig, suppliers, activeFilter]);
+  }, [searchTerm, sortConfig, suppliersWithTotals, activeFilter]);
 
   const itemsPerPage =
     viewMode === 'grid' ? ITEMS_PER_PAGE_GRID : ITEMS_PER_PAGE_LIST;
-  
+
   const { paginatedSuppliers, totalPages } = useMemo(() => {
     const total = sortedAndFilteredSuppliers.length;
     const pages = Math.ceil(total / itemsPerPage);
@@ -233,6 +268,9 @@ export default function FournisseursPage() {
       } else if (e.altKey && (e.key === 'n' || e.key === 'N')) {
         e.preventDefault();
         addSupplierTriggerRef.current?.click();
+      } else if (e.altKey && (e.key === 's' || e.key === 'S')) {
+        e.preventDefault();
+        sortSelectTriggerRef.current?.click();
       } else if (e.altKey && (e.key === 'v' || e.key === 'V')) {
         e.preventDefault();
         if (viewMode === 'grid') {
@@ -276,7 +314,7 @@ export default function FournisseursPage() {
       window.removeEventListener('keydown', handleKeyDown);
     };
   }, [viewMode, currentPage, totalPages]);
-  
+
   useEffect(() => {
     setCurrentPage(1);
     setSelectedSupplierIds([]);
@@ -292,6 +330,11 @@ export default function FournisseursPage() {
       direction = 'descending';
     }
     setSortConfig({ key, direction });
+  };
+  
+  const handleSortChange = (value: string) => {
+    const [key, direction] = value.split(':');
+    setSortConfig({ key: key as SortKey, direction: direction as SortDirection });
   };
 
   const getSortIcon = (key: SortKey) => {
@@ -316,7 +359,7 @@ export default function FournisseursPage() {
       .join('')
       .toUpperCase();
   };
-  
+
   const areFiltersActive = searchTerm !== '' || activeFilter !== 'all';
 
   const handleClearFilters = () => {
@@ -461,7 +504,7 @@ export default function FournisseursPage() {
           <div className="flex flex-col gap-4">
             <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
               <div className="flex items-center gap-2 w-full sm:w-auto">
-                 <div className="relative w-full sm:w-auto">
+                <div className="relative w-full sm:w-auto">
                   <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                   <Input
                     ref={searchInputRef}
@@ -472,14 +515,46 @@ export default function FournisseursPage() {
                     disabled={!hasSuppliers}
                   />
                 </div>
-                 {areFiltersActive && (
-                  <Button ref={clearFiltersButtonRef} variant="ghost" onClick={handleClearFilters}>
+                {areFiltersActive && (
+                  <Button
+                    ref={clearFiltersButtonRef}
+                    variant="ghost"
+                    onClick={handleClearFilters}
+                  >
                     <X className="mr-2 h-4 w-4" /> Effacer
                   </Button>
                 )}
               </div>
               <div className="flex items-center gap-2">
-                 <SupplierShortcutsDialog />
+                <SupplierShortcutsDialog />
+                <Select
+                  value={`${sortConfig.key}:${sortConfig.direction}`}
+                  onValueChange={handleSortChange}
+                  disabled={!hasSuppliers}
+                >
+                  <SelectTrigger ref={sortSelectTriggerRef} className="w-[180px]">
+                    <SelectValue placeholder="Trier par..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="createdAt:descending">
+                      Plus récent
+                    </SelectItem>
+                    <SelectItem value="createdAt:ascending">
+                      Plus ancien
+                    </SelectItem>
+                    <SelectItem value="name:ascending">Nom (A-Z)</SelectItem>
+                    <SelectItem value="name:descending">Nom (Z-A)</SelectItem>
+                    <SelectItem value="balance:descending">
+                      Solde (décroissant)
+                    </SelectItem>
+                    <SelectItem value="balance:ascending">
+                      Solde (croissant)
+                    </SelectItem>
+                    <SelectItem value="totalPurchases:descending">
+                      Total des achats
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
                 <div className="flex items-center gap-1 border rounded-md p-1">
                   <Button
                     ref={viewModeListButtonRef}
@@ -491,7 +566,7 @@ export default function FournisseursPage() {
                     <List className="h-4 w-4" />
                   </Button>
                   <Button
-                     ref={viewModeGridButtonRef}
+                    ref={viewModeGridButtonRef}
                     variant={viewMode === 'grid' ? 'secondary' : 'ghost'}
                     size="icon"
                     onClick={() => setViewMode('grid')}
@@ -670,7 +745,7 @@ export default function FournisseursPage() {
                             <DropdownMenuContent align="end">
                               <DropdownMenuItem asChild>
                                 <Link href={`/fournisseurs/${supplier.id}`}>
-                                  <ArrowRight />
+                                  <ArrowRight className="mr-2 h-4 w-4" />
                                   Voir les détails
                                 </Link>
                               </DropdownMenuItem>
@@ -679,7 +754,7 @@ export default function FournisseursPage() {
                                   href={`/fournisseurs/${supplier.id}?print=true`}
                                   target="_blank"
                                 >
-                                  <Printer />
+                                  <Printer className="mr-2 h-4 w-4" />
                                   Imprimer le relevé
                                 </Link>
                               </DropdownMenuItem>
@@ -689,7 +764,7 @@ export default function FournisseursPage() {
                                   <DropdownMenuItem
                                     onSelect={(e) => e.preventDefault()}
                                   >
-                                    <Pencil />
+                                    <Pencil className="mr-2 h-4 w-4" />
                                     Modifier
                                   </DropdownMenuItem>
                                 }
@@ -702,7 +777,7 @@ export default function FournisseursPage() {
                                     onSelect={(e) => e.preventDefault()}
                                     className="text-destructive focus:text-destructive focus:bg-destructive/10"
                                   >
-                                    <Trash2 />
+                                    <Trash2 className="mr-2 h-4 w-4" />
                                     Supprimer
                                   </DropdownMenuItem>
                                 }
@@ -715,7 +790,7 @@ export default function FournisseursPage() {
                                   <DropdownMenuItem
                                     onSelect={(e) => e.preventDefault()}
                                   >
-                                    <Plus />
+                                    <Plus className="mr-2 h-4 w-4" />
                                     Enregistrer un Achat
                                   </DropdownMenuItem>
                                 }
@@ -729,7 +804,7 @@ export default function FournisseursPage() {
                                     <DropdownMenuItem
                                       onSelect={(e) => e.preventDefault()}
                                     >
-                                      <MinusCircle />
+                                      <MinusCircle className="mr-2 h-4 w-4" />
                                       Enregistrer un Paiement
                                     </DropdownMenuItem>
                                   }

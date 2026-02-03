@@ -41,6 +41,7 @@ const SUPPLIER_MODEL_FIELDS: (keyof Supplier)[] = [
   'balance',
   'category',
   'visitDay',
+  'createdAt',
 ];
 
 const MINIMUM_MAPPED_FIELDS: (keyof Supplier)[] = ['name'];
@@ -152,6 +153,10 @@ export function SupplierCsvImportDialog({ trigger }: { trigger?: React.ReactNode
           supplier.id = maxId.toString();
         }
 
+        if (!supplier.createdAt || isNaN(Date.parse(supplier.createdAt as string))) {
+          supplier.createdAt = new Date().toISOString();
+        }
+
         return {
             id: supplier.id,
             name: supplier.name || 'Fournisseur sans nom',
@@ -160,6 +165,7 @@ export function SupplierCsvImportDialog({ trigger }: { trigger?: React.ReactNode
             phone: supplier.phone || '',
             balance: supplier.balance ?? 0,
             visitDay: supplier.visitDay || '',
+            createdAt: supplier.createdAt as string,
         };
       }
     );

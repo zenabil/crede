@@ -36,7 +36,7 @@ export interface Transaction {
   customerId: string;
   type: TransactionType;
   amount: number;
-  date: string; // ISO Date string
+  date: string; // ISO string
   description: string;
   orderId?: string;
   saleItems?: {
@@ -88,6 +88,7 @@ export interface Supplier {
   balance: number;
   category: string;
   visitDay?: string;
+  createdAt: string; // ISO string
   // These are calculated client-side
   totalPurchases?: number;
   totalPayments?: number;

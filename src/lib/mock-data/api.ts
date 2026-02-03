@@ -336,6 +336,7 @@ export const addSupplier = async (data: AddSupplierData) => {
     const newSupplier: Supplier = {
         ...data,
         id: nextId(),
+        createdAt: new Date().toISOString(),
     };
     mockDataStore.suppliers.push(newSupplier);
     saveData();
@@ -612,7 +613,7 @@ export const exportSuppliersToCsv = () => {
     if (mockDataStore.suppliers.length === 0) {
         return;
     }
-    const headers = ['id', 'name', 'category', 'contact', 'phone', 'balance', 'visitDay'];
+    const headers = ['id', 'name', 'category', 'contact', 'phone', 'balance', 'visitDay', 'createdAt'];
     const csvRows = [
         headers.join(',')
     ];

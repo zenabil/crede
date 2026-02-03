@@ -100,6 +100,9 @@ export function loadData() {
        if (!parsedData.suppliers) {
           parsedData.suppliers = [];
       }
+       if (parsedData.suppliers && parsedData.suppliers.length > 0 && !('createdAt' in parsedData.suppliers[0])) {
+        parsedData.suppliers = parsedData.suppliers.map((s: any) => ({ ...s, createdAt: new Date().toISOString() }));
+      }
        if (!parsedData.supplierTransactions) {
           parsedData.supplierTransactions = [];
       }
