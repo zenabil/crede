@@ -17,6 +17,7 @@ import {
   PackageWarning,
   PackageX,
   Truck,
+  Tags,
 } from 'lucide-react';
 import Link from 'next/link';
 import { Input } from '@/components/ui/input';
@@ -115,8 +116,8 @@ export default function ProduitsPage() {
   }, [products]);
 
 
-  const { lowStockCount, outOfStockCount, totalValue } = useMemo(() => {
-    if (!products) return { lowStockCount: 0, outOfStockCount: 0, totalValue: 0 };
+  const { lowStockCount, outOfStockCount, totalValue, totalRetailValue } = useMemo(() => {
+    if (!products) return { lowStockCount: 0, outOfStockCount: 0, totalValue: 0, totalRetailValue: 0 };
 
     return products.reduce((acc, p) => {
         if (p.stock <= 0) {
@@ -125,8 +126,9 @@ export default function ProduitsPage() {
             acc.lowStockCount++;
         }
         acc.totalValue += p.purchasePrice * p.stock;
+        acc.totalRetailValue += p.sellingPrice * p.stock;
         return acc;
-    }, { lowStockCount: 0, outOfStockCount: 0, totalValue: 0 });
+    }, { lowStockCount: 0, outOfStockCount: 0, totalValue: 0, totalRetailValue: 0 });
   }, [products]);
 
   const sortedAndFilteredProducts = useMemo(() => {
@@ -246,12 +248,18 @@ export default function ProduitsPage() {
         </div>
       </header>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
         <StatCard
-          title="Valeur de l'inventaire"
+          title="Valeur d'Achat"
           value={formatCurrency(totalValue)}
-          description="Basé sur le prix d'achat"
+          description="Valeur totale au prix d'achat"
           icon={Archive}
+        />
+        <StatCard
+          title="Valeur de Vente"
+          value={formatCurrency(totalRetailValue)}
+          description="Valeur totale au prix de vente"
+          icon={Tags}
         />
         <StatCard
           title="Produits"
@@ -262,11 +270,11 @@ export default function ProduitsPage() {
         <StatCard
           title="Stock faible"
           value={lowStockCount}
-          description="Produits en dessous du seuil minimum"
+          description="Produits en dessous du seuil"
           icon={PackageWarning}
         />
         <StatCard
-          title="En rupture de stock"
+          title="Rupture de stock"
           value={outOfStockCount}
           description="Produits avec un stock de 0"
           icon={PackageX}
