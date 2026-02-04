@@ -220,7 +220,7 @@ export const resetBreadOrders = async () => {
 
     // Reset today's pinned orders
     const updatedOrders = ordersToKeep.map(order => {
-        if (isSameDay(new Date(order.createdAt), todayStart) && order.isPinned) {
+        if (isSameDay(new Date(o.createdAt), todayStart) && order.isPinned) {
             return {
                 ...order,
                 isPaid: false,
