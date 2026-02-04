@@ -74,7 +74,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { OrderShortcutsDialog } from '@/components/orders/shortcuts-dialog';
+import { ShortcutsDialog } from '@/components/layout/shortcuts-dialog';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
@@ -90,6 +90,14 @@ type TodayStatusFilter = 'all' | 'unpaid' | 'undelivered';
 type PastStatusFilter = 'all' | 'paid' | 'unpaid' | 'delivered' | 'undelivered';
 
 const PAST_ORDERS_PER_PAGE = 10;
+
+const orderShortcuts = [
+  { group: 'Actions', key: 'Alt + N', description: 'Ajouter une nouvelle commande' },
+  { group: 'Actions', key: 'Alt + R', description: 'Réinitialiser les commandes du jour' },
+  { group: 'Interface', key: 'Alt + V', description: 'Basculer entre la vue grille et la vue liste' },
+  { group: 'Historique', key: 'Alt + D', description: "Ouvrir le filtre de date pour l'historique" },
+  { group: 'Historique', key: 'Alt + S', description: "Ouvrir la sélection de tri pour l'historique" },
+];
 
 export default function OrdersPage() {
   const { breadOrders: orders, loading } = useMockData();
@@ -516,7 +524,11 @@ export default function OrdersPage() {
           Commandes Boulangerie
         </h1>
         <div className="flex items-center gap-2">
-            <OrderShortcutsDialog />
+            <ShortcutsDialog 
+              shortcuts={orderShortcuts}
+              title="Raccourcis Clavier Commandes"
+              description="Utilisez ces raccourcis pour accélérer votre flux de travail sur la page des commandes."
+            />
             <ResetOrdersDialog trigger={
               <Button ref={resetOrdersTriggerRef} variant="outline">
                 <RotateCcw /> Réinitialiser

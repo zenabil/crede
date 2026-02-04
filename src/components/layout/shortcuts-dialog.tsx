@@ -19,22 +19,23 @@ import {
   TableRow,
 } from '@/components/ui/table';
 
-const shortcuts = [
-  { group: 'Navigation', key: 'F1', description: 'Rechercher une dépense' },
-  { group: 'Navigation', key: 'Alt + → / ←', description: 'Naviguer entre les pages' },
-  { group: 'Filtres', key: 'Alt + C', description: 'Ouvrir la sélection de catégorie' },
-  { group: 'Filtres', key: 'Alt + D', description: 'Ouvrir le sélecteur de date' },
-  { group: 'Filtres', key: 'Alt + X', description: 'Effacer les filtres' },
-  { group: 'Actions', key: 'Alt + N', description: 'Ajouter une nouvelle dépense' },
-  { group: 'Actions', key: 'Alt + I', description: "Importer des dépenses (CSV)" },
-  { group: 'Actions', key: 'Alt + E', description: "Exporter les dépenses (CSV)" },
-];
+interface Shortcut {
+  group: string;
+  key: string;
+  description: string;
+}
 
-export function DepensesShortcutsDialog() {
+interface ShortcutsDialogProps {
+  shortcuts: Shortcut[];
+  title: string;
+  description: string;
+}
+
+export function ShortcutsDialog({ shortcuts, title, description }: ShortcutsDialogProps) {
     const groupedShortcuts = shortcuts.reduce((acc, shortcut) => {
         (acc[shortcut.group] = acc[shortcut.group] || []).push(shortcut);
         return acc;
-    }, {} as Record<string, typeof shortcuts>);
+    }, {} as Record<string, Shortcut[]>);
 
 
   return (
@@ -47,9 +48,9 @@ export function DepensesShortcutsDialog() {
       </DialogTrigger>
       <DialogContent className="max-w-2xl">
         <DialogHeader>
-          <DialogTitle>Raccourcis Clavier</DialogTitle>
+          <DialogTitle>{title}</DialogTitle>
           <DialogDescription>
-            Utilisez ces raccourcis pour accélérer votre flux de travail sur la page des dépenses.
+            {description}
           </DialogDescription>
         </DialogHeader>
         <div className="max-h-[60vh] overflow-y-auto pr-4">

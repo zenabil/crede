@@ -70,7 +70,7 @@ import { SupplierCsvImportDialog } from '@/components/fournisseurs/csv-import-di
 import { exportSuppliersToCsv } from '@/lib/mock-data/api';
 import { Checkbox } from '@/components/ui/checkbox';
 import { BulkDeleteSuppliersDialog } from '@/components/fournisseurs/bulk-delete-supplier-dialog';
-import { SupplierShortcutsDialog } from '@/components/fournisseurs/shortcuts-dialog';
+import { ShortcutsDialog } from '@/components/layout/shortcuts-dialog';
 import {
   Select,
   SelectContent,
@@ -89,6 +89,19 @@ interface SortConfig {
 
 const ITEMS_PER_PAGE_GRID = 12;
 const ITEMS_PER_PAGE_LIST = 10;
+
+const fournisseursShortcuts = [
+  { group: 'Navigation', key: 'F1', description: 'Rechercher un fournisseur' },
+  { group: 'Navigation', key: 'Alt + → / ←', description: 'Naviguer entre les pages' },
+  { group: 'Filtres', key: 'Alt + A', description: 'Afficher tous les fournisseurs' },
+  { group: 'Filtres', key: 'Alt + P', description: 'Filtrer les fournisseurs à payer' },
+  { group: 'Filtres', key: 'Alt + C', description: 'Filtrer les fournisseurs en crédit' },
+  { group: 'Filtres', key: 'Alt + X', description: 'Effacer les filtres' },
+  { group: 'Actions', key: 'Alt + N', description: 'Ajouter un nouveau fournisseur' },
+  { group: 'Actions', key: 'Alt + I', description: "Importer des fournisseurs (CSV)" },
+  { group: 'Actions', key: 'Alt + E', description: "Exporter les fournisseurs (CSV)" },
+  { group: 'Interface', key: 'Alt + V', description: 'Basculer entre la vue grille et la vue liste' },
+];
 
 export default function FournisseursPage() {
   const [searchTerm, setSearchTerm] = useState('');
@@ -526,7 +539,11 @@ export default function FournisseursPage() {
                 )}
               </div>
               <div className="flex items-center gap-2">
-                <SupplierShortcutsDialog />
+                <ShortcutsDialog 
+                    shortcuts={fournisseursShortcuts}
+                    title="Raccourcis Clavier Fournisseurs"
+                    description="Utilisez ces raccourcis pour accélérer votre flux de travail sur la page des fournisseurs."
+                />
                 <Select
                   value={`${sortConfig.key}:${sortConfig.direction}`}
                   onValueChange={handleSortChange}

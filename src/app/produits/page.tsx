@@ -67,7 +67,7 @@ import { BulkDeleteProductsDialog } from '@/components/produits/bulk-delete-prod
 import { PrintBarcodeDialog } from '@/components/produits/print-barcode-dialog';
 import { PrintBulkBarcodeDialog } from '@/components/produits/print-bulk-barcode-dialog';
 import imageData from '@/lib/placeholder-images.json';
-import { ProductShortcutsDialog } from '@/components/produits/shortcuts-dialog';
+import { ShortcutsDialog } from '@/components/layout/shortcuts-dialog';
 
 type SortKey = keyof Product | 'margin' | 'supplierName';
 type SortDirection = 'ascending' | 'descending';
@@ -79,6 +79,19 @@ interface SortConfig {
 
 type StockStatusFilter = 'all' | 'ok' | 'low' | 'out' | 'archived';
 const ITEMS_PER_PAGE = 12;
+
+const productShortcuts = [
+  { group: 'Navigation', key: 'F1', description: 'Rechercher un produit' },
+  { group: 'Navigation', key: 'Alt + → / ←', description: 'Naviguer entre les pages' },
+  { group: 'Filtres', key: 'Alt + C', description: 'Ouvrir la sélection de catégorie' },
+  { group: 'Filtres', key: 'Alt + S', description: 'Ouvrir la sélection de fournisseur' },
+  { group: 'Filtres', key: 'Alt + T', description: "Ouvrir la sélection de l'état du stock" },
+  { group: 'Filtres', key: 'Alt + X', description: 'Effacer les filtres' },
+  { group: 'Actions', key: 'Alt + N', description: 'Ajouter un nouveau produit' },
+  { group: 'Actions', key: 'Alt + I', description: "Importer des produits (CSV)" },
+  { group: 'Actions', key: 'Alt + E', description: "Exporter les produits (CSV)" },
+  { group: 'Interface', key: 'Alt + V', description: 'Basculer entre la vue grille et la vue liste' },
+];
 
 export default function ProduitsPage() {
   const [searchTerm, setSearchTerm] = useState('');
@@ -138,52 +151,8 @@ export default function ProduitsPage() {
     }
   }, [loading, settings.productPageViewMode]);
 
-  // Reset selection and page when filters change
-  useEffect(() => {
-    setCurrentPage(1);
-    setSelectedProductIds([]);
-  }, [searchTerm, selectedCategory, selectedSupplier, stockStatus, viewMode, sortConfig]);
-
-  const handleViewModeChange = async (mode: 'list' | 'grid') => {
-    if (viewMode === mode) return;
-    const oldViewMode = viewMode;
-    setViewMode(mode); // Optimistic UI update
-    try {
-      await updateProductPageViewMode(mode);
-      toast({
-        title: 'Vue par défaut mise à jour',
-        description: `La vue des produits est maintenant en mode ${
-          mode === 'list' ? 'liste' : 'grille'
-        }.`,
-      });
-    } catch (error) {
-      toast({
-        title: 'Erreur',
-        description: 'Impossible de sauvegarder la préférence de vue.',
-        variant: 'destructive',
-      });
-      // Revert state on failure
-      setViewMode(oldViewMode);
-    }
-  };
-
-  const handleDuplicate = async (productId: string, productName: string) => {
-    try {
-      await duplicateProduct(productId);
-      toast({
-        title: 'Produit dupliqué',
-        description: `Le produit "${productName}" a été dupliqué avec succès.`,
-      });
-    } catch (error) {
-      toast({
-        title: 'Erreur de duplication',
-        description:
-          error instanceof Error ? error.message : 'Une erreur est survenue.',
-        variant: 'destructive',
-      });
-    }
-  };
-
+  const itemsPerPage = viewMode === 'grid' ? ITEMS_PER_PAGE : 10;
+  
   const productsWithSupplier = useMemo(() => {
     if (!products || !suppliers) return [];
     const supplierMap = new Map(suppliers.map((s) => [s.id, s.name]));
@@ -315,8 +284,6 @@ export default function ProduitsPage() {
     stockStatus,
   ]);
 
-  const itemsPerPage = viewMode === 'grid' ? ITEMS_PER_PAGE : 10;
-
   const { paginatedProducts, totalPages } = useMemo(() => {
     const total = sortedAndFilteredProducts.length;
     const pages = Math.ceil(total / itemsPerPage);
@@ -325,6 +292,12 @@ export default function ProduitsPage() {
     const paginated = sortedAndFilteredProducts.slice(start, end);
     return { paginatedProducts: paginated, totalPages: pages };
   }, [sortedAndFilteredProducts, currentPage, itemsPerPage]);
+
+  // Reset selection and page when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+    setSelectedProductIds([]);
+  }, [searchTerm, selectedCategory, selectedSupplier, stockStatus, viewMode, sortConfig]);
 
   // Keyboard shortcut handler
   useEffect(() => {
@@ -379,6 +352,47 @@ export default function ProduitsPage() {
       window.removeEventListener('keydown', handleKeyDown);
     };
   }, [viewMode, currentPage, totalPages]);
+  
+
+  const handleViewModeChange = async (mode: 'list' | 'grid') => {
+    if (viewMode === mode) return;
+    const oldViewMode = viewMode;
+    setViewMode(mode); // Optimistic UI update
+    try {
+      await updateProductPageViewMode(mode);
+      toast({
+        title: 'Vue par défaut mise à jour',
+        description: `La vue des produits est maintenant en mode ${
+          mode === 'list' ? 'liste' : 'grille'
+        }.`,
+      });
+    } catch (error) {
+      toast({
+        title: 'Erreur',
+        description: 'Impossible de sauvegarder la préférence de vue.',
+        variant: 'destructive',
+      });
+      // Revert state on failure
+      setViewMode(oldViewMode);
+    }
+  };
+
+  const handleDuplicate = async (productId: string, productName: string) => {
+    try {
+      await duplicateProduct(productId);
+      toast({
+        title: 'Produit dupliqué',
+        description: `Le produit "${productName}" a été dupliqué avec succès.`,
+      });
+    } catch (error) {
+      toast({
+        title: 'Erreur de duplication',
+        description:
+          error instanceof Error ? error.message : 'Une erreur est survenue.',
+        variant: 'destructive',
+      });
+    }
+  };
   
   const handleSelectAll = (checked: boolean | 'indeterminate') => {
      if (checked === true) {
@@ -648,7 +662,11 @@ export default function ProduitsPage() {
                 )}
               </div>
               <div className="flex items-center gap-2 flex-wrap">
-                <ProductShortcutsDialog />
+                <ShortcutsDialog 
+                  shortcuts={productShortcuts}
+                  title="Raccourcis Clavier Produits"
+                  description="Utilisez ces raccourcis pour accélérer votre flux de travail sur la page des produits."
+                />
                 <div className="flex items-center gap-1 border rounded-md p-1">
                   <Button
                     ref={viewModeListButtonRef}

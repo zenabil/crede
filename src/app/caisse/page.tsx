@@ -43,7 +43,7 @@ import { CustomerCombobox } from '@/components/caisse/customer-combobox';
 import { Receipt, type ReceiptData } from '@/components/caisse/receipt';
 import { SettleDebtDialog } from '@/components/caisse/settle-debt-dialog';
 import { AddProductDialog } from '@/components/produits/add-product-dialog';
-import { ShortcutsDialog } from '@/components/caisse/shortcuts-dialog';
+import { ShortcutsDialog } from '@/components/layout/shortcuts-dialog';
 
 
 const productImages = imageData.caisse;
@@ -58,6 +58,20 @@ interface CartState {
     discount: number;
     customerId: string | null;
 }
+
+const caisseShortcuts = [
+  { group: 'Navigation', key: 'F1', description: 'Rechercher un produit' },
+  { group: 'Navigation', key: 'F2', description: 'Scanner un code-barres' },
+  { group: 'Navigation', key: 'Alt + C', description: 'Ouvrir la sélection de catégorie' },
+  { group: 'Clients', key: 'F4', description: 'Sélectionner / Désélectionner un client' },
+  { group: 'Clients', key: 'Alt + N', description: 'Ajouter un nouveau client' },
+  { group: 'Panier', key: 'F6', description: 'Appliquer une réduction' },
+  { group: 'Panier', key: 'F9', description: 'Vider le panier' },
+  { group: 'Panier', key: 'F10', description: 'Finaliser la vente (Paiement)' },
+  { group: 'Onglets', key: 'F8', description: 'Ouvrir un nouvel onglet de vente' },
+  { group: 'Onglets', key: 'Alt + W', description: "Fermer l'onglet actuel" },
+  { group: 'Onglets', key: 'Alt + → / ←', description: 'Naviguer entre les onglets' },
+];
 
 export default function CaissePage() {
   const { products, customers, transactions, loading } = useMockData();
@@ -538,7 +552,11 @@ export default function CaissePage() {
                     {categories.map(cat => <SelectItem key={cat} value={cat}>{cat}</SelectItem>)}
                   </SelectContent>
                 </Select>
-                <ShortcutsDialog />
+                <ShortcutsDialog 
+                    shortcuts={caisseShortcuts}
+                    title="Raccourcis Clavier Caisse"
+                    description="Utilisez ces raccourcis pour accélérer votre flux de travail sur la page de la caisse."
+                />
               </div>
             </CardHeader>
           </Card>

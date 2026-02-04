@@ -62,7 +62,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { DepensesShortcutsDialog } from '@/components/depenses/shortcuts-dialog';
+import { ShortcutsDialog } from '@/components/layout/shortcuts-dialog';
 import type { Expense } from '@/lib/types';
 import { exportExpensesToCsv } from '@/lib/mock-data/api';
 import { DepensesCsvImportDialog } from '@/components/depenses/csv-import-dialog';
@@ -77,6 +77,17 @@ interface SortConfig {
 }
 
 const ITEMS_PER_PAGE = 10;
+
+const depensesShortcuts = [
+  { group: 'Navigation', key: 'F1', description: 'Rechercher une dépense' },
+  { group: 'Navigation', key: 'Alt + → / ←', description: 'Naviguer entre les pages' },
+  { group: 'Filtres', key: 'Alt + C', description: 'Ouvrir la sélection de catégorie' },
+  { group: 'Filtres', key: 'Alt + D', description: 'Ouvrir le sélecteur de date' },
+  { group: 'Filtres', key: 'Alt + X', description: 'Effacer les filtres' },
+  { group: 'Actions', key: 'Alt + N', description: 'Ajouter une nouvelle dépense' },
+  { group: 'Actions', key: 'Alt + I', description: "Importer des dépenses (CSV)" },
+  { group: 'Actions', key: 'Alt + E', description: "Exporter les dépenses (CSV)" },
+];
 
 export default function DepensesPage() {
   const [searchTerm, setSearchTerm] = useState('');
@@ -393,7 +404,11 @@ export default function DepensesPage() {
                 >
                     <Download className="mr-2 h-4 w-4" /> Exporter
                 </Button>
-                <DepensesShortcutsDialog />
+                <ShortcutsDialog 
+                  shortcuts={depensesShortcuts}
+                  title="Raccourcis Clavier Dépenses"
+                  description="Utilisez ces raccourcis pour accélérer votre flux de travail sur la page des dépenses."
+                />
                 <AddExpenseDialog />
             </div>
         </CardHeader>

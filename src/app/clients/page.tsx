@@ -48,7 +48,7 @@ import Link from 'next/link';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
-import { CustomerShortcutsDialog } from '@/components/customers/shortcuts-dialog';
+import { ShortcutsDialog } from '@/components/layout/shortcuts-dialog';
 
 type SortKey = keyof Customer | 'totalDebts' | 'totalPayments';
 type SortDirection = 'ascending' | 'descending';
@@ -60,6 +60,21 @@ interface SortConfig {
 type ActiveFilter = 'all' | 'debt' | 'credit' | 'dueToday';
 
 const ITEMS_PER_PAGE = 12;
+
+const clientShortcuts = [
+  { group: 'Navigation', key: 'F1', description: 'Rechercher un client' },
+  { group: 'Navigation', key: 'Alt + → / ←', description: 'Naviguer entre les pages' },
+  { group: 'Filtres et Tri', key: 'Alt + S', description: 'Ouvrir la sélection de tri' },
+  { group: 'Filtres et Tri', key: 'Alt + A', description: 'Afficher tous les clients' },
+  { group: 'Filtres et Tri', key: 'Alt + D', description: 'Filtrer les clients en dette' },
+  { group: 'Filtres et Tri', key: 'Alt + C', description: 'Filtrer les clients avec crédit' },
+  { group: 'Filtres et Tri', key: 'Alt + J', description: "Filtrer les clients dûs aujourd'hui" },
+  { group: 'Filtres et Tri', key: 'Alt + X', description: 'Effacer les filtres' },
+  { group: 'Actions', key: 'Alt + N', description: 'Ajouter un nouveau client' },
+  { group: 'Actions', key: 'Alt + I', description: "Importer des clients (CSV)" },
+  { group: 'Actions', key: 'Alt + E', description: "Exporter les clients (CSV)" },
+  { group: 'Interface', key: 'Alt + V', description: 'Basculer entre la vue grille et la vue liste' },
+];
 
 export default function ClientsPage() {
   const { customers, transactions: rawTransactions, loading } = useMockData();
@@ -486,7 +501,11 @@ export default function ClientsPage() {
                 )}
               </div>
               <div className="flex items-center gap-2">
-                 <CustomerShortcutsDialog />
+                 <ShortcutsDialog 
+                    shortcuts={clientShortcuts}
+                    title="Raccourcis Clavier Clients"
+                    description="Utilisez ces raccourcis pour accélérer votre flux de travail sur la page des clients."
+                 />
                 <Select
                   value={`${sortConfig.key}:${sortConfig.direction}`}
                   onValueChange={handleSortChange}

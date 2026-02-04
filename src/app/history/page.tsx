@@ -36,7 +36,7 @@ import { Calendar } from '@/components/ui/calendar';
 import { formatCurrency, cn } from '@/lib/utils';
 import { exportTransactionsToCsv } from '@/lib/mock-data/api';
 import { StatCard } from '@/components/dashboard/stat-card';
-import { HistoryShortcutsDialog } from '@/components/history/shortcuts-dialog';
+import { ShortcutsDialog } from '@/components/layout/shortcuts-dialog';
 import { EditTransactionDialog } from '@/components/transactions/edit-transaction-dialog';
 import { DeleteTransactionDialog } from '@/components/transactions/delete-transaction-dialog';
 
@@ -49,6 +49,16 @@ interface SortConfig {
 }
 
 const ITEMS_PER_PAGE = 15;
+
+const historyShortcuts = [
+  { group: 'Navigation', key: 'F1', description: 'Rechercher une transaction' },
+  { group: 'Navigation', key: 'Alt + → / ←', description: 'Naviguer entre les pages' },
+  { group: 'Filtres', key: 'Alt + D', description: 'Ouvrir le sélecteur de date' },
+  { group: 'Filtres', key: 'Alt + C', description: 'Ouvrir la sélection de client' },
+  { group: 'Filtres', key: 'Alt + T', description: 'Ouvrir la sélection de type de transaction' },
+  { group: 'Filtres', key: 'Alt + X', description: 'Effacer les filtres' },
+  { group: 'Actions', key: 'Alt + E', description: "Exporter les transactions (CSV)" },
+];
 
 export default function HistoryPage() {
   const { customers, transactions, products, loading } = useMockData();
@@ -335,7 +345,11 @@ export default function HistoryPage() {
                     <X className="mr-2 h-4 w-4" /> Effacer
                   </Button>
                 )}
-               <HistoryShortcutsDialog />
+               <ShortcutsDialog 
+                shortcuts={historyShortcuts}
+                title="Raccourcis Clavier Historique"
+                description="Utilisez ces raccourcis pour accélérer votre flux de travail sur la page d'historique."
+               />
             </div>
           </div>
         </CardHeader>
