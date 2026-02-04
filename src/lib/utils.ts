@@ -2,7 +2,7 @@ import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import { mockDataStore } from '@/lib/mock-data';
 import { addDays, isAfter, differenceInCalendarDays } from 'date-fns';
-import type { Customer, Transaction, AppSettings, Product, BreadOrder } from '@/lib/types';
+import type { Customer, Transaction, AppSettings, Product, BreadOrder, Supplier, SupplierTransaction } from '@/lib/types';
 
 
 export function cn(...inputs: ClassValue[]) {
@@ -156,4 +156,60 @@ export function getLowStockProducts(products: Product[]) {
 export function getUnpaidBreadOrders(breadOrders: BreadOrder[]) {
   if (!breadOrders) return [];
   return breadOrders.filter((order) => !order.isPaid);
+}
+
+export function getRecentCustomers(
+  transactions: Transaction[],
+  customers: Customer[],
+  count: number
+) {
+  if (!transactions || !customers) return [];
+
+  const sortedTransactions = [...transactions].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  
+  const recentCustomerIds = new Set<string>();
+  
+  for (const t of sortedTransactions) {
+    if (t.customerId) {
+      recentCustomerIds.add(t.customerId);
+    }
+    if (recentCustomerIds.size >= count) {
+      break;
+    }
+  }
+
+  const customerMap = new Map(customers.map(c => [c.id, c]));
+  
+  return Array.from(recentCustomerIds)
+      .map(id => customerMap.get(id))
+      .filter((c): c is Customer => !!c);
+}
+
+export function getRecentSuppliers(
+  supplierTransactions: SupplierTransaction[],
+  suppliers: Supplier[],
+  count: number
+) {
+    if (!supplierTransactions || !suppliers) return [];
+
+    const sortedTransactions = [...supplierTransactions].sort(
+      (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+    );
+
+    const recentSupplierIds = new Set<string>();
+
+    for (const t of sortedTransactions) {
+      if (t.supplierId) {
+        recentSupplierIds.add(t.supplierId);
+      }
+      if (recentSupplierIds.size >= count) {
+        break;
+      }
+    }
+
+    const supplierMap = new Map(suppliers.map((s) => [s.id, s]));
+
+    return Array.from(recentSupplierIds)
+      .map((id) => supplierMap.get(id))
+      .filter((s): s is Supplier => !!s);
 }

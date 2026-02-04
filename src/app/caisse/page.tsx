@@ -29,7 +29,7 @@ import {
 } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { formatCurrency, cn, getBalanceColorClassName, slugify } from '@/lib/utils';
+import { formatCurrency, cn, getBalanceColorClassName, slugify, getRecentCustomers } from '@/lib/utils';
 import imageData from '@/lib/placeholder-images.json';
 import { Separator } from '@/components/ui/separator';
 import { useMockData } from '@/hooks/use-mock-data';
@@ -143,28 +143,8 @@ export default function CaissePage() {
   }, [activeCart, productMap, products]);
 
     const recentCustomers = useMemo(() => {
-    if (!transactions || !customers) return [];
-
-    const sortedTransactions = [...transactions].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-    
-    const recentCustomerIds = new Set<string>();
-    
-    for (const t of sortedTransactions) {
-      if (t.customerId) {
-        recentCustomerIds.add(t.customerId);
-      }
-      if (recentCustomerIds.size >= 4) { // Get last 4 unique customers
-        break;
-      }
-    }
-
-    const customerMap = new Map(customers.map(c => [c.id, c]));
-    
-    return Array.from(recentCustomerIds)
-        .map(id => customerMap.get(id))
-        .filter((c): c is Customer => !!c);
-
-  }, [transactions, customers]);
+        return getRecentCustomers(transactions, customers, 4);
+    }, [transactions, customers]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -760,7 +740,7 @@ export default function CaissePage() {
                               className="text-destructive hover:bg-destructive/10 hover:text-destructive h-8 px-2"
                               onClick={clearCart}
                           >
-                              <Trash2 className="mr-1.5 h-3.5 w-3.5" />
+                              <Trash2 className="h-3.5 w-3.5" />
                               Vider
                               <kbd className="ml-2 rounded bg-muted px-1.5 font-mono text-[10px] text-muted-foreground">F9</kbd>
                           </Button>

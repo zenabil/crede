@@ -43,6 +43,7 @@ import {
   getBalanceVariant,
   getBalanceColorClassName,
   getInitials,
+  getRecentSuppliers,
 } from '@/lib/utils';
 import { cn } from '@/lib/utils';
 import { AddSupplierDialog } from '@/components/fournisseurs/add-supplier-dialog';
@@ -195,29 +196,7 @@ export default function FournisseursPage() {
   }, [suppliers]);
 
   const recentSuppliers = useMemo(() => {
-    if (!supplierTransactions || !suppliers) return [];
-
-    const sortedTransactions = [...supplierTransactions].sort(
-      (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
-    );
-
-    const recentSupplierIds = new Set<string>();
-
-    for (const t of sortedTransactions) {
-      if (t.supplierId) {
-        recentSupplierIds.add(t.supplierId);
-      }
-      if (recentSupplierIds.size >= 5) {
-        // Get last 5 unique suppliers
-        break;
-      }
-    }
-
-    const supplierMap = new Map(suppliers.map((s) => [s.id, s]));
-
-    return Array.from(recentSupplierIds)
-      .map((id) => supplierMap.get(id))
-      .filter((s): s is Supplier => !!s);
+    return getRecentSuppliers(supplierTransactions, suppliers, 5);
   }, [supplierTransactions, suppliers]);
 
   const sortedAndFilteredSuppliers = useMemo(() => {
@@ -492,7 +471,7 @@ export default function FournisseursPage() {
                   </div>
                   <Button asChild variant="secondary" size="sm">
                     <Link href={`/fournisseurs/${supplier.id}`}>
-                      Voir <ArrowRight className="h-4 w-4" />
+                      Voir <ArrowRight />
                     </Link>
                   </Button>
                 </div>
@@ -524,7 +503,7 @@ export default function FournisseursPage() {
                     variant="ghost"
                     onClick={handleClearFilters}
                   >
-                    <X className="h-4 w-4" /> Effacer
+                    <X /> Effacer
                   </Button>
                 )}
               </div>
@@ -585,7 +564,7 @@ export default function FournisseursPage() {
                 <SupplierCsvImportDialog
                   trigger={
                     <Button ref={importTriggerRef} variant="outline">
-                      <Upload className="h-4 w-4" /> Importer
+                      <Upload /> Importer
                     </Button>
                   }
                 />
@@ -595,13 +574,13 @@ export default function FournisseursPage() {
                   onClick={exportSuppliersToCsv}
                   disabled={!hasSuppliers}
                 >
-                  <Download className="h-4 w-4" />
+                  <Download />
                   Exporter
                 </Button>
                 <AddSupplierDialog
                   trigger={
                     <Button ref={addSupplierTriggerRef} className="w-full sm:w-auto">
-                      <Plus className="h-4 w-4" /> Ajouter un fournisseur
+                      <Plus /> Ajouter un fournisseur
                     </Button>
                   }
                 />
@@ -752,7 +731,7 @@ export default function FournisseursPage() {
                             <DropdownMenuContent align="end">
                               <DropdownMenuItem asChild>
                                 <Link href={`/fournisseurs/${supplier.id}`}>
-                                  <ArrowRight className="h-4 w-4" />
+                                  <ArrowRight />
                                   Voir les détails
                                 </Link>
                               </DropdownMenuItem>
@@ -761,7 +740,7 @@ export default function FournisseursPage() {
                                   href={`/fournisseurs/${supplier.id}?print=true`}
                                   target="_blank"
                                 >
-                                  <Printer className="h-4 w-4" />
+                                  <Printer />
                                   Imprimer le relevé
                                 </Link>
                               </DropdownMenuItem>
@@ -771,7 +750,7 @@ export default function FournisseursPage() {
                                   <DropdownMenuItem
                                     onSelect={(e) => e.preventDefault()}
                                   >
-                                    <Pencil className="h-4 w-4" />
+                                    <Pencil />
                                     Modifier
                                   </DropdownMenuItem>
                                 }
@@ -784,7 +763,7 @@ export default function FournisseursPage() {
                                     onSelect={(e) => e.preventDefault()}
                                     className="text-destructive focus:text-destructive focus:bg-destructive/10"
                                   >
-                                    <Trash2 className="h-4 w-4" />
+                                    <Trash2 />
                                     Supprimer
                                   </DropdownMenuItem>
                                 }
@@ -797,7 +776,7 @@ export default function FournisseursPage() {
                                   <DropdownMenuItem
                                     onSelect={(e) => e.preventDefault()}
                                   >
-                                    <Plus className="h-4 w-4" />
+                                    <Plus />
                                     Enregistrer un Achat
                                   </DropdownMenuItem>
                                 }
@@ -811,7 +790,7 @@ export default function FournisseursPage() {
                                     <DropdownMenuItem
                                       onSelect={(e) => e.preventDefault()}
                                     >
-                                      <MinusCircle className="h-4 w-4" />
+                                      <MinusCircle />
                                       Enregistrer un Paiement
                                     </DropdownMenuItem>
                                   }

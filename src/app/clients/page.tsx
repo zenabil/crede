@@ -33,7 +33,7 @@ import { Button } from '@/components/ui/button';
 import { CustomersGrid } from '@/components/customers/customers-grid';
 import { CustomersTable } from '@/components/customers/customers-table';
 import { StatCard } from '@/components/dashboard/stat-card';
-import { formatCurrency, cn, getBalanceColorClassName, getInitials } from '@/lib/utils';
+import { formatCurrency, cn, getBalanceColorClassName, getInitials, getRecentCustomers } from '@/lib/utils';
 import { CsvImportDialog } from '@/components/customers/csv-import-dialog';
 import { exportCustomersToCsv } from '@/lib/mock-data/api';
 import {
@@ -248,29 +248,7 @@ export default function ClientsPage() {
   }, [searchTerm, activeFilter, viewMode, sortConfig]);
 
   const recentCustomers = useMemo(() => {
-    if (!rawTransactions || !customers) return [];
-
-    const sortedTransactions = [...rawTransactions].sort(
-      (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
-    );
-
-    const recentCustomerIds = new Set<string>();
-
-    for (const t of sortedTransactions) {
-      if (t.customerId) {
-        recentCustomerIds.add(t.customerId);
-      }
-      if (recentCustomerIds.size >= 5) {
-        // Get last 5 unique customers
-        break;
-      }
-    }
-
-    const customerMap = new Map(customers.map((c) => [c.id, c]));
-
-    return Array.from(recentCustomerIds)
-      .map((id) => customerMap.get(id))
-      .filter((c): c is Customer => !!c);
+    return getRecentCustomers(rawTransactions, customers, 5);
   }, [rawTransactions, customers]);
 
   const {
@@ -467,7 +445,7 @@ export default function ClientsPage() {
                   </div>
                   <Button asChild variant="secondary" size="sm">
                     <Link href={`/clients/${customer.id}`}>
-                      Voir <ArrowRight className="h-4 w-4" />
+                      Voir <ArrowRight />
                     </Link>
                   </Button>
                 </div>
@@ -496,7 +474,7 @@ export default function ClientsPage() {
                 </div>
                 {areFiltersActive && (
                   <Button ref={clearFiltersButtonRef} variant="ghost" onClick={handleClearFilters}>
-                    <X className="h-4 w-4" /> Effacer
+                    <X /> Effacer
                   </Button>
                 )}
               </div>
@@ -556,7 +534,7 @@ export default function ClientsPage() {
                 </div>
                 <CsvImportDialog trigger={
                     <Button ref={importTriggerRef} variant="outline">
-                      <Upload className="h-4 w-4" /> Importer
+                      <Upload /> Importer
                     </Button>
                 } />
                 <Button
@@ -565,7 +543,7 @@ export default function ClientsPage() {
                   onClick={exportCustomersToCsv}
                   disabled={!hasCustomers}
                 >
-                  <Download className="h-4 w-4" />
+                  <Download />
                   Exporter
                 </Button>
                 <AddCustomerDialog trigger={
