@@ -20,7 +20,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Search, FileText, Calendar as CalendarIcon, Download, Wallet, TrendingUp, TrendingDown, X } from 'lucide-react';
-import { TransactionsHistoryTable } from '@/components/history/transactions-history-table';
+import { TransactionsTable } from '@/components/transactions/transactions-table';
 import { DateRange } from 'react-day-picker';
 import {
   subDays,
@@ -37,6 +37,8 @@ import { formatCurrency, cn } from '@/lib/utils';
 import { exportTransactionsToCsv } from '@/lib/mock-data/api';
 import { StatCard } from '@/components/dashboard/stat-card';
 import { HistoryShortcutsDialog } from '@/components/history/shortcuts-dialog';
+import { EditTransactionDialog } from '@/components/transactions/edit-transaction-dialog';
+import { DeleteTransactionDialog } from '@/components/transactions/delete-transaction-dialog';
 
 type SortKey = 'customerName' | 'description' | 'type' | 'date' | 'amount';
 type SortDirection = 'ascending' | 'descending';
@@ -339,11 +341,21 @@ export default function HistoryPage() {
         </CardHeader>
         <CardContent>
           {hasResults ? (
-            <TransactionsHistoryTable 
+            <TransactionsTable 
               transactions={paginatedTransactions}
               products={products} 
               onSort={requestSort}
               sortConfig={sortConfig}
+              showCustomerColumn={true}
+              actions={(transaction) => (
+                <div className="flex items-center justify-end gap-0.5" onClick={(e) => e.stopPropagation()}>
+                    <EditTransactionDialog transaction={transaction as Transaction} />
+                    <DeleteTransactionDialog
+                      transactionId={transaction.id}
+                      transactionDescription={transaction.description}
+                    />
+                </div>
+              )}
             />
           ) : (
             <div className="text-center py-16 border-2 border-dashed rounded-lg flex flex-col items-center justify-center gap-4">

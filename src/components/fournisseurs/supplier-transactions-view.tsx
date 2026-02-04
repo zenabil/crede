@@ -1,14 +1,16 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import type { SupplierTransaction } from '@/lib/types';
+import type { SupplierTransaction, Transaction } from '@/lib/types';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '../ui/card';
-import { SupplierTransactionsTable } from './supplier-transactions-table';
+import { TransactionsTable } from '@/components/transactions/transactions-table';
 import { AddSupplierTransactionDialog } from './add-supplier-transaction-dialog';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Search, PlusCircle, MinusCircle, FileText } from 'lucide-react';
 import { formatCurrency, getBalanceColorClassName } from '@/lib/utils';
+import { EditSupplierTransactionDialog } from './edit-supplier-transaction-dialog';
+import { DeleteSupplierTransactionDialog } from './delete-supplier-transaction-dialog';
 
 export function SupplierTransactionsView({
   transactions,
@@ -79,7 +81,18 @@ export function SupplierTransactionsView({
       </CardHeader>
       <CardContent>
         {hasResults ? (
-          <SupplierTransactionsTable transactions={filteredTransactions} />
+          <TransactionsTable
+            transactions={filteredTransactions}
+            actions={(transaction) => (
+                <div className="flex items-center justify-end gap-0.5">
+                  <EditSupplierTransactionDialog transaction={transaction as SupplierTransaction} />
+                  <DeleteSupplierTransactionDialog
+                    transactionId={transaction.id}
+                    transactionDescription={transaction.description}
+                  />
+                </div>
+            )}
+          />
         ) : (
           <div className="text-center py-16 border-2 border-dashed rounded-lg flex flex-col items-center justify-center gap-4">
             <FileText className="h-12 w-12 text-muted-foreground" />

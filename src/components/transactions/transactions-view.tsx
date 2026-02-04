@@ -9,6 +9,8 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Search, PlusCircle, MinusCircle, FileText } from 'lucide-react';
 import { formatCurrency, getBalanceColorClassName } from '@/lib/utils';
+import { EditTransactionDialog } from './edit-transaction-dialog';
+import { DeleteTransactionDialog } from './delete-transaction-dialog';
 
 export function TransactionsView({
   transactions,
@@ -79,7 +81,18 @@ export function TransactionsView({
       </CardHeader>
       <CardContent>
         {hasResults ? (
-          <TransactionsTable transactions={filteredTransactions} />
+          <TransactionsTable
+            transactions={filteredTransactions}
+            actions={(transaction) => (
+              <div className="flex items-center justify-end gap-0.5">
+                <EditTransactionDialog transaction={transaction as Transaction} />
+                <DeleteTransactionDialog
+                  transactionId={transaction.id}
+                  transactionDescription={transaction.description}
+                />
+              </div>
+            )}
+          />
         ) : (
           <div className="text-center py-16 border-2 border-dashed rounded-lg flex flex-col items-center justify-center gap-4">
             <FileText className="h-12 w-12 text-muted-foreground" />
