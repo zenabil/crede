@@ -30,6 +30,7 @@ import {
 } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
 import { StatCard } from '@/components/dashboard/stat-card';
+import { type ChartConfig } from '@/components/ui/chart';
 
 import {
   LineChart,
@@ -75,6 +76,18 @@ const NoDataMessage = ({ message }: { message: string }) => (
 );
 
 
+const salesProfitChartConfig = {
+  Ventes: {
+    label: "Ventes de produits",
+    color: "hsl(var(--chart-1))",
+  },
+  "Marge Brute": {
+    label: "Marge Brute",
+    color: "hsl(var(--chart-2))",
+  },
+} satisfies ChartConfig;
+
+
 export default function RapportsPage() {
   const { transactions, expenses, customers, products, loading } = useMockData();
   const [date, setDate] = useState<DateRange | undefined>({
@@ -90,7 +103,7 @@ export default function RapportsPage() {
 
   const {
     stats,
-    salesOverTime,
+    salesAndProfitOverTime,
     salesByCategory,
     topProducts,
     topProductsBySales,
@@ -101,45 +114,37 @@ export default function RapportsPage() {
     const to = date?.to ? endOfDay(date.to) : new Date();
     const interval = { start: from, end: to };
 
-    const ft = transactions.filter((t) =>
-      isWithinInterval(new Date(t.date), interval)
-    );
-    const fe = expenses.filter((e) =>
-      isWithinInterval(new Date(e.date), interval)
-    );
-    const fnc = customers.filter((c) =>
-      isWithinInterval(new Date(c.createdAt), interval)
-    );
-
+    // Filter all data based on date range once
+    const ft = transactions.filter((t) => isWithinInterval(new Date(t.date), interval));
+    const fe = expenses.filter((e) => isWithinInterval(new Date(e.date), interval));
+    const fnc = customers.filter((c) => isWithinInterval(new Date(c.createdAt), interval));
     const salesTransactions = ft.filter((t) => t.type === 'debt');
 
-    const totalSales = salesTransactions.reduce((sum, t) => sum + t.amount, 0);
-    const totalExpenses = fe.reduce((sum, e) => sum + e.amount, 0);
-
+    // --- Stat Aggregators ---
+    let totalSalesFromProducts = 0;
     let totalCostOfGoods = 0;
-    let salesFromProducts = 0;
-    const productSales: {
-      [key: string]: { name: string; quantity: number; sales: number };
-    } = {};
+    const productSales: { [key: string]: { name: string; quantity: number; sales: number } } = {};
     const categorySales: { [key: string]: number } = {};
+    const salesAndProfitOverTimeMap: { [key: string]: { date: string; Ventes: number; 'Marge Brute': number } } = {};
     const productMap = new Map(products.map((p) => [p.id, p]));
 
+    // --- Main Calculation Loop for Product-based Sales ---
     salesTransactions.forEach((t) => {
       if (t.saleItems && t.saleItems.length > 0) {
         let saleTxTotal = 0;
+        let saleTxCost = 0;
+
         t.saleItems.forEach((item) => {
           const itemTotal = item.unitPrice * item.quantity;
+          const itemCost = (item.purchasePrice || 0) * item.quantity;
           saleTxTotal += itemTotal;
-          totalCostOfGoods += (item.purchasePrice || 0) * item.quantity;
+          saleTxCost += itemCost;
 
+          // For top products/categories charts
           const product = productMap.get(item.productId);
           if (product) {
             if (!productSales[product.id]) {
-              productSales[product.id] = {
-                name: product.name,
-                quantity: 0,
-                sales: 0,
-              };
+              productSales[product.id] = { name: product.name, quantity: 0, sales: 0 };
             }
             productSales[product.id].quantity += item.quantity;
             productSales[product.id].sales += itemTotal;
@@ -150,15 +155,28 @@ export default function RapportsPage() {
             categorySales[product.category] += itemTotal;
           }
         });
-        salesFromProducts += saleTxTotal;
+
+        totalSalesFromProducts += saleTxTotal;
+        totalCostOfGoods += saleTxCost;
+
+        // For sales/profit over time chart
+        const day = format(new Date(t.date), 'dd/MM');
+        if (!salesAndProfitOverTimeMap[day]) {
+          salesAndProfitOverTimeMap[day] = { date: day, Ventes: 0, 'Marge Brute': 0 };
+        }
+        salesAndProfitOverTimeMap[day].Ventes += saleTxTotal;
+        salesAndProfitOverTimeMap[day]['Marge Brute'] += (saleTxTotal - saleTxCost);
       }
     });
 
-    const grossProfit = salesFromProducts - totalCostOfGoods;
+    // --- Final Stats Calculation ---
+    const totalExpenses = fe.reduce((sum, e) => sum + e.amount, 0);
+    const grossProfit = totalSalesFromProducts - totalCostOfGoods;
     const netProfit = grossProfit - totalExpenses;
+    const totalDebtTransactions = salesTransactions.reduce((sum, t) => sum + t.amount, 0);
 
     const _stats = {
-      totalSales,
+      totalSales: totalDebtTransactions, // Total debt added in period
       totalExpenses,
       netProfit,
       grossProfit,
@@ -166,57 +184,33 @@ export default function RapportsPage() {
       salesCount: salesTransactions.length,
     };
 
-    const _salesOverTime = salesTransactions
-      .reduce((acc, t) => {
-        const day = format(new Date(t.date), 'dd/MM');
-        const existing = acc.find((d) => d.date === day);
-        if (existing) {
-          existing.Ventes += t.amount;
-        } else {
-          acc.push({ date: day, Ventes: t.amount });
-        }
-        return acc;
-      }, [] as { date: string; Ventes: number }[])
-      .sort((a, b) => a.date.localeCompare(b.date));
-
-    const _salesByCategory = Object.entries(categorySales).map(
-      ([name, value]) => ({ name, value })
-    );
-    const _topProducts = Object.values(productSales)
-      .sort((a, b) => b.quantity - a.quantity)
-      .slice(0, 5);
-    const _topProductsBySales = Object.values(productSales)
-      .sort((a, b) => b.sales - a.sales)
-      .slice(0, 5);
-
+    // --- Chart Data Preparation ---
+    const _salesAndProfitOverTime = Object.values(salesAndProfitOverTimeMap).sort((a, b) => a.date.localeCompare(b.date));
+    const _salesByCategory = Object.entries(categorySales).map(([name, value]) => ({ name, value }));
+    const _topProducts = Object.values(productSales).sort((a, b) => b.quantity - a.quantity).slice(0, 5);
+    const _topProductsBySales = Object.values(productSales).sort((a, b) => b.sales - a.sales).slice(0, 5);
+    
     const _salesByCustomer = salesTransactions.reduce((acc, t) => {
       const customer = customers.find((c) => c.id === t.customerId);
       const name = customer?.name || 'Client au comptant';
-      if (!acc[name]) {
-        acc[name] = 0;
-      }
-      acc[name] += t.amount;
+      acc[name] = (acc[name] || 0) + t.amount;
       return acc;
     }, {} as { [key: string]: number });
+
     const salesByCustomerData = Object.entries(_salesByCustomer)
       .map(([name, value]) => ({ name, value }))
       .sort((a, b) => b.value - a.value)
       .slice(0, 10);
 
-    const _expensesByCategory = fe.reduce((acc, expense) => {
-      if (!acc[expense.category]) {
-        acc[expense.category] = 0;
-      }
-      acc[expense.category] += expense.amount;
-      return acc;
-    }, {} as Record<string, number>);
-    const expensesByCategoryData = Object.entries(_expensesByCategory).map(
-      ([name, value]) => ({ name, value })
-    );
+    const expensesByCategoryData = Object.entries(fe.reduce((acc, expense) => {
+        acc[expense.category] = (acc[expense.category] || 0) + expense.amount;
+        return acc;
+      }, {} as Record<string, number>))
+      .map(([name, value]) => ({ name, value }));
 
     return {
       stats: _stats,
-      salesOverTime: _salesOverTime,
+      salesAndProfitOverTime: _salesAndProfitOverTime,
       salesByCategory: _salesByCategory,
       topProducts: _topProducts,
       topProductsBySales: _topProductsBySales,
@@ -329,13 +323,16 @@ export default function RapportsPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Ventes au fil du temps</CardTitle>
+            <CardTitle>Ventes et Marge Brute au fil du temps</CardTitle>
+             <CardDescription>
+              Chiffre d'affaires des produits et marge brute (Ventes - Coût des marchandises) sur la période sélectionnée.
+            </CardDescription>
           </CardHeader>
           <CardContent className="h-80">
-            {salesOverTime.length > 0 ? (
+            {salesAndProfitOverTime.length > 0 ? (
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart
-                  data={salesOverTime}
+                  data={salesAndProfitOverTime}
                   margin={{ top: 5, right: 20, left: -10, bottom: 5 }}
                 >
                   <CartesianGrid strokeDasharray="3 3" />
@@ -346,19 +343,27 @@ export default function RapportsPage() {
                       backgroundColor: 'hsl(var(--background))',
                       border: '1px solid hsl(var(--border))',
                     }}
+                    formatter={(value, name) => [formatCurrency(value as number), name as string]}
                   />
                   <Legend />
                   <Line
                     type="monotone"
                     dataKey="Ventes"
-                    stroke="hsl(var(--primary))"
+                    stroke={salesProfitChartConfig.Ventes.color}
+                    strokeWidth={2}
+                    dot={false}
+                  />
+                   <Line
+                    type="monotone"
+                    dataKey="Marge Brute"
+                    stroke={salesProfitChartConfig['Marge Brute'].color}
                     strokeWidth={2}
                     dot={false}
                   />
                 </LineChart>
               </ResponsiveContainer>
             ) : (
-                <NoDataMessage message="Aucune donnée de vente pour cette période." />
+                <NoDataMessage message="Aucune vente de produits pour cette période." />
             )}
           </CardContent>
         </Card>
