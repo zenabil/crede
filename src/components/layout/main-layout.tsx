@@ -120,8 +120,8 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="grid min-h-screen w-full md:grid-cols-[280px_1fr]">
-      <div className="hidden border-r bg-card md:block no-print">
-        <div className="flex h-full max-h-screen flex-col gap-2">
+      <div className="hidden md:block sticky top-0 h-screen border-r bg-card no-print">
+        <div className="flex h-full flex-col gap-2">
           <div className="flex h-14 items-center border-b px-4 lg:h-[60px] lg:px-6">
             <Link href="/caisse" className="flex items-center gap-2 font-semibold">
                <Image
@@ -134,7 +134,7 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
               <span className="text-xl">Frucio</span>
             </Link>
           </div>
-          <div className="flex-1 py-4">
+          <div className="flex-1 overflow-y-auto py-4">
              <NavContent />
           </div>
         </div>
