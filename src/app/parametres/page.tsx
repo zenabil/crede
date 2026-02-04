@@ -393,7 +393,7 @@ export default function SettingsPage() {
               <CardFooter>
                 <Button type="submit" disabled={isCompanyPending}>
                   {isCompanyPending ? (
-                    <Loader2 className="animate-spin h-4 w-4" />
+                    <Loader2 className="animate-spin" />
                   ) : (
                     <Save />
                   )}
@@ -434,7 +434,7 @@ export default function SettingsPage() {
                 </div>
                 <Button type="submit" disabled={isAppearancePending}>
                   {isAppearancePending ? (
-                    <Loader2 className="animate-spin h-4 w-4" />
+                    <Loader2 className="animate-spin" />
                   ) : (
                     <Save />
                   )}
@@ -571,7 +571,7 @@ export default function SettingsPage() {
                 <CardFooter>
                   <Button type="submit" disabled={isModulesPending}>
                     {isModulesPending ? (
-                      <Loader2 className="animate-spin h-4 w-4" />
+                      <Loader2 className="animate-spin" />
                     ) : (
                       <Save />
                     )}
@@ -601,13 +601,13 @@ export default function SettingsPage() {
                 </p>
                 <div className="rounded-md border divide-y">
                   {/* Customers */}
-                  <div className="flex items-center justify-between p-4">
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4">
                     <p className="font-medium">Clients</p>
-                    <div className="flex gap-2">
+                    <div className="flex flex-wrap gap-2">
                       <CsvImportDialog
                         trigger={
                           <Button variant="outline">
-                            <Upload className="h-4 w-4" /> Importer (CSV)
+                            <Upload /> Importer (CSV)
                           </Button>
                         }
                       />
@@ -615,18 +615,18 @@ export default function SettingsPage() {
                         onClick={handleExportCustomers}
                         variant="outline"
                       >
-                        <Download className="h-4 w-4" /> Exporter (CSV)
+                        <Download /> Exporter (CSV)
                       </Button>
                     </div>
                   </div>
                   {/* Products */}
-                  <div className="flex items-center justify-between p-4">
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4">
                     <p className="font-medium">Produits</p>
-                    <div className="flex gap-2">
+                    <div className="flex flex-wrap gap-2">
                       <ProductCsvImportDialog
                         trigger={
                           <Button variant="outline">
-                            <Upload className="h-4 w-4" /> Importer (CSV)
+                            <Upload /> Importer (CSV)
                           </Button>
                         }
                       />
@@ -634,18 +634,18 @@ export default function SettingsPage() {
                         onClick={handleExportProducts}
                         variant="outline"
                       >
-                        <Download className="h-4 w-4" /> Exporter (CSV)
+                        <Download /> Exporter (CSV)
                       </Button>
                     </div>
                   </div>
                   {/* Suppliers */}
-                  <div className="flex items-center justify-between p-4">
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4">
                     <p className="font-medium">Fournisseurs</p>
-                    <div className="flex gap-2">
+                    <div className="flex flex-wrap gap-2">
                       <SupplierCsvImportDialog
                         trigger={
                           <Button variant="outline">
-                            <Upload className="h-4 w-4" /> Importer (CSV)
+                            <Upload /> Importer (CSV)
                           </Button>
                         }
                       />
@@ -653,7 +653,7 @@ export default function SettingsPage() {
                         onClick={handleExportSuppliers}
                         variant="outline"
                       >
-                        <Download className="h-4 w-4" /> Exporter (CSV)
+                        <Download /> Exporter (CSV)
                       </Button>
                     </div>
                   </div>
@@ -675,7 +675,7 @@ export default function SettingsPage() {
                 <div className="flex flex-col sm:flex-row gap-4">
                   <ImportDataDialog />
                   <Button onClick={handleExportData} variant="outline">
-                    <Download className="h-4 w-4" />
+                    <Download />
                     Exporter les données (.json)
                   </Button>
                   <ResetAllDataDialog />

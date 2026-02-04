@@ -248,7 +248,7 @@ export default function HistoryPage() {
         <CardHeader>
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <CardTitle>Filtres de recherche</CardTitle>
-            <div className="flex w-full flex-wrap sm:flex-nowrap items-center gap-2">
+            <div className="flex w-full flex-wrap items-center justify-start sm:justify-end gap-2">
               <div className="relative w-full sm:w-auto sm:max-w-xs">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
@@ -273,7 +273,7 @@ export default function HistoryPage() {
                     )}
                     disabled={!hasTransactions}
                   >
-                    <CalendarIcon className="h-4 w-4" />
+                    <CalendarIcon />
                     {date?.from ? (
                       date.to ? (
                         <>
@@ -337,12 +337,12 @@ export default function HistoryPage() {
                 onClick={() => exportTransactionsToCsv(filteredTransactions)}
                 disabled={!hasResults}
               >
-                <Download className="h-4 w-4" />
+                <Download />
                 Exporter
               </Button>
                {areFiltersActive && (
                   <Button ref={clearFiltersButtonRef} variant="ghost" onClick={handleClearFilters}>
-                    <X className="h-4 w-4" /> Effacer
+                    <X /> Effacer
                   </Button>
                 )}
                <ShortcutsDialog 

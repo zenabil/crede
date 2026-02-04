@@ -318,7 +318,7 @@ export default function DepensesPage() {
         <CardHeader>
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <CardTitle>Liste des Dépenses</CardTitle>
-            <div className="flex w-full flex-wrap sm:flex-nowrap items-center gap-2">
+            <div className="flex w-full flex-wrap items-center justify-start sm:justify-end gap-2">
               <div className="relative w-full sm:w-auto flex-grow">
                 <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                 <Input
@@ -354,7 +354,7 @@ export default function DepensesPage() {
                     className="w-full sm:w-[260px] justify-start text-left font-normal"
                     disabled={!hasExpenses}
                   >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    <CalendarIcon />
                     <span className="truncate">
                       {date?.from ? (
                         date.to ? (
@@ -385,7 +385,7 @@ export default function DepensesPage() {
               </Popover>
                {areFiltersActive && (
                   <Button ref={clearFiltersButtonRef} variant="ghost" onClick={handleClearFilters}>
-                    <X className="h-4 w-4" /> Effacer
+                    <X /> Effacer
                   </Button>
                 )}
             </div>
