@@ -155,43 +155,38 @@ export const addBreadOrder = async (data: AddBreadOrderData) => {
 
 export const updateBreadOrder = async (orderId: string, data: Partial<Omit<BreadOrder, 'id'>>) => {
   const order = mockDataStore.breadOrders.find(o => o.id === orderId);
-  if (order) {
-    const originalCustomerId = order.customerId;
+  if (!order) return;
 
-    Object.assign(order, data);
+  const originalCustomerId = order.customerId;
+  const originalAmount = order.totalAmount;
 
-    // If customer is removed from order, we need to delete the associated transaction
-    if (originalCustomerId && !order.customerId) {
-        const txIndex = mockDataStore.transactions.findIndex(t => t.orderId === orderId);
-        if (txIndex > -1) {
-            deleteTransaction(mockDataStore.transactions[txIndex].id);
-            // saveData() is called inside deleteTransaction
-            return; 
-        }
+  // Apply new data to the order in memory
+  Object.assign(order, data);
+
+  const newCustomerId = order.customerId;
+  const newAmount = order.totalAmount;
+
+  const existingTx = mockDataStore.transactions.find(t => t.orderId === orderId);
+
+  // If there's a change that affects the transaction...
+  if (originalCustomerId !== newCustomerId || (newCustomerId && originalAmount !== newAmount)) {
+    // The simplest, most robust way is to remove the old one and add a new one if needed.
+    if (existingTx) {
+        deleteTransaction(existingTx.id); // This calls saveData internally
     }
-    
-    // If customer is added or changed, or amount changed. Find and update transaction.
-    const tx = mockDataStore.transactions.find(t => t.orderId === orderId);
-    if (tx) {
-        if (tx.customerId !== order.customerId || tx.amount !== order.totalAmount) {
-            updateTransaction(tx.id, {
-                amount: order.totalAmount,
-                description: tx.description,
-                date: tx.date,
-            });
-        }
-    } else if (order.customerId) {
-        // If no transaction existed but now there is a customer
-        addTransaction({
-            customerId: order.customerId,
+    if (newCustomerId) {
+        addTransaction({ // This also calls saveData internally
+            customerId: newCustomerId,
             type: 'debt',
-            amount: order.totalAmount,
+            amount: newAmount,
             description: `Commande: ${order.name}`,
             date: order.createdAt,
             orderId: order.id,
         });
     }
-
+  } else {
+    // No transaction change, but other order fields (like isPaid/isDelivered) might have changed.
+    // So we need to save the main data store.
     saveData();
   }
 };
