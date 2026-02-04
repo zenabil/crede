@@ -11,6 +11,7 @@ import { SupplierHeader } from '@/components/fournisseurs/supplier-header';
 import { SupplierBalanceHistoryChart } from '@/components/fournisseurs/supplier-balance-history-chart';
 import { SupplierTransactionsView } from '@/components/fournisseurs/supplier-transactions-view';
 import { SupplierProducts } from '@/components/fournisseurs/supplier-products';
+import { usePrintOnLoad } from '@/hooks/use-print-on-load';
 
 export default function SupplierDetailPage() {
   const params = useParams();
@@ -18,6 +19,8 @@ export default function SupplierDetailPage() {
   const id = params.id as string;
   
   const { suppliers, supplierTransactions, loading } = useMockData();
+  
+  usePrintOnLoad();
 
   const supplier = useMemo(() => {
     return suppliers.find(s => s.id === id);
