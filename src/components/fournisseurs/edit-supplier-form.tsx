@@ -1,24 +1,13 @@
 'use client';
 
 import { useRef } from 'react';
-import { z } from 'zod';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { SubmitButton } from '@/components/forms/submit-button';
 import { useFormSubmission } from '@/hooks/use-form-submission';
 import { updateSupplier } from '@/lib/mock-data/api';
 import type { Supplier } from '@/lib/types';
-
-const supplierSchema = z.object({
-  name: z
-    .string()
-    .min(2, { message: 'Le nom doit comporter au moins 2 caractères.' }),
-  contact: z.string().optional(),
-  phone: z.string().optional(),
-  category: z.string().optional(),
-  balance: z.coerce.number().optional(),
-  visitDay: z.string().optional(),
-});
+import { supplierSchema } from '@/lib/schemas';
 
 export function EditSupplierForm({
   supplier,

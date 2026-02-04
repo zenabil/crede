@@ -1,7 +1,6 @@
 'use client';
 
 import { useRef, useState } from 'react';
-import { z } from 'zod';
 import { useMockData } from '@/hooks/use-mock-data';
 
 import { Input } from '@/components/ui/input';
@@ -16,18 +15,8 @@ import {
 import { SubmitButton } from '@/components/forms/submit-button';
 import { useFormSubmission } from '@/hooks/use-form-submission';
 import { addBreadOrder } from '@/lib/mock-data/api';
-import type { Customer, AppSettings } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
-
-const orderSchema = z.object({
-  name: z
-    .string()
-    .min(2, { message: 'Le nom doit comporter au moins 2 caractères.' }),
-  quantity: z.coerce
-    .number()
-    .int()
-    .positive({ message: 'La quantité doit être un nombre entier positif.' }),
-});
+import { orderSchema } from '@/lib/schemas';
 
 export function AddOrderForm({ onSuccess }: { onSuccess?: () => void }) {
   const formRef = useRef<HTMLFormElement>(null);

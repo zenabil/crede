@@ -1,25 +1,13 @@
 'use client';
 
 import { useRef } from 'react';
-import { z } from 'zod';
-
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { SubmitButton } from '@/components/forms/submit-button';
 import { useFormSubmission } from '@/hooks/use-form-submission';
 import { updateCustomer } from '@/lib/mock-data/api';
 import type { Customer } from '@/lib/types';
-
-const customerSchema = z.object({
-  name: z
-    .string()
-    .min(2, { message: 'Le nom doit comporter au moins 2 caractères.' }),
-  email: z.string().email({ message: 'Veuillez saisir une adresse e-mail valide.' }).or(z.literal('')).optional(),
-  phone: z.string().min(10, {
-    message: 'Le numéro de téléphone doit comporter au moins 10 caractères.',
-  }),
-  settlementDay: z.string().optional(),
-});
+import { customerSchema } from '@/lib/schemas';
 
 export function EditCustomerForm({
   customer,

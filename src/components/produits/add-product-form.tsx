@@ -1,7 +1,6 @@
 'use client';
 
 import { useRef, useState } from 'react';
-import { z } from 'zod';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
@@ -11,17 +10,7 @@ import { addProduct } from '@/lib/mock-data/api';
 import { useMockData } from '@/hooks/use-mock-data';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import type { Product } from '@/lib/types';
-
-const productSchema = z.object({
-  name: z.string().min(2, { message: 'Le nom doit comporter au moins 2 caractères.' }),
-  category: z.string().min(2, { message: 'La catégorie doit comporter au moins 2 caractères.' }),
-  description: z.string().optional(),
-  barcode: z.string().optional(),
-  purchasePrice: z.coerce.number().min(0, { message: 'Le prix doit être un nombre positif.' }),
-  sellingPrice: z.coerce.number().positive({ message: 'Le prix doit être un nombre positif.' }),
-  stock: z.coerce.number().int({ message: 'Le stock doit être un nombre entier.' }).min(0),
-  minStock: z.coerce.number().int({ message: 'Le stock min. doit être un nombre entier.' }).min(0),
-});
+import { productSchema } from '@/lib/schemas';
 
 export function AddProductForm({ onSuccess, defaultBarcode }: { onSuccess?: (newProduct: Product) => void; defaultBarcode?: string }) {
   const formRef = useRef<HTMLFormElement>(null);

@@ -1,7 +1,6 @@
 'use client';
 
 import { useRef } from 'react';
-import { z } from 'zod';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
@@ -11,21 +10,7 @@ import { updateExpense } from '@/lib/mock-data/api';
 import type { Expense } from '@/lib/types';
 import { format } from 'date-fns';
 import { useMockData } from '@/hooks/use-mock-data';
-
-const expenseSchema = z.object({
-  description: z
-    .string()
-    .min(2, { message: 'La description doit comporter au moins 2 caractères.' }),
-  category: z
-    .string()
-    .min(2, { message: 'La catégorie doit comporter au moins 2 caractères.' }),
-  amount: z.coerce
-    .number()
-    .positive({ message: 'Le montant doit être un nombre positif.' }),
-  date: z.string().refine((val) => !isNaN(Date.parse(val)), {
-    message: "La date n'est pas valide.",
-  }),
-});
+import { expenseSchema } from '@/lib/schemas';
 
 export function EditExpenseForm({
   expense,

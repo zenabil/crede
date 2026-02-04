@@ -1,7 +1,6 @@
 'use client';
 
 import { useRef } from 'react';
-import { z } from 'zod';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
@@ -10,18 +9,7 @@ import type { TransactionType } from '@/lib/types';
 import { useFormSubmission } from '@/hooks/use-form-submission';
 import { addTransaction } from '@/lib/mock-data/api';
 import { format } from 'date-fns';
-
-const transactionSchema = z.object({
-  amount: z.coerce
-    .number()
-    .positive({ message: 'Le montant doit être un nombre positif.' }),
-  description: z
-    .string()
-    .min(3, { message: 'La description doit comporter au moins 3 caractères.' }),
-  date: z.string().refine((val) => !isNaN(Date.parse(val)), {
-    message: "La date n'est pas valide.",
-  }),
-});
+import { transactionSchema } from '@/lib/schemas';
 
 export function AddTransactionForm({
   type,
