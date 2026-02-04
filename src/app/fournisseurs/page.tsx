@@ -42,6 +42,7 @@ import {
   formatCurrency,
   getBalanceVariant,
   getBalanceColorClassName,
+  getInitials,
 } from '@/lib/utils';
 import { cn } from '@/lib/utils';
 import { AddSupplierDialog } from '@/components/fournisseurs/add-supplier-dialog';
@@ -360,17 +361,6 @@ export default function FournisseursPage() {
       return <ArrowUp className="ml-2 h-4 w-4" />;
     }
     return <ArrowDown className="ml-2 h-4 w-4" />;
-  };
-
-  const getInitials = (name: string) => {
-    if (!name) return '?';
-    return name
-      .split(' ')
-      .map((n) => n[0])
-      .filter(Boolean)
-      .slice(0, 2)
-      .join('')
-      .toUpperCase();
   };
 
   const areFiltersActive = searchTerm !== '' || activeFilter !== 'all';

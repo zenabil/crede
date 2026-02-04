@@ -110,31 +110,13 @@ export default function CaissePage() {
     return customers.find(c => c.id === activeCustomerId);
   }, [activeCustomerId, customers]);
 
-  // Load cart from localStorage on initial render, with migration from old structure
+  // Load cart from localStorage on initial render
   useEffect(() => {
     try {
       const savedCarts = localStorage.getItem('caisse-carts-data');
       if (savedCarts) {
         const parsedCarts = JSON.parse(savedCarts);
         if (typeof parsedCarts === 'object' && parsedCarts !== null && Object.keys(parsedCarts).length > 0) {
-          
-          // --- MIGRATION LOGIC ---
-          // This handles carts saved with the old structure (full product object)
-          Object.keys(parsedCarts).forEach(cartKey => {
-              if (parsedCarts[cartKey].items) {
-                  parsedCarts[cartKey].items = parsedCarts[cartKey].items.map((item: any) => {
-                      if (item.product && typeof item.product === 'object' && item.product.id) {
-                          return { productId: item.product.id, quantity: item.quantity };
-                      }
-                      if (item.productId && typeof item.quantity === 'number') {
-                          return { productId: item.productId, quantity: item.quantity };
-                      }
-                      return null;
-                  }).filter((item: any): item is CartItem => item !== null);
-              }
-          });
-          // --- END MIGRATION LOGIC ---
-
           setCarts(parsedCarts);
           const firstTabKey = Object.keys(parsedCarts)[0];
           if (firstTabKey) {
@@ -143,7 +125,7 @@ export default function CaissePage() {
         }
       }
     } catch (error) {
-      console.error("Failed to load or migrate cart state from localStorage", error);
+      console.error("Failed to load cart state from localStorage", error);
     } finally {
         setIsStateLoaded(true);
     }
